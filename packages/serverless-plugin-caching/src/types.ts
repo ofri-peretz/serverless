@@ -14,7 +14,13 @@ export interface PerKeyInvalidationConfig {
 export interface CacheKeyParameterConfig {
   /** Parameter name (e.g., 'request.path.id', 'request.querystring.page', 'request.header.Accept') */
   name: string;
-  /** Override the mapped value for integration request parameters */
+  /**
+   * Override the mapped value for integration request parameters.
+   * Use for body-based cache keys:
+   *   { name: 'integration.request.header.bodyValue', mappedFrom: 'method.request.body' }
+   */
+  mappedFrom?: string;
+  /** @deprecated Use `mappedFrom` instead. Alias for backward compat. */
   value?: string;
 }
 
@@ -30,6 +36,8 @@ export interface EndpointCachingConfig {
   perKeyInvalidation?: PerKeyInvalidationConfig;
   /** Cache key parameters — defines what makes a cache key unique */
   cacheKeyParameters?: CacheKeyParameterConfig[];
+  /** Inherit CloudWatch settings (log level, data trace, metrics) from stage. Default: true */
+  inheritCloudWatchSettingsFromStage?: boolean;
 }
 
 /** Valid API Gateway cache cluster sizes (in GB) */
@@ -42,6 +50,16 @@ export type CacheClusterSize =
   | '58.2'
   | '118'
   | '237';
+
+/** Additional endpoint — for CF-defined resources that aren't Lambda functions */
+export interface AdditionalEndpointConfig {
+  /** HTTP method (GET, POST, etc.) */
+  method: string;
+  /** Resource path (e.g., '/serverless') */
+  path: string;
+  /** Caching configuration for this endpoint */
+  caching?: EndpointCachingConfig;
+}
 
 /** Global caching configuration (under custom.interlaceCaching) */
 export interface CachingPluginConfig {
@@ -57,10 +75,16 @@ export interface CachingPluginConfig {
   flushOnDeploy?: boolean;
   /** Per-key invalidation defaults */
   perKeyInvalidation?: PerKeyInvalidationConfig;
-  /** Shared API Gateway support */
+  /** Shared API Gateway — skip stage-level cache cluster changes. Default: false */
+  sharedApiGateway?: boolean;
+  /** Explicit REST API ID (for shared/cross-stack gateways) */
   restApiId?: string;
   /** Base path for shared API Gateway */
   basePath?: string;
+  /** Inherit CloudWatch settings from stage to per-method settings. Default: true */
+  endpointsInheritCloudWatchSettingsFromStage?: boolean;
+  /** Additional endpoints defined in CF (non-Lambda). */
+  additionalEndpoints?: AdditionalEndpointConfig[];
 }
 
 /** Resolved settings for a single endpoint */
@@ -79,6 +103,14 @@ export interface EndpointSettings {
   perKeyInvalidation: PerKeyInvalidationConfig;
   /** Cache key parameters */
   cacheKeyParameters: CacheKeyParameterConfig[];
+  /** Inherit CloudWatch settings from stage */
+  inheritCloudWatchSettingsFromStage: boolean;
+  /** CF resource name (e.g., 'ApiGatewayMethodUsersIdVarGet') */
+  gatewayResourceName: string;
+  /** Whether this is an additional (CF-defined) endpoint */
+  isAdditionalEndpoint: boolean;
+  /** Function name (empty for additional endpoints) */
+  functionName: string;
 }
 
 /** Fully resolved plugin settings (after merging global + per-endpoint) */
@@ -95,12 +127,16 @@ export interface ResolvedCachingSettings {
   flushOnDeploy: boolean;
   /** Default per-key invalidation */
   perKeyInvalidation: PerKeyInvalidationConfig;
+  /** Whether the API Gateway is shared (skip stage-level changes) */
+  sharedApiGateway: boolean;
   /** Rest API ID (auto-detected or configured) */
   restApiId?: string;
   /** Base path */
   basePath?: string;
-  /** Per-endpoint settings */
+  /** Per-endpoint settings (from function events) */
   endpoints: EndpointSettings[];
+  /** Additional endpoint settings (from CF resources) */
+  additionalEndpoints: EndpointSettings[];
 }
 
 /** AWS API Gateway UpdateStage patch operation */
@@ -108,4 +144,11 @@ export interface PatchOperation {
   op: 'replace';
   path: string;
   value: string;
+}
+
+/** CloudWatch method settings from the stage (for inheritance) */
+export interface StageMethodSettings {
+  loggingLevel?: string;
+  dataTraceEnabled?: boolean;
+  metricsEnabled?: boolean;
 }

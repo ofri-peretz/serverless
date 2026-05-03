@@ -4,10 +4,16 @@
  * API Gateway caching plugin for Serverless Framework.
  * Replaces `serverless-api-gateway-caching` with:
  * - Proper cleanup hooks (before:remove:remove)
- * - Cache flush command (sls caching flush)
+ * - Cache flush/status commands
+ * - ANY method → GET-only caching
+ * - CloudWatch settings inheritance
+ * - Shared API Gateway support
+ * - Additional (CF-defined) endpoints
+ * - Body-based cache keys (mappedFrom)
+ * - CacheKeyParameters + CacheNamespace on CF template
  * - Jittered exponential backoff (no thundering herd)
- * - Zero prototype pollution
- * - TypeScript-native, zero dependencies
+ * - Zero prototype pollution, zero dependencies
+ * - TypeScript-native, full config validation
  *
  * @example
  * ```yaml
@@ -44,6 +50,7 @@ import {
   buildPatchOperations,
   updateStageCache,
   flushStageCache,
+  getStageState,
 } from './stage-cache.js';
 
 class InterlaceCachingPlugin implements ServerlessPlugin {
@@ -148,6 +155,11 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
       return;
     }
 
+    // Check if caching is even defined
+    if (this.settings.cachingEnabled === undefined) {
+      return;
+    }
+
     const restApiId = await this.getRestApiId();
     if (!restApiId) {
       this.log('Unable to determine REST API ID. Skipping cache configuration.');
@@ -156,15 +168,35 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
 
     const stageName = this.provider.getStage();
 
+    // Retrieve current stage state for CloudWatch settings inheritance
+    const stageMethodSettings = await getStageState(this.provider, restApiId, stageName);
+
+    // Warn if caching is enabled but no endpoints have caching
+    const allEndpoints = [...this.settings.endpoints, ...this.settings.additionalEndpoints];
+    const endpointsWithCaching = allEndpoints.filter((e) => e.cachingEnabled);
+    if (this.settings.cachingEnabled && endpointsWithCaching.length === 0) {
+      this.log(
+        'WARNING: API Gateway caching is enabled but none of the endpoints have caching enabled.',
+      );
+    }
+
     // Build and apply patch operations
-    const ops = buildPatchOperations(this.settings);
+    const ops = buildPatchOperations(this.settings, stageMethodSettings);
     await updateStageCache(this.provider, restApiId, stageName, ops, this.log.bind(this));
 
-    this.log(
-      this.settings.cachingEnabled
-        ? `Cache enabled (${this.settings.clusterSize} GB, TTL: ${this.settings.ttlInSeconds}s)`
-        : 'Cache disabled.',
-    );
+    if (this.settings.sharedApiGateway) {
+      this.log(
+        `Shared API Gateway mode — stage-level cluster settings skipped. ` +
+        `${endpointsWithCaching.length} endpoint(s) configured.`,
+      );
+    } else {
+      this.log(
+        this.settings.cachingEnabled
+          ? `Cache enabled (${this.settings.clusterSize} GB, TTL: ${this.settings.ttlInSeconds}s, ` +
+            `${endpointsWithCaching.length} endpoint(s) cached)`
+          : 'Cache disabled.',
+      );
+    }
 
     // Flush cache after deploy if configured
     if (this.settings.cachingEnabled && this.settings.flushOnDeploy) {
@@ -284,6 +316,30 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
       return;
     }
 
+    const perKeyInvalidationSchema = {
+      type: 'object',
+      properties: {
+        requireAuthorization: { type: 'boolean' },
+        handleUnauthorizedRequests: {
+          type: 'string',
+          enum: ['Ignore', 'IgnoreWithWarning', 'Fail'],
+        },
+      },
+    };
+
+    const cacheKeyParametersSchema = {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          mappedFrom: { type: 'string' },
+          value: { type: 'string' },
+        },
+        required: ['name'],
+      },
+    };
+
     handler.defineCustomProperties({
       type: 'object',
       properties: {
@@ -298,16 +354,30 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
             ttlInSeconds: { type: 'number', minimum: 0, maximum: 3600 },
             dataEncrypted: { type: 'boolean' },
             flushOnDeploy: { type: 'boolean' },
+            sharedApiGateway: { type: 'boolean' },
             restApiId: { type: 'string' },
             basePath: { type: 'string' },
-            perKeyInvalidation: {
-              type: 'object',
-              properties: {
-                requireAuthorization: { type: 'boolean' },
-                handleUnauthorizedRequests: {
-                  type: 'string',
-                  enum: ['Ignore', 'IgnoreWithWarning', 'Fail'],
+            endpointsInheritCloudWatchSettingsFromStage: { type: 'boolean' },
+            perKeyInvalidation: perKeyInvalidationSchema,
+            additionalEndpoints: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  method: { type: 'string' },
+                  path: { type: 'string' },
+                  caching: {
+                    type: 'object',
+                    properties: {
+                      enabled: { type: 'boolean' },
+                      ttlInSeconds: { type: 'number', minimum: 0, maximum: 3600 },
+                      dataEncrypted: { type: 'boolean' },
+                      perKeyInvalidation: perKeyInvalidationSchema,
+                      cacheKeyParameters: cacheKeyParametersSchema,
+                    },
+                  },
                 },
+                required: ['method', 'path'],
               },
             },
           },
@@ -324,33 +394,16 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
             enabled: { type: 'boolean' },
             ttlInSeconds: { type: 'number', minimum: 0, maximum: 3600 },
             dataEncrypted: { type: 'boolean' },
-            perKeyInvalidation: {
-              type: 'object',
-              properties: {
-                requireAuthorization: { type: 'boolean' },
-                handleUnauthorizedRequests: {
-                  type: 'string',
-                  enum: ['Ignore', 'IgnoreWithWarning', 'Fail'],
-                },
-              },
-            },
-            cacheKeyParameters: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  value: { type: 'string' },
-                },
-                required: ['name'],
-              },
-            },
+            inheritCloudWatchSettingsFromStage: { type: 'boolean' },
+            perKeyInvalidation: perKeyInvalidationSchema,
+            cacheKeyParameters: cacheKeyParametersSchema,
           },
         },
       },
     });
   }
 }
+
 // Default export for ESM
 export default InterlaceCachingPlugin;
 
@@ -364,4 +417,5 @@ export type {
   CacheKeyParameterConfig,
   CacheClusterSize,
   PerKeyInvalidationConfig,
+  AdditionalEndpointConfig,
 } from './types.js';

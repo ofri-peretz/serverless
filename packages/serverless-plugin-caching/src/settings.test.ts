@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { ServerlessInstance } from '@interlace/serverless-devkit';
-import { resolveSettings } from './settings.js';
+import { resolveSettings, buildGatewayResourceName } from './settings.js';
 
 function createServerless(
   customConfig: Record<string, unknown> = {},
@@ -51,7 +51,9 @@ describe('resolveSettings', () => {
     expect(settings.ttlInSeconds).toBe(300);
     expect(settings.dataEncrypted).toBe(false);
     expect(settings.flushOnDeploy).toBe(false);
+    expect(settings.sharedApiGateway).toBe(false);
     expect(settings.endpoints).toHaveLength(0);
+    expect(settings.additionalEndpoints).toHaveLength(0);
   });
 
   it('parses global caching config', () => {
@@ -62,6 +64,7 @@ describe('resolveSettings', () => {
         ttlInSeconds: 600,
         dataEncrypted: true,
         flushOnDeploy: true,
+        sharedApiGateway: true,
       },
     });
 
@@ -72,6 +75,7 @@ describe('resolveSettings', () => {
     expect(settings.ttlInSeconds).toBe(600);
     expect(settings.dataEncrypted).toBe(true);
     expect(settings.flushOnDeploy).toBe(true);
+    expect(settings.sharedApiGateway).toBe(true);
   });
 
   it('extracts endpoints from function HTTP events', () => {
@@ -122,8 +126,7 @@ describe('resolveSettings', () => {
 
     const listUsersEndpoint = settings.endpoints.find((e) => e.resourcePath === '/users');
     expect(listUsersEndpoint).toBeDefined();
-    expect(listUsersEndpoint!.cachingEnabled).toBe(true); // inherits from global
-    expect(listUsersEndpoint!.ttlInSeconds).toBe(300); // inherits from global
+    expect(listUsersEndpoint!.cachingEnabled).toBe(false); // not explicitly enabled
   });
 
   it('endpoint config overrides global config', () => {
@@ -163,14 +166,46 @@ describe('resolveSettings', () => {
   });
 
   it('normalizes path with leading slash', () => {
-    const serverless = createServerless({}, {
-      noSlash: {
-        handler: 'src/handler.test',
-        events: [
+    const serverless = createServerless(
+      { interlaceCaching: { enabled: true } },
+      {
+        noSlash: {
+          handler: 'src/handler.test',
+          events: [
+            {
+              http: {
+                path: 'no-leading-slash',
+                method: 'get',
+              },
+            },
+          ],
+        },
+      },
+    );
+
+    const settings = resolveSettings(serverless);
+    expect(settings.endpoints[0].resourcePath).toBe('/no-leading-slash');
+  });
+
+  it('parses additional endpoints', () => {
+    const serverless = createServerless({
+      interlaceCaching: {
+        enabled: true,
+        additionalEndpoints: [
           {
-            http: {
-              path: 'no-leading-slash',
-              method: 'get',
+            method: 'GET',
+            path: '/serverless',
+            caching: {
+              enabled: true,
+              ttlInSeconds: 1200,
+            },
+          },
+          {
+            method: 'GET',
+            path: '/dynamodb',
+            caching: {
+              enabled: true,
+              cacheKeyParameters: [{ name: 'request.querystring.id' }],
             },
           },
         ],
@@ -178,6 +213,100 @@ describe('resolveSettings', () => {
     });
 
     const settings = resolveSettings(serverless);
-    expect(settings.endpoints[0].resourcePath).toBe('/no-leading-slash');
+    expect(settings.additionalEndpoints).toHaveLength(2);
+
+    const slsEndpoint = settings.additionalEndpoints[0];
+    expect(slsEndpoint.resourcePath).toBe('/serverless');
+    expect(slsEndpoint.httpMethod).toBe('GET');
+    expect(slsEndpoint.cachingEnabled).toBe(true);
+    expect(slsEndpoint.ttlInSeconds).toBe(1200);
+    expect(slsEndpoint.isAdditionalEndpoint).toBe(true);
+
+    const dynamoEndpoint = settings.additionalEndpoints[1];
+    expect(dynamoEndpoint.cacheKeyParameters).toHaveLength(1);
+  });
+
+  it('builds correct gateway resource names', () => {
+    const serverless = createServerless(
+      { interlaceCaching: { enabled: true } },
+      {
+        getUser: {
+          handler: 'src/handler.get',
+          events: [
+            {
+              http: {
+                path: '/users/{id}',
+                method: 'get',
+                caching: { enabled: true },
+              },
+            },
+          ],
+        },
+      },
+    );
+
+    const settings = resolveSettings(serverless);
+    expect(settings.endpoints[0].gatewayResourceName).toBe('ApiGatewayMethodUsersIdVarGet');
+  });
+
+  it('prepends basePath for shared gateways', () => {
+    const serverless = createServerless(
+      {
+        interlaceCaching: {
+          enabled: true,
+          sharedApiGateway: true,
+          basePath: '/animals',
+        },
+      },
+      {
+        getCats: {
+          handler: 'src/handler.get',
+          events: [
+            {
+              http: {
+                path: '/cats',
+                method: 'get',
+                caching: { enabled: true },
+              },
+            },
+          ],
+        },
+      },
+    );
+
+    const settings = resolveSettings(serverless);
+    expect(settings.endpoints[0].resourcePath).toBe('/animals/cats');
+  });
+});
+
+describe('buildGatewayResourceName', () => {
+  it('builds simple path', () => {
+    expect(buildGatewayResourceName('/users', 'get')).toBe('ApiGatewayMethodUsersGet');
+  });
+
+  it('builds path with param', () => {
+    expect(buildGatewayResourceName('/users/{id}', 'get')).toBe('ApiGatewayMethodUsersIdVarGet');
+  });
+
+  it('builds nested path', () => {
+    expect(buildGatewayResourceName('/cats/{city}/{shelterId}', 'get')).toBe(
+      'ApiGatewayMethodCatsCityVarShelteridVarGet',
+    );
+  });
+
+  it('handles hyphens', () => {
+    expect(buildGatewayResourceName('/my-resource', 'post')).toBe(
+      'ApiGatewayMethodMyDashresourcePost',
+    );
+  });
+
+  it('handles greedy path (+)', () => {
+    expect(buildGatewayResourceName('/cats/{proxy+}', 'get')).toBe(
+      'ApiGatewayMethodCatsProxyVarGet',
+    );
+  });
+
+  it('handles root path', () => {
+    expect(buildGatewayResourceName('/', 'get')).toBe('ApiGatewayMethodGet');
   });
 });
