@@ -397,6 +397,187 @@ export const hello = defineFunction({
 
 ---
 
+## B-Tier: `serverless-domain-manager` (Track, Don't Compete — But Type It)
+
+### Source Code Review (~500 LOC entry, ~2K LOC total)
+
+**Files analyzed**: `src/index.ts`, `src/aws/acm-wrapper.ts`, `src/aws/route53-wrapper.ts`, `src/aws/api-gateway-v1-wrapper.ts`, `src/aws/api-gateway-v2-wrapper.ts`
+
+#### Architecture (sophisticated — this is well-built)
+
+```
+ServerlessCustomDomain
+  ├── hooks: before:deploy:deploy, after:deploy:deploy, before:remove:remove,
+  │          create_domain:create, delete_domain:delete, after:info:info
+  ├── ACMWrapper (certificate lookup)
+  ├── Route53Wrapper (DNS record management — UPSERT/DELETE)
+  ├── APIGatewayV1Wrapper (REST API custom domains)
+  ├── APIGatewayV2Wrapper (HTTP API + WebSocket custom domains)
+  ├── CloudFormationWrapper (API ID resolution)
+  └── S3Wrapper (TLS truststore validation)
+```
+
+#### What It Does Well
+
+1. **Full lifecycle**: `create_domain` → `before:deploy` → `after:deploy` → `before:remove` ✅
+2. **DNS management**: Creates/updates/deletes Route53 records automatically
+3. **Multi-domain**: Supports `customDomain` (single) and `customDomains` (array)
+4. **API type aware**: REST, HTTP, WebSocket — each with correct v1/v2 API calls
+5. **Multi-level base paths**: Falls back to v2 API for paths with `/`
+6. **AutoDomain**: Polls for domain creation completion before deploy
+7. **Remove hook**: Removes base path mappings + optionally deletes domain ✅
+8. **Cross-account Route53**: `route53Profile` for separate AWS profile
+9. **CF Outputs**: Exports domain name, distribution, hosted zone ID
+
+#### What It Doesn't Do Well
+
+**🟡 Legacy AWS SDK v2 credentials fallback** — Still has a compatibility shim for SDK v2
+**🟡 `Globals` singleton** — Global mutable state for credentials, region, options
+**🟡 No dry-run** — Can't preview what DNS changes will be made
+**🟡 Error messages are verbose but not actionable** — Multi-line template strings in logs
+
+#### @interlace Strategy: Type It, Don't Replace It
+
+This is 2K LOC, well-tested, actively maintained with 30+ contributors. Replacing it would be high effort, low ROI. Instead:
+
+```typescript
+// @interlace/serverless-devkit/compat
+import { domainManagerConfig } from '@interlace/serverless-devkit/compat';
+
+export default defineConfig({
+  custom: {
+    ...domainManagerConfig({
+      domainName: 'api.example.com',
+      basePath: 'v1',
+      certificateName: '*.example.com',
+      createRoute53Record: true,
+      createRoute53IPv6Record: true,
+      endpointType: 'REGIONAL',
+      securityPolicy: 'TLS_1_2',
+      autoDomain: true,
+    }),
+  },
+});
+```
+
+The doctor CLI should detect domain-manager and offer typed config instead.
+
+---
+
+## C-Tier: `serverless-prune-plugin` (Source Reviewed — Good Plugin)
+
+### Source Code Review (~390 LOC)
+
+#### What It Does (Exactly)
+
+1. **`after:deploy:deploy`** — If `automatic: true`, prunes old Lambda versions after each deploy
+2. **`prune:prune` command** — Manual prune with `-n` (keep N versions)
+3. Handles both **functions** and **layers**
+4. Respects **aliases** — never deletes aliased versions
+5. Has **dry-run mode** and **verbose logging**
+6. Handles **Lambda@Edge** replicated functions gracefully (catches 400 errors)
+7. Proper **pagination** via `NextMarker`
+
+#### Source Code Quality
+
+**✅ Well-structured** — Clean separation of concerns, proper error handling
+**✅ Bluebird for serial processing** — Avoids Lambda API rate limits
+**✅ Pagination done right** — Recursive `NextMarker` handling
+**✅ Alias-safe** — Filters aliased versions from deletion candidates
+**🟡 Uses Bluebird** — Still uses `bluebird` instead of native Promise
+**🟡 No remove hook** — Not needed (prune is about old versions, not resources)
+
+#### @interlace Strategy: Don't compete
+
+Well-built plugin, niche purpose, no cleanup issues. Our devkit provides types only:
+
+```typescript
+import { pruneConfig } from '@interlace/serverless-devkit/compat';
+// Types for custom.prune — { automatic: boolean, number: number, includeLayers: boolean }
+```
+
+---
+
+## C-Tier: `serverless-plugin-warmup` (Source Reviewed)
+
+### Source Code Review (~275 LOC entry, ~500 LOC total)
+
+#### What It Does (Exactly)
+
+1. Creates a **separate Lambda function** that invokes your target functions with a warmup payload
+2. **Multiple named warmers** — can have different warmup groups
+3. **Schedule-based** — uses CloudWatch Events for periodic invocation
+4. **Prewarm on deploy** — optionally invokes warmer right after deploy
+5. **Cleanup** — removes `.warmup/` temp folder after packaging
+6. **Tracing-aware** — can enable X-Ray on warmer function
+
+#### Critical Findings
+
+**🟡 Creates actual Lambda functions** — Each warmer is a real deployed function (costs money)
+**🟡 Webpack/bundler compatibility workaround** — Has special `resetWarmerConfigs` hook
+**🟡 No SnapStart awareness** — SnapStart (Java) makes warmup unnecessary for some runtimes
+**🟡 No Provisioned Concurrency recommendation** — Doesn't suggest PC as an alternative
+
+#### @interlace Strategy: Subsume into observability plugin later
+
+Not a quick win. Warmup is less relevant with:
+- SnapStart (Java)
+- Provisioned Concurrency
+- v4's improved cold start handling
+
+---
+
+## C-Tier: `serverless-step-functions` (Complex — Track Only)
+
+### Source Code Review (~200+ LOC entry, 5K+ LOC total)
+
+**Verdict**: This is a massive, mature plugin maintained by `serverless-operations` (official partner). 50+ files, full ASL definition support, CloudFormation integration. **Do not compete**. If anything, our devkit can provide typed ASL state machine definitions.
+
+---
+
+## C-Tier: `serverless-plugin-split-stacks` (Infrastructure — Track Only)
+
+Splits large CloudFormation templates into nested stacks to avoid the 500-resource limit. This is infrastructure-level, not application-level. **Track, don't compete**.
+
+---
+
+## C-Tier: `serverless-plugin-canary-deployments` (Deployment — Track Only)
+
+Creates CodeDeploy applications for traffic shifting. Well-built, specific purpose. Our devkit can provide typed config.
+
+---
+
+## Updated Quick Win Tier List
+
+| Tier | Plugin We Replace | Effort | Weekly DL | @interlace Plugin |
+|---|---|---|---|---|
+| **S** | `serverless-api-gateway-caching` | 2 wks | 20K | `plugin-caching` |
+| **S** | `serverless-associate-waf` | 1 wk | 7K | `plugin-security` |
+| **A** | `serverless-plugin-common-excludes` | 3 days | ~50K | `plugin-package` |
+| **A** | `serverless-plugin-include-dependencies` | 1 wk | ~40K | `plugin-package` |
+| **B** | `serverless-esbuild` (migration guide) | docs | 500K | `devkit doctor` |
+| **B** | `serverless-webpack` (migration guide) | docs | 200K | `devkit doctor` |
+| **B** | `serverless-plugin-typescript` (migration guide) | docs | 150K | `devkit doctor` |
+| **B** | `serverless-iam-roles-per-function` (migration guide) | docs | 200K | `devkit doctor` |
+| **Type** | `serverless-domain-manager` | types | 200K | `devkit/compat` |
+| **Type** | `serverless-prune-plugin` | types | ~30K | `devkit/compat` |
+| **Type** | `serverless-step-functions` | types | ~80K | `devkit/compat` |
+| **Skip** | `serverless-offline` | — | 700K | Phase 4 |
+| **Skip** | `serverless-plugin-warmup` | — | ~20K | Later |
+| **Skip** | `serverless-plugin-split-stacks` | — | ~30K | Infra scope |
+| **Skip** | `serverless-plugin-canary-deployments` | — | ~10K | Deployment scope |
+
+### Total Addressable Market
+
+| Strategy | Plugins | Combined Weekly DL |
+|---|---|---|
+| **Replace** (build better) | 4 plugins | ~117K |
+| **Migration Guide** (help migrate to v4) | 4 plugins | ~1.05M |
+| **Type** (devkit/compat typed helpers) | 3 plugins | ~310K |
+| **Total ecosystem touch** | **11 plugins** | **~1.48M weekly DL** |
+
+---
+
 ## Migration Vision — Community Pain → @interlace Adoption
 
 ### Pain-Driven Migration Funnel
