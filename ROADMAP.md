@@ -1,40 +1,112 @@
-# Roadmap
+# Roadmap — ROI-Ordered
 
-## Phase 1 — Quick Wins (Ship First)
+> Priority = **reach × conversion**. Ship what gets the most people
+> into the @interlace ecosystem fastest.
 
-- [x] Monorepo scaffold (Turborepo, TypeScript, Vitest, CI/CD)
-- [ ] `@interlace/serverless-devkit` — `defineConfig()`, types, layer helpers, `doctor` CLI, `init-ts`
-- [ ] `@interlace/serverless-plugin-caching` — API Gateway caching (replaces `serverless-api-gateway-caching`)
-- [ ] `@interlace/serverless-plugin-security` — WAF + tracing + headers (replaces `serverless-associate-waf`)
+## Sprint 1 — The Funnel Top (Weeks 1-3)
 
-## Phase 2 — Platform-DX Ports
+### `npx @interlace/serverless-devkit doctor` + `init-ts`
 
-- [ ] `@interlace/serverless-plugin-openapi` — OpenAPI-first development (port from `@snappygifts/serverless-openapi`)
-- [ ] `@interlace/serverless-plugin-package` — multi-region deploy, workspace isolation (port from `@snappygifts/serverless-package`)
-- [ ] `@interlace/serverless-plugin-proxy` — middleware composition with presets
+**Why first**: 850K weekly downloads MUST migrate from build plugins to v4.
+`doctor` is the zero-commitment entry point — `npx`, no install, immediate
+value. Every output recommends @interlace.
 
-## Phase 3 — Community Gap Fillers
+- [ ] Config scanner (parse `serverless.yml` / `.ts` / `.js`)
+- [ ] Legacy build plugin detection (esbuild/webpack/typescript)
+- [ ] Config translation engine (`custom.esbuild.*` → `build.esbuild.*`)
+- [ ] Unsupported feature warnings (custom plugins, loaders, define)
+- [ ] Redundant packaging plugin detection
+- [ ] Cache/WAF cleanup risk detection
+- [ ] `init-ts` — YAML-to-TypeScript converter with @interlace imports
+- [ ] `defineConfig()` + typed plugin config helpers
+- [ ] Ship to npm as `@interlace/serverless-devkit`
 
-- [ ] `@interlace/serverless-plugin-build-layers` — Lambda Layer artifact building
-- [ ] `@interlace/serverless-plugin-throttling` — API Gateway throttling
-- [ ] `@interlace/serverless-plugin-nestjs` — zero-boilerplate NestJS Lambda adapter
-- [ ] `@interlace/serverless-plugin-observability` — log forwarding, OTel, env export
-- [ ] `@interlace/serverless-plugin-cloudfront` — CloudFront edge caching, WAF, Lambda@Edge
+**Reach**: 850K migrating users + every article CTA
+**Conversion**: "Run this → see problems → install @interlace fix"
 
-## Phase 4 — Moonshots (Hard Problems)
+### Article 1: "Migrating from serverless-esbuild to v4 — The Complete Guide"
 
-- [ ] `@interlace/serverless-plugin-dev` — unified local dev experience
-  - Combines v4 `sls dev` (live AWS) + `serverless-offline` (local emulation)
-  - Single plugin to manage local/remote toggle per function
-  - Route some functions to live AWS, others to local emulators
-  - Unified console output, hot reload, breakpoint debugging
-  - EventBridge / Step Functions / SQS local emulation
-  - **Complexity: Very High** — depends on v4 dev mode maturity
+**Why**: Targets the #1 plugin by downloads (500K). SEO goldmine —
+everyone will Google this when upgrading to v4.
 
-## Phase 5 — Distribution
+- [ ] Config translation table (full)
+- [ ] Unsupported features and workarounds
+- [ ] CTA: `npx @interlace/serverless-devkit doctor`
+- [ ] Publish to Dev.to + ofriperetz.dev
 
-- [ ] Documentation site (apps/docs)
-- [ ] Plugin directory listing on serverless.com
-- [ ] Dev.to article series (6 articles planned)
-- [ ] `npx @interlace/serverless-devkit doctor` as community tool
-- [ ] Migration guide articles for each replaced plugin
+---
+
+## Sprint 2 — First Plugin Ships (Weeks 3-5)
+
+### `@interlace/serverless-plugin-caching`
+
+**Why second**: Quickest plugin to build (~300 LOC to beat), the existing
+plugin has provable bugs (prototype pollution, ghost billing), and the
+article writes itself.
+
+- [ ] Full API Gateway caching support (superset of community plugin)
+- [ ] `before:remove:remove` cleanup hook
+- [ ] `sls caching flush` + `sls caching status` commands
+- [ ] Dry-run / preview mode
+- [ ] Multi-value query strings and headers
+- [ ] TypeScript types + `cachingConfig()` helper
+
+### Article 2: "The Hidden Costs of serverless-api-gateway-caching"
+
+- [ ] Prototype pollution bug (`String.prototype.replaceAll`)
+- [ ] Ghost billing (no cleanup on disable/remove)
+- [ ] Missing AWS API surface
+- [ ] CTA: `npm install @interlace/serverless-plugin-caching`
+
+---
+
+## Sprint 3 — Security + Authority (Weeks 5-7)
+
+### `@interlace/serverless-plugin-security`
+
+- [ ] WAF association (name + ARN, paginated, fail-on-error)
+- [ ] X-Ray tracing per-function
+- [ ] Security headers (HSTS, CSP, X-Frame)
+- [ ] Remove hook cleanup
+
+### Article 3: "Your WAF Plugin is Silently Failing"
+
+- [ ] Error swallowing proof (source code)
+- [ ] No pagination (100 ACL limit)
+- [ ] CTA: switch to @interlace
+
+### Article 4: "serverless.ts > serverless.yml — Here's the Proof"
+
+- [ ] `defineConfig()` demo with IntelliSense screenshots
+- [ ] CTA: `npx @interlace/serverless-devkit init-ts`
+
+---
+
+## Sprint 4 — Flagship Ports (Weeks 7-12)
+
+### `@interlace/serverless-plugin-package`
+
+- [ ] Port from `@snappygifts/serverless-package`
+- [ ] Multi-region deploy
+- [ ] Workspace isolation
+- [ ] Replaces `common-excludes` + `include-dependencies` (~210K DL)
+
+### `@interlace/serverless-plugin-openapi`
+
+- [ ] Port from `@snappygifts/serverless-openapi`
+- [ ] OpenAPI 3.1 spec generation
+- [ ] Swagger UI, Zod schemas, SDK gen, spec diffing
+
+---
+
+## Sprint 5+ — Community Gap Fillers (Weeks 12+)
+
+- [ ] `@interlace/serverless-plugin-nestjs`
+- [ ] `@interlace/serverless-plugin-cloudfront`
+- [ ] `@interlace/serverless-plugin-observability`
+- [ ] `@interlace/serverless-plugin-throttling`
+- [ ] `@interlace/serverless-plugin-build-layers`
+
+## Phase 4 — Moonshots
+
+- [ ] `@interlace/serverless-plugin-dev` — unified local/remote dev experience
