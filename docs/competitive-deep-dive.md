@@ -555,13 +555,13 @@ Creates CodeDeploy applications for traffic shifting. Well-built, specific purpo
 | **S** | `serverless-associate-waf` | 1 wk | 7K | `plugin-security` |
 | **A** | `serverless-plugin-common-excludes` | 3 days | ~50K | `plugin-package` |
 | **A** | `serverless-plugin-include-dependencies` | 1 wk | ~40K | `plugin-package` |
+| **A** | `serverless-domain-manager` | 4 wks | 200K | `plugin-domains` |
+| **A** | `serverless-prune-plugin` | 2 wks | ~30K | `plugin-prune` |
+| **A** | `serverless-step-functions` | 6 wks | ~80K | `plugin-workflows` |
 | **B** | `serverless-esbuild` (migration guide) | docs | 500K | `devkit doctor` |
 | **B** | `serverless-webpack` (migration guide) | docs | 200K | `devkit doctor` |
 | **B** | `serverless-plugin-typescript` (migration guide) | docs | 150K | `devkit doctor` |
 | **B** | `serverless-iam-roles-per-function` (migration guide) | docs | 200K | `devkit doctor` |
-| **Type** | `serverless-domain-manager` | types | 200K | `devkit/compat` |
-| **Type** | `serverless-prune-plugin` | types | ~30K | `devkit/compat` |
-| **Type** | `serverless-step-functions` | types | ~80K | `devkit/compat` |
 | **Skip** | `serverless-offline` | — | 700K | Phase 4 |
 | **Skip** | `serverless-plugin-warmup` | — | ~20K | Later |
 | **Skip** | `serverless-plugin-split-stacks` | — | ~30K | Infra scope |
@@ -571,10 +571,236 @@ Creates CodeDeploy applications for traffic shifting. Well-built, specific purpo
 
 | Strategy | Plugins | Combined Weekly DL |
 |---|---|---|
-| **Replace** (build better) | 4 plugins | ~117K |
+| **Replace** (build better) | 7 plugins | ~427K |
 | **Migration Guide** (help migrate to v4) | 4 plugins | ~1.05M |
-| **Type** (devkit/compat typed helpers) | 3 plugins | ~310K |
 | **Total ecosystem touch** | **11 plugins** | **~1.48M weekly DL** |
+
+---
+
+### What We Build Better: `@interlace/serverless-plugin-domains`
+
+Replaces `serverless-domain-manager` (200K weekly DL, 2K LOC).
+
+**Gaps in the original we exploit:**
+
+| Gap | domain-manager | @interlace/plugin-domains |
+|---|---|---|
+| SDK v2 legacy shim | 🔴 Still has fallback | ✅ SDK v3 only |
+| Global singleton state | 🔴 `Globals.*` mutable | ✅ Instance-scoped, no globals |
+| Dry-run / preview | ❌ None | ✅ `sls domains preview` — shows DNS changes without applying |
+| Error UX | 🟡 Multi-line template strings | ✅ Structured errors with fix suggestions |
+| DNS propagation check | ❌ Fire and forget | ✅ `sls domains status` — verify DNS resolution |
+| Certificate auto-request | ❌ Must pre-create ACM cert | ✅ Auto-request + DNS validation |
+| Health check integration | ❌ None | ✅ Route53 health checks for failover |
+| Multi-account | ⚠️ `route53Profile` only | ✅ Full cross-account IAM role assumption |
+| TypeScript types | ❌ None (JS config only) | ✅ `domainsConfig()` with full IntelliSense |
+| Cleanup on remove | ✅ Removes mappings | ✅ Removes mappings + shows orphan check |
+
+```yaml
+# serverless.yml — raw YAML works
+plugins:
+  - '@interlace/serverless-plugin-domains'
+
+custom:
+  interlaceDomains:
+    - domainName: api.example.com
+      basePath: v1
+      certificateName: '*.example.com'      # auto-lookup or auto-request
+      endpointType: REGIONAL
+      createRoute53Record: true
+      healthCheck:                            # ← NEW
+        enabled: true
+        path: /health
+        failureThreshold: 3
+    - domainName: ws.example.com
+      apiType: websocket
+      basePath: ''
+```
+
+```bash
+sls domains create          # Create custom domains + DNS
+sls domains delete          # Delete domains + cleanup DNS
+sls domains status          # Verify DNS propagation + cert status
+sls domains preview         # Show what DNS changes WOULD be made (dry-run)
+```
+
+---
+
+### What We Build Better: `@interlace/serverless-plugin-prune`
+
+Replaces `serverless-prune-plugin` (~30K weekly DL, 390 LOC).
+
+**Gaps in the original we exploit:**
+
+| Gap | prune-plugin | @interlace/plugin-prune |
+|---|---|---|
+| Bluebird dependency | 🟡 Uses `bluebird` | ✅ Native async/await |
+| Cost visibility | ❌ None | ✅ Shows estimated cost savings per prune |
+| Storage metrics | ❌ None | ✅ `sls prune status` — total Lambda storage used |
+| Orphan layer detection | ❌ Only prunes by version count | ✅ Detects layers not referenced by any function |
+| Retention policies | 🟡 Count-based only | ✅ Count + age-based + tag-based retention |
+| CloudFormation stack awareness | ❌ None | ✅ Never prune versions referenced by active stacks |
+| Scheduled pruning | ❌ Manual or post-deploy only | ✅ EventBridge rule for automated background pruning |
+| Progress reporting | ⚠️ Basic | ✅ Rich progress with version counts and space freed |
+| TypeScript types | ❌ None | ✅ `pruneConfig()` with full IntelliSense |
+
+```yaml
+# serverless.yml
+plugins:
+  - '@interlace/serverless-plugin-prune'
+
+custom:
+  interlacePrune:
+    automatic: true
+    keep: 3                          # keep last 3 versions
+    keepLayers: 2                    # separate layer retention
+    maxAge: 30d                      # ← NEW: also prune versions older than 30 days
+    includeLayers: true
+    protectAliased: true             # default: true
+    protectStackReferenced: true     # ← NEW: never prune versions used by CF stacks
+    scheduledPrune:                  # ← NEW
+      enabled: true
+      rate: 'rate(7 days)'
+```
+
+```bash
+sls prune -n 3                    # Prune keeping 3 versions
+sls prune --dry-run               # Preview what would be deleted
+sls prune status                  # Show storage usage, orphan layers, cost estimate
+sls prune --function myFunc       # Prune specific function
+```
+
+---
+
+### What We Build Better: `@interlace/serverless-plugin-workflows`
+
+Replaces `serverless-step-functions` (~80K weekly DL, 5K+ LOC).
+
+This is the biggest effort but the payoff is massive — the existing plugin
+is powerful but has a terrible DX. The ASL definitions are raw JSON embedded
+in YAML, with zero type safety.
+
+**Gaps in the original we exploit:**
+
+| Gap | step-functions | @interlace/plugin-workflows |
+|---|---|---|
+| ASL definition format | 🔴 Raw JSON-in-YAML | ✅ TypeScript builder API with IntelliSense |
+| Type safety | ❌ None — typos fail at deploy | ✅ Compile-time validation of state machines |
+| Local testing | ❌ None | ✅ `sls workflows test` with Step Functions Local |
+| Visualization | ❌ None | ✅ `sls workflows diagram` — generates Mermaid/SVG |
+| Intrinsic functions | 🟡 String-based | ✅ Typed helper functions (`States.format()`, `States.jsonToString()`) |
+| Error handling | 🟡 Verbose retry/catch blocks | ✅ `withRetry()`, `withCatch()` composable helpers |
+| Parallel composition | 🟡 Deeply nested YAML | ✅ `.parallel([branch1, branch2])` |
+| Map state iteration | 🟡 Hard to get right | ✅ `.map(items, processor)` with typed I/O |
+| Express vs Standard | ⚠️ Config flag | ✅ `defineExpressWorkflow()` vs `defineStandardWorkflow()` |
+| CloudFormation cleanup | ✅ Good | ✅ Same + orphan detection |
+
+```typescript
+// serverless.ts — TypeScript-native state machine definition
+import { defineConfig } from '@interlace/serverless-devkit';
+import { workflowsConfig, defineWorkflow, task, choice, parallel, wait, succeed, fail }
+  from '@interlace/serverless-plugin-workflows';
+
+const orderWorkflow = defineWorkflow('ProcessOrder', {
+  type: 'EXPRESS',
+  definition: task('ValidateOrder', { resource: '${ValidateOrderArn}' })
+    .next(
+      choice('CheckInventory')
+        .when('$.inventory > 0',
+          task('ProcessPayment', { resource: '${ProcessPaymentArn}' })
+            .withRetry({ maxAttempts: 3, interval: 2, backoffRate: 2 })
+            .next(
+              parallel('FulfillOrder', [
+                task('ShipItem', { resource: '${ShipItemArn}' }),
+                task('SendConfirmation', { resource: '${SendConfirmationArn}' }),
+              ])
+            )
+            .next(succeed('OrderComplete'))
+        )
+        .otherwise(
+          task('NotifyOutOfStock', { resource: '${NotifyArn}' })
+            .next(fail('OutOfStock', { cause: 'Item not available' }))
+        )
+    ),
+});
+
+export default defineConfig({
+  plugins: ['@interlace/serverless-plugin-workflows'],
+  custom: {
+    ...workflowsConfig({
+      stateMachines: { orderWorkflow },
+    }),
+  },
+});
+```
+
+The same workflow in raw YAML (what `serverless-step-functions` requires):
+
+```yaml
+# 60+ lines of deeply nested YAML with no type safety
+stepFunctions:
+  stateMachines:
+    processOrder:
+      type: EXPRESS
+      definition:
+        StartAt: ValidateOrder
+        States:
+          ValidateOrder:
+            Type: Task
+            Resource: ${ValidateOrderArn}
+            Next: CheckInventory
+          CheckInventory:
+            Type: Choice
+            Choices:
+              - Variable: $.inventory
+                NumericGreaterThan: 0
+                Next: ProcessPayment
+            Default: NotifyOutOfStock
+          ProcessPayment:
+            Type: Task
+            Resource: ${ProcessPaymentArn}
+            Retry:
+              - ErrorEquals: [States.ALL]
+                MaxAttempts: 3
+                IntervalSeconds: 2
+                BackoffRate: 2
+            Next: FulfillOrder
+          FulfillOrder:
+            Type: Parallel
+            Branches:
+              - StartAt: ShipItem
+                States:
+                  ShipItem:
+                    Type: Task
+                    Resource: ${ShipItemArn}
+                    End: true
+              - StartAt: SendConfirmation
+                States:
+                  SendConfirmation:
+                    Type: Task
+                    Resource: ${SendConfirmationArn}
+                    End: true
+            Next: OrderComplete
+          NotifyOutOfStock:
+            Type: Task
+            Resource: ${NotifyArn}
+            Next: OutOfStock
+          OrderComplete:
+            Type: Succeed
+          OutOfStock:
+            Type: Fail
+            Cause: Item not available
+```
+
+**Builder API advantage**: 15 lines of typed TS vs 50+ lines of untyped YAML.
+
+```bash
+sls workflows deploy          # Deploy state machines
+sls workflows test             # Run with Step Functions Local
+sls workflows diagram          # Generate visual diagram
+sls workflows list             # List deployed state machines
+sls workflows describe         # Show execution history
+```
 
 ---
 
