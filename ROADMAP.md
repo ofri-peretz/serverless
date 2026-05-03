@@ -15,8 +15,9 @@
 
 ## Phase 3 — Community Gap Fillers
 
+- [ ] `@interlace/serverless-plugin-cloudfront` — CloudFront caching, edge functions, WAF
 - [ ] `@interlace/serverless-plugin-security` — WAF, tracing, cross-account access
-- [ ] `@interlace/serverless-plugin-dependencies` — smart dependency analysis
+- [ ] `@interlace/serverless-plugin-nestjs` — zero-boilerplate NestJS Lambda adapter
 - [ ] `@interlace/serverless-plugin-observability` — log forwarding, OTel, env export
 
 ## Phase 4 — Distribution
@@ -25,3 +26,4 @@
 - [ ] Plugin directory listing on serverless.com
 - [ ] Dev.to article series on serverless DX
 - [ ] Benchmark suite for plugin performance
+- [ ] Migration guide articles for each replaced plugin
