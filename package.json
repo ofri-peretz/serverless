@@ -31,7 +31,10 @@
     "ci:lint": "eslint .",
     "ci:typecheck": "tsc --noEmit -p tsconfig.json",
     "fix": "prettier --write \"**/*.{md,yml,yaml,json,ts,mts,js,mjs}\" && eslint --fix .",
-    "release": "echo 'TODO: configure changeset or nx release'",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "turbo run build && changeset publish",
+    "changeset:status": "changeset status --verbose",
     "prepare": "lefthook install"
   },
   "keywords": [
@@ -51,6 +54,8 @@
   "author": "Ofri Peretz <ofriperetzdev@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.31.0",
     "@commitlint/cli": "^20.4.0",
     "@commitlint/config-conventional": "^20.4.0",
     "@eslint/js": "^9.39.2",
