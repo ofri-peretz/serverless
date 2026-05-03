@@ -835,11 +835,25 @@ functions:
 
 ### `@snappygifts/serverless` + `serverless-toolkit` → `@interlace/serverless-devkit`
 
-> **Core Principle**: Promote `serverless.ts` over `serverless.yml` — but support all formats.
+> **Engineering Mandate: Raw-First, Types-as-Enhancement**
+>
+> Every @interlace plugin **must** work with raw `serverless.yml` — no devkit
+> dependency, no `defineConfig()`, no TypeScript. The devkit is an *optional
+> enhancement* that unlocks IntelliSense and type safety for teams who adopt
+> `serverless.ts`. A team should be able to `npm install @interlace/serverless-plugin-openapi`,
+> add it to their YAML `plugins:` list, configure `custom:`, and deploy — period.
 
-#### The Problem with YAML
+#### Rules for Plugin Authors
 
-Most Serverless Framework projects use `serverless.yml`. This creates several pain points:
+1. **YAML examples first** — every plugin README shows `serverless.yml` as the primary example
+2. **`serverless.ts` as "Recommended"** — shown as a second example with the DX benefits called out
+3. **No devkit peer dependency** — plugins must never `import` from `@interlace/serverless-devkit`
+4. **Config helpers are optional** — `openApiConfig()` is a convenience, not a requirement
+5. **Runtime reads `serverless.service.custom.*`** — plugins access config the standard Serverless Framework way
+
+#### The Problem with YAML (why we recommend TS)
+
+Most Serverless Framework projects use `serverless.yml`. It works fine, but has DX gaps:
 
 1. **No IntelliSense** — YAML editors give no autocomplete for plugin-specific config
 2. **No type safety** — typos in property names fail silently at deploy time
