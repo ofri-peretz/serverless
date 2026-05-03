@@ -1,5 +1,5 @@
 /**
- * @interlace/serverless-plugin-caching
+ * @interlace/serverless-api-gateway-caching
  *
  * API Gateway caching plugin for Serverless Framework.
  * Replaces `serverless-api-gateway-caching` with:
@@ -19,7 +19,7 @@
  * ```yaml
  * # serverless.yml
  * plugins:
- *   - '@interlace/serverless-plugin-caching'
+ *   - '@interlace/serverless-api-gateway-caching'
  *
  * custom:
  *   interlaceCaching:
@@ -342,7 +342,7 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
       this.log('');
       this.log('You can now safely remove the plugin from your serverless.yml:');
       this.log('');
-      this.log('  1. Remove "@interlace/serverless-plugin-caching" from plugins');
+      this.log('  1. Remove "@interlace/serverless-api-gateway-caching" from plugins');
       this.log('  2. Remove the "interlaceCaching" section from custom');
       this.log('  3. Remove "caching" from function http events');
       this.log('  4. Run "sls deploy" to apply');

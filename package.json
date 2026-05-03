@@ -28,6 +28,7 @@
     "typecheck": "turbo run typecheck",
     "dev": "turbo run dev",
     "ci:format": "prettier --check \"**/*.{md,yml,yaml,json,ts,mts,js,mjs}\"",
+    "ci:oxlint": "oxlint -c .oxlintrc.json --deny=correctness --deny=suspicious --deny=perf --allow=no-await-in-loop --allow=no-shadow --allow=no-underscore-dangle --allow=unicorn/no-array-sort .",
     "ci:lint": "eslint .",
     "ci:typecheck": "tsc --noEmit -p tsconfig.json",
     "fix": "prettier --write \"**/*.{md,yml,yaml,json,ts,mts,js,mjs}\" && eslint --fix .",
@@ -55,6 +56,7 @@
   "license": "MIT",
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
+    "oxlint": "^1.2.0",
     "@changesets/cli": "^2.31.0",
     "@commitlint/cli": "^20.4.0",
     "@commitlint/config-conventional": "^20.4.0",

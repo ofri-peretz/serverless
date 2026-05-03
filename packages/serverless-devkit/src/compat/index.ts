@@ -7,7 +7,7 @@
  */
 
 // ---------------------------------------------------------------------------
-// @interlace/serverless-plugin-caching (replaces serverless-api-gateway-caching)
+// @interlace/serverless-api-gateway-caching (replaces serverless-api-gateway-caching)
 // ---------------------------------------------------------------------------
 
 export interface CachingPerKeyInvalidation {

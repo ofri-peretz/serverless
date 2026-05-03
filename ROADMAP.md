@@ -38,7 +38,7 @@ everyone will Google this when upgrading to v4.
 
 ## Sprint 2 — First Plugin Ships (Weeks 3-5)
 
-### `@interlace/serverless-plugin-caching`
+### `@interlace/serverless-api-gateway-caching`
 
 **Why second**: Quickest plugin to build (~300 LOC to beat), the existing
 plugin has provable bugs (prototype pollution, ghost billing), and the
@@ -56,7 +56,7 @@ article writes itself.
 - [ ] Prototype pollution bug (`String.prototype.replaceAll`)
 - [ ] Ghost billing (no cleanup on disable/remove)
 - [ ] Missing AWS API surface
-- [ ] CTA: `npm install @interlace/serverless-plugin-caching`
+- [ ] CTA: `npm install @interlace/serverless-api-gateway-caching`
 
 ---
 

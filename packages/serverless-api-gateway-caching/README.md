@@ -1,4 +1,4 @@
-# @interlace/serverless-plugin-caching
+# @interlace/serverless-api-gateway-caching
 
 > API Gateway caching for Serverless Framework — done right.
 
@@ -27,7 +27,7 @@ A TypeScript-native replacement for [`serverless-api-gateway-caching`](https://g
 ## Install
 
 ```bash
-npm install @interlace/serverless-plugin-caching
+npm install @interlace/serverless-api-gateway-caching
 ```
 
 ## Quick Start
@@ -35,7 +35,7 @@ npm install @interlace/serverless-plugin-caching
 ```yaml
 # serverless.yml
 plugins:
-  - '@interlace/serverless-plugin-caching'
+  - '@interlace/serverless-api-gateway-caching'
 
 custom:
   interlaceCaching:
@@ -257,7 +257,7 @@ sls caching disable --stage dev
 sls caching disable --stage prod    # repeat for each stage
 
 # Step 2: Edit serverless.yml
-#   - Remove '@interlace/serverless-plugin-caching' from plugins
+#   - Remove '@interlace/serverless-api-gateway-caching' from plugins
 #   - Remove 'interlaceCaching' from custom
 #   - Remove 'caching' from function http events
 
@@ -266,7 +266,7 @@ sls deploy --stage dev
 sls deploy --stage prod
 
 # Step 4: Uninstall
-npm uninstall @interlace/serverless-plugin-caching
+npm uninstall @interlace/serverless-api-gateway-caching
 ```
 
 ### Why is this necessary?
@@ -288,7 +288,7 @@ The `sls caching disable` command solves this by calling `UpdateStage` to set `c
 
 ```bash
 npm uninstall serverless-api-gateway-caching
-npm install @interlace/serverless-plugin-caching
+npm install @interlace/serverless-api-gateway-caching
 ```
 
 ### Step 2: Update serverless.yml
@@ -296,7 +296,7 @@ npm install @interlace/serverless-plugin-caching
 ```diff
 plugins:
 -  - serverless-api-gateway-caching
-+  - '@interlace/serverless-plugin-caching'
++  - '@interlace/serverless-api-gateway-caching'
 
 custom:
 -  apiGatewayCaching:

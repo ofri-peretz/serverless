@@ -1,5 +1,5 @@
 /**
- * @interlace/serverless-plugin-caching — Settings parser
+ * @interlace/serverless-api-gateway-caching — Settings parser
  *
  * Reads `custom.interlaceCaching` and per-function `caching` event config,
  * merging them into fully-resolved settings.

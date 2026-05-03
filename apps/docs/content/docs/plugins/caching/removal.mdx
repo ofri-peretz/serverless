@@ -34,7 +34,7 @@ Remove the plugin, the config, and all endpoint caching:
 
 ```diff
 plugins:
--  - '@interlace/serverless-plugin-caching'
+-  - '@interlace/serverless-api-gateway-caching'
 
 custom:
 -  interlaceCaching:
@@ -65,7 +65,7 @@ sls deploy --stage prod
 ### Step 4: Uninstall the package
 
 ```bash
-npm uninstall @interlace/serverless-plugin-caching
+npm uninstall @interlace/serverless-api-gateway-caching
 ```
 
 ## What about `sls remove`?

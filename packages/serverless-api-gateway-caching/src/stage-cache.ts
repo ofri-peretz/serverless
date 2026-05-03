@@ -1,5 +1,5 @@
 /**
- * @interlace/serverless-plugin-caching — Stage cache operations
+ * @interlace/serverless-api-gateway-caching — Stage cache operations
  *
  * Handles post-deploy API Gateway stage updates:
  * - Enable/disable cache cluster

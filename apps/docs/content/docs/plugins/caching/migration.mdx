@@ -1,13 +1,13 @@
 ---
 title: Migration Guide
-description: Migrate from serverless-api-gateway-caching to @interlace/serverless-plugin-caching.
+description: Migrate from serverless-api-gateway-caching to @interlace/serverless-api-gateway-caching.
 ---
 
 ## Step 1: Swap the package
 
 ```bash
 npm uninstall serverless-api-gateway-caching
-npm install @interlace/serverless-plugin-caching
+npm install @interlace/serverless-api-gateway-caching
 ```
 
 ## Step 2: Update serverless.yml
@@ -15,7 +15,7 @@ npm install @interlace/serverless-plugin-caching
 ```diff
 plugins:
 -  - serverless-api-gateway-caching
-+  - '@interlace/serverless-plugin-caching'
++  - '@interlace/serverless-api-gateway-caching'
 
 custom:
 -  apiGatewayCaching:

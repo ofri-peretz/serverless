@@ -68,7 +68,7 @@ export default function HomePage() {
 
         {/* Install snippet with subtle glow */}
         <div className="relative mt-8 overflow-hidden rounded-lg border border-fd-border bg-fd-card px-6 py-3 font-mono text-sm text-fd-muted-foreground">
-          npm install @interlace/serverless-plugin-caching
+          npm install @interlace/serverless-api-gateway-caching
           <BorderBeam
             size={80}
             duration={8}
@@ -131,7 +131,7 @@ export default function HomePage() {
 
           <div className="grid gap-6 md:grid-cols-2">
             <PackageCard
-              name="@interlace/serverless-plugin-caching"
+              name="@interlace/serverless-api-gateway-caching"
               description="API Gateway caching done right. Replaces serverless-api-gateway-caching with proper cleanup, CLI commands, and TypeScript config validation."
               href="/docs/plugins/caching"
               tags={['REST API', 'Cache Cluster', 'Cleanup', 'CLI']}

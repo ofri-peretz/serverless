@@ -102,7 +102,7 @@ describe('defineConfig', () => {
           ],
         },
       },
-      plugins: ['@interlace/serverless-plugin-caching'],
+      plugins: ['@interlace/serverless-api-gateway-caching'],
       custom: {
         interlaceCaching: {
           enabled: true,

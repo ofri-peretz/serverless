@@ -1,5 +1,5 @@
 {
-  "name": "@interlace/serverless-plugin-caching",
+  "name": "@interlace/serverless-api-gateway-caching",
   "version": "0.1.0",
   "description": "API Gateway caching plugin for Serverless Framework — cache clusters, flush commands, cleanup hooks, and full AWS API coverage",
   "type": "module",
@@ -34,11 +34,11 @@
   ],
   "author": "Ofri Peretz <ofriperetzdev@gmail.com>",
   "license": "MIT",
-  "homepage": "https://github.com/ofri-peretz/serverless/tree/main/packages/serverless-plugin-caching",
+  "homepage": "https://github.com/ofri-peretz/serverless/tree/main/packages/serverless-api-gateway-caching",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ofri-peretz/serverless.git",
-    "directory": "packages/serverless-plugin-caching"
+    "directory": "packages/serverless-api-gateway-caching"
   },
   "bugs": {
     "url": "https://github.com/ofri-peretz/serverless/issues"

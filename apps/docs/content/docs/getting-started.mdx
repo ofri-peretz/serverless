@@ -6,7 +6,7 @@ description: Install and configure @interlace serverless plugins in under 2 minu
 ## Install
 
 ```bash
-npm install @interlace/serverless-plugin-caching @interlace/serverless-devkit
+npm install @interlace/serverless-api-gateway-caching @interlace/serverless-devkit
 ```
 
 ## Quick Start
@@ -15,7 +15,7 @@ Add the plugin to your `serverless.yml`:
 
 ```yaml
 plugins:
-  - '@interlace/serverless-plugin-caching'
+  - '@interlace/serverless-api-gateway-caching'
 
 custom:
   interlaceCaching:
@@ -49,7 +49,7 @@ export default defineConfig({
     runtime: 'nodejs20.x',
     region: 'us-east-1',
   },
-  plugins: ['@interlace/serverless-plugin-caching'],
+  plugins: ['@interlace/serverless-api-gateway-caching'],
   custom: {
     interlaceCaching: {
       enabled: true,

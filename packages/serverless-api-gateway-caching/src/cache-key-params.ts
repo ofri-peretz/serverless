@@ -1,5 +1,5 @@
 /**
- * @interlace/serverless-plugin-caching — Cache key parameters
+ * @interlace/serverless-api-gateway-caching — Cache key parameters
  *
  * Mutates the CloudFormation template to add:
  * - RequestParameters (method-level)

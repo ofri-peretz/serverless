@@ -1,5 +1,5 @@
 /**
- * @interlace/serverless-plugin-caching — REST API ID resolution
+ * @interlace/serverless-api-gateway-caching — REST API ID resolution
  *
  * Resolves the API Gateway REST API ID from the CloudFormation stack
  * or from explicit configuration.
@@ -47,7 +47,7 @@ export function addRestApiIdOutput(
   }
 
   compiledTemplate.Outputs[REST_API_OUTPUT_KEY] = {
-    Description: 'REST API ID for @interlace/serverless-plugin-caching',
+    Description: 'REST API ID for @interlace/serverless-api-gateway-caching',
     Value: { Ref: 'ApiGatewayRestApi' },
   };
 }

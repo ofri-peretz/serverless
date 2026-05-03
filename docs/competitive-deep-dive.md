@@ -116,7 +116,7 @@ const delay = baseDelay * 2 ** attempt; // No jitter = thundering herd
 6. `ANY` method handling is confusing
 7. No HTTP API support (AWS limitation but users keep asking)
 
-#### @interlace/serverless-plugin-caching — Spec
+#### @interlace/serverless-api-gateway-caching — Spec
 
 We should call this `plugin-caching` (not `plugin-cloudfront`) since API Gateway caching is the immediate replacement. CloudFront is a separate, bigger scope.
 
@@ -125,7 +125,7 @@ We should call this `plugin-caching` (not `plugin-cloudfront`) since API Gateway
 ```yaml
 # serverless.yml
 plugins:
-  - '@interlace/serverless-plugin-caching'
+  - '@interlace/serverless-api-gateway-caching'
 
 custom:
   interlaceCaching:
@@ -846,7 +846,7 @@ sls workflows describe         # Show execution history
 │  Migration guide in @interlace README               │
 ├─────────────────────────────────────────────────────┤
 │  ADOPTION                                           │
-│  npm install @interlace/serverless-plugin-caching   │
+│  npm install @interlace/serverless-api-gateway-caching   │
 │  2-minute YAML config change                        │
 │  Immediate benefits: cleanup hooks, flush command,  │
 │  dry-run, TypeScript types                          │
@@ -871,7 +871,7 @@ sls workflows describe         # Show execution history
 
 | Week | Ship | Captures |
 |---|---|---|
-| 1-2 | `@interlace/serverless-plugin-caching` | 20K weekly DL |
+| 1-2 | `@interlace/serverless-api-gateway-caching` | 20K weekly DL |
 | 2-3 | `@interlace/serverless-plugin-security` | 7K weekly DL |
 | 3-4 | Migration guide articles (Dev.to) | Awareness |
 | 4-6 | `@interlace/serverless-plugin-package` (port from platform-dx) | 210K weekly DL |
@@ -1008,10 +1008,10 @@ Scanning serverless.yml...
 │ Issue: No remove hook — cache cluster may continue billing  │
 │        after stack deletion.                                │
 │                                                             │
-│ Fix: Switch to @interlace/serverless-plugin-caching         │
+│ Fix: Switch to @interlace/serverless-api-gateway-caching         │
 │      (includes cleanup hooks + flush command)               │
 │                                                             │
-│ Run: npm install @interlace/serverless-plugin-caching       │
+│ Run: npm install @interlace/serverless-api-gateway-caching       │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -1061,7 +1061,7 @@ Converting serverless.yml → serverless.ts...
 ✅ Generated serverless.ts (127 lines)
 ✅ Installed @interlace/serverless-devkit as devDependency
 ✅ Detected plugins:
-   - @interlace/serverless-plugin-caching → imported cachingConfig()
+   - @interlace/serverless-api-gateway-caching → imported cachingConfig()
    - @interlace/serverless-plugin-package → imported packageConfig()
 ✅ Removed serverless.yml (backed up to serverless.yml.bak)
 

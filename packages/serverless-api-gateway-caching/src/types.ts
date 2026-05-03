@@ -1,5 +1,5 @@
 /**
- * @interlace/serverless-plugin-caching — Types
+ * @interlace/serverless-api-gateway-caching — Types
  *
  * All configuration and internal types for the caching plugin.
  */

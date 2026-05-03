@@ -15,8 +15,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ──────────────────────────────────────────────────────────────────────
+  # Fast gate — oxlint (~200ms) + format check
+  # Fails fast before expensive Node matrix starts
+  # ──────────────────────────────────────────────────────────────────────
+  fast-gate:
+    name: Fast Gate (oxlint + format)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: ⚡ oxlint (fast pass)
+        run: npm run ci:oxlint
+
+      - name: 📐 Prettier format check
+        run: npm run ci:format
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Deep gate — ESLint + TypeScript + tests + build
+  # Runs in parallel per Node version, waits for fast-gate
+  # ──────────────────────────────────────────────────────────────────────
   ci:
     name: CI (Node ${{ matrix.node-version }})
+    needs: fast-gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -75,17 +106,17 @@ jobs:
             turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
             turbo-${{ runner.os }}-
 
-      - name: 🧪 Test
-        if: steps.docs_only.outputs.docs_only != 'true'
-        run: npx turbo run test --output-logs errors-only
-
       - name: 🔨 Build
         if: steps.docs_only.outputs.docs_only != 'true'
         run: npx turbo run build --output-logs errors-only
 
-      - name: 🔍 Lint
+      - name: 🧪 Test
         if: steps.docs_only.outputs.docs_only != 'true'
-        run: npx turbo run lint --output-logs errors-only
+        run: npx turbo run test --output-logs errors-only
+
+      - name: 🔍 ESLint (deep pass)
+        if: steps.docs_only.outputs.docs_only != 'true'
+        run: npm run ci:lint
 
       - name: 🔍 Typecheck
         if: steps.docs_only.outputs.docs_only != 'true'
