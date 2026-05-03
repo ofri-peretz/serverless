@@ -1,25 +1,34 @@
 {
   "name": "@interlace/serverless-api-gateway-caching",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "API Gateway caching plugin for Serverless Framework — cache clusters, flush commands, cleanup hooks, and full AWS API coverage",
   "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "vite build",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "e2e": "npm run build && tsx scripts/e2e/run.ts"
   },
   "keywords": [
     "serverless",
@@ -47,7 +56,7 @@
     "serverless": ">=3.0.0"
   },
   "devDependencies": {
-    "@interlace/serverless-devkit": "*"
+    "tsx": "^4.20.0"
   },
   "publishConfig": {
     "access": "public"

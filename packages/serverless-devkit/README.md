@@ -64,28 +64,34 @@ const functions = defineFunctions({
 
 ## Compatibility Helpers
 
-Typed shims for legacy community plugins — use these until you migrate to `@interlace` native plugins:
+Typed shims for legacy community plugins — useful while migrating to `@interlace` native plugins. Each helper returns a `custom.*` fragment ready to spread into `defineConfig`:
 
 ```typescript
-import { compat } from '@interlace/serverless-devkit';
+import { defineConfig } from '@interlace/serverless-devkit';
+import {
+  cachingConfig,
+  domainManagerConfig,
+  pruneConfig,
+} from '@interlace/serverless-devkit/compat';
 
 export default defineConfig({
   custom: {
-    // Typed config for serverless-api-gateway-caching
-    ...compat.apiGatewayCaching({
+    // Typed config for @interlace/serverless-api-gateway-caching
+    // (also a drop-in upgrade from serverless-api-gateway-caching)
+    ...cachingConfig({
       enabled: true,
       clusterSize: '0.5',
       ttlInSeconds: 300,
     }),
 
     // Typed config for serverless-domain-manager
-    ...compat.domainManager({
+    ...domainManagerConfig({
       domainName: 'api.example.com',
       basePath: '',
     }),
 
     // Typed config for serverless-prune-plugin
-    ...compat.prune({
+    ...pruneConfig({
       automatic: true,
       number: 3,
     }),

@@ -12,7 +12,18 @@ export interface PerKeyInvalidationConfig {
 
 /** Cache key parameter — reference to a request property */
 export interface CacheKeyParameterConfig {
-  /** Parameter name (e.g., 'request.path.id', 'request.querystring.page', 'request.header.Accept') */
+  /**
+   * Parameter name. Supported prefixes:
+   * - `request.path.<name>`
+   * - `request.querystring.<name>`
+   * - `request.header.<name>`
+   *
+   * Legacy shorthand (auto-prefixed): `path.<name>`, `querystring.<name>`, `header.<name>`.
+   *
+   * Multi-value sources (`multivaluequerystring`, `multivalueheader`) are NOT
+   * supported by AWS API Gateway as cache key parameter declarations — AWS
+   * rejects them as "Invalid mapping expression".
+   */
   name: string;
   /**
    * Override the mapped value for integration request parameters.

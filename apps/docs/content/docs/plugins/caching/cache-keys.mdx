@@ -102,5 +102,6 @@ Cache entries:
 
 ## Limitations
 
-- Multi-value query strings and multi-value headers are **not supported** by API Gateway caching
+- Multi-value query strings (`request.multivaluequerystring.*`) and multi-value headers (`request.multivalueheader.*`) are **not supported** as cache key parameters. This is an AWS API Gateway limitation, not a plugin choice — AWS rejects these as `Invalid mapping expression`. The same limitation applies to the community `serverless-api-gateway-caching` plugin.
 - Body-based cache keys require an integration request mapping (handled automatically by the plugin)
+- `httpApi` (HTTP API) events are not supported — API Gateway HTTP APIs do not support caching ([AWS docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html))

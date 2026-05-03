@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-05-03T23:32:06.555Z",
+  "status": "passed",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "steps": [],
+  "awsObservations": {
+    "deployDurationSec": 130,
+    "cacheClusterCreateSec": 245,
+    "cacheClusterCreateStatusHistory": [
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 1
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 18
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 34
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 50
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 67
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 83
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 100
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 116
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 132
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 148
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 164
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 180
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 196
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 213
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 229
+      },
+      {
+        "status": "AVAILABLE",
+        "elapsedSec": 245
+      }
+    ]
+  },
+  "region": "us-east-1",
+  "serviceName": "interlace-cache-e2e-qeo2ui",
+  "pluginVersion": "0.0.0",
+  "awsIdentity": "arn:aws:iam::346133547796:user/interlace-cli",
+  "endpoint": "https://nsld6a9hie.execute-api.us-east-1.amazonaws.com/e2e/hello",
+  "endedAt": "2026-05-03T23:41:03.310Z",
+  "notable": {
+    "totalElapsedSec": 542,
+    "cacheMissResponseTimeMs": 807,
+    "cacheHitResponseTimeMs": 146,
+    "cacheHitLatencyImprovement": "5.5x faster (807 → 146ms)",
+    "cacheHitConfirmedAtAttempt": 9,
+    "cacheHitConfirmedSecPostMiss": 45,
+    "flushPropagationSec": 35,
+    "removeDurationSec": 28,
+    "totalAwsCostUsdEstimate": 0.05
+  },
+  "verifies": [
+    "Cache MISS on first request, HIT within TTL",
+    "sls caching status reports cluster state",
+    "sls caching flush invalidates the cache",
+    "sls caching disable is the safe-offboarding command",
+    "Cleanup on removal — cache cluster disabled before stack deletion",
+    "No more ghost billing from orphaned resources",
+    "Safe offboarding — sls caching disable tears down AWS resources"
+  ]
+}

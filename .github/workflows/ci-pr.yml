@@ -4,10 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - "docs/**"
-      - "*.md"
-      - "!README.md"
-      - ".github/ISSUE_TEMPLATE/**"
+      - 'docs/**'
+      - '*.md'
+      - '!README.md'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
 
 concurrency:
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: "npm"
+          cache: 'npm'
 
       - run: npm ci
 
@@ -90,7 +90,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: 📦 Install dependencies
         if: steps.docs_only.outputs.docs_only != 'true'

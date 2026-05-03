@@ -1,4 +1,4 @@
-import { source } from '@/lib/source';
+import { source } from '#interlace/lib/source';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { baseOptions } from '@/lib/layout.shared';
 import { Shield, Wrench, BookOpen } from 'lucide-react';

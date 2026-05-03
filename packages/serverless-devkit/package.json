@@ -1,29 +1,37 @@
 {
   "name": "@interlace/serverless-devkit",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "TypeScript-first configuration toolkit for Serverless Framework — defineConfig, types, and plugin helpers",
   "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./compat": {
+      "types": "./dist/compat/index.d.ts",
       "import": "./dist/compat/index.js",
-      "require": "./dist/compat/index.cjs",
-      "types": "./dist/compat/index.d.ts"
+      "require": "./dist/compat/index.cjs"
     },
     "./functions": {
+      "types": "./dist/functions.d.ts",
       "import": "./dist/functions.js",
-      "require": "./dist/functions.cjs",
-      "types": "./dist/functions.d.ts"
+      "require": "./dist/functions.cjs"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "vite build",
     "test": "vitest run",

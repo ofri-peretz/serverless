@@ -18,7 +18,7 @@ Output:
 [interlace-caching]   Enabled:  true
 [interlace-caching]   Size:     0.5 GB
 [interlace-caching]   Status:   AVAILABLE
-[interlace-caching]   Stage:    dev
+[interlace-caching]   Stage:    development
 [interlace-caching]   API ID:   abc123xyz
 ```
 
@@ -28,7 +28,7 @@ Flush all cached responses for a stage:
 
 ```bash
 sls caching flush
-sls caching flush --stage prod --region us-west-2
+sls caching flush --stage production --region us-west-2
 ```
 
 Use `flushOnDeploy: true` in your config to flush automatically after every deploy:
@@ -40,19 +40,51 @@ custom:
     flushOnDeploy: true
 ```
 
+## `sls caching preview`
+
+**Dry-run.** Print every patch operation a `sls deploy` would apply, without calling AWS write APIs (`updateStage` / `flushStageCache`). Read-only AWS calls (`getStage`, REST API ID resolution) still happen.
+
+```bash
+sls caching preview
+sls caching preview --stage production
+```
+
+Output:
+
+```
+[interlace-caching] --- Cache Preview (dry-run) ---
+[interlace-caching]   REST API:    abc123def4
+[interlace-caching]   Stage:       production
+[interlace-caching]   Cluster:     enabled
+[interlace-caching]   Size:        0.5 GB
+[interlace-caching]   Default TTL: 300s
+[interlace-caching]   Operations:  6 (would chunk into 1 UpdateStage call(s))
+[interlace-caching]
+[interlace-caching]   replace /*/*/caching/enabled  →  false
+[interlace-caching]   replace /cacheClusterEnabled  →  true
+[interlace-caching]   replace /cacheClusterSize     →  0.5
+[interlace-caching]   replace /~1users~1{id}/GET/caching/enabled       →  true
+[interlace-caching]   replace /~1users~1{id}/GET/caching/ttlInSeconds  →  600
+[interlace-caching]   replace /~1users~1{id}/GET/caching/dataEncrypted →  true
+[interlace-caching]
+[interlace-caching] No AWS write APIs were called. Run `sls deploy` to apply.
+```
+
+Use this in CI gates, code review, or before applying breaking config changes in production.
+
 ## `sls caching disable`
 
 **Fully disable the cache cluster on AWS.** This is the safe offboarding command — run it before removing the plugin from `serverless.yml`:
 
 ```bash
 sls caching disable
-sls caching disable --stage prod
+sls caching disable --stage production
 ```
 
 Output:
 
 ```
-[interlace-caching] Disabling cache cluster for stage 'prod'...
+[interlace-caching] Disabling cache cluster for stage 'production'...
 [interlace-caching] ✅ Cache cluster disabled successfully.
 [interlace-caching]
 [interlace-caching] You can now safely remove the plugin from your serverless.yml:

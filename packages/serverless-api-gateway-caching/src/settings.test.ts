@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { ServerlessInstance } from '@interlace/serverless-devkit';
+import type { ServerlessInstance } from './framework.js';
 import { resolveSettings, buildGatewayResourceName } from './settings.js';
 
 function createServerless(
@@ -14,7 +14,7 @@ function createServerless(
       custom: customConfig,
       provider: {
         name: 'aws',
-        stage: 'dev',
+        stage: 'development',
         region: 'us-east-1',
         compiledCloudFormationTemplate: {
           Resources: {},
@@ -29,7 +29,7 @@ function createServerless(
     },
     providers: {
       aws: {
-        getStage: () => 'dev',
+        getStage: () => 'development',
         getRegion: () => 'us-east-1',
         getCredentials: () => ({}),
         request: vi.fn(),
@@ -48,7 +48,7 @@ describe('resolveSettings', () => {
 
     expect(settings.cachingEnabled).toBe(false);
     expect(settings.clusterSize).toBe('0.5');
-    expect(settings.ttlInSeconds).toBe(300);
+    expect(settings.ttlInSeconds).toBe(3600);
     expect(settings.dataEncrypted).toBe(false);
     expect(settings.flushOnDeploy).toBe(false);
     expect(settings.sharedApiGateway).toBe(false);
@@ -116,7 +116,9 @@ describe('resolveSettings', () => {
 
     expect(settings.endpoints).toHaveLength(2);
 
-    const getUserEndpoint = settings.endpoints.find((e) => e.resourcePath === '/users/{id}');
+    const getUserEndpoint = settings.endpoints.find(
+      (e) => e.resourcePath === '/users/{id}',
+    );
     expect(getUserEndpoint).toBeDefined();
     expect(getUserEndpoint!.httpMethod).toBe('GET');
     expect(getUserEndpoint!.cachingEnabled).toBe(true);
@@ -124,7 +126,9 @@ describe('resolveSettings', () => {
     expect(getUserEndpoint!.cacheKeyParameters).toHaveLength(1);
     expect(getUserEndpoint!.cacheKeyParameters[0].name).toBe('request.path.id');
 
-    const listUsersEndpoint = settings.endpoints.find((e) => e.resourcePath === '/users');
+    const listUsersEndpoint = settings.endpoints.find(
+      (e) => e.resourcePath === '/users',
+    );
     expect(listUsersEndpoint).toBeDefined();
     expect(listUsersEndpoint!.cachingEnabled).toBe(false); // not explicitly enabled
   });
@@ -163,6 +167,57 @@ describe('resolveSettings', () => {
 
     expect(endpoint.ttlInSeconds).toBe(60); // overridden
     expect(endpoint.dataEncrypted).toBe(true); // overridden
+  });
+
+  it('parses string-form HTTP events ("GET /path") for parity with the community plugin', () => {
+    const serverless = createServerless(
+      { interlaceCaching: { enabled: true, ttlInSeconds: 600 } },
+      {
+        getUser: {
+          handler: 'src/handler.get',
+          events: [{ http: 'GET /users/{id}' }],
+        },
+        listUsers: {
+          handler: 'src/handler.list',
+          events: [{ http: 'get /users' }],
+        },
+      },
+    );
+
+    const settings = resolveSettings(serverless);
+
+    expect(settings.endpoints).toHaveLength(2);
+
+    const getUser = settings.endpoints.find(
+      (e) => e.resourcePath === '/users/{id}',
+    );
+    expect(getUser).toBeDefined();
+    expect(getUser!.httpMethod).toBe('GET');
+    // String-form events can't carry per-endpoint caching config, so cachingEnabled
+    // is false (the global flag still produces stage-level patches, but the method
+    // itself is not enabled until the user switches to object form).
+    expect(getUser!.cachingEnabled).toBe(false);
+
+    const listUsers = settings.endpoints.find(
+      (e) => e.resourcePath === '/users',
+    );
+    expect(listUsers).toBeDefined();
+    expect(listUsers!.httpMethod).toBe('GET');
+  });
+
+  it('skips malformed string-form HTTP events', () => {
+    const serverless = createServerless(
+      { interlaceCaching: { enabled: true } },
+      {
+        broken: {
+          handler: 'src/handler.broken',
+          events: [{ http: 'just-one-token' }],
+        },
+      },
+    );
+
+    const settings = resolveSettings(serverless);
+    expect(settings.endpoints).toHaveLength(0);
   });
 
   it('normalizes path with leading slash', () => {
@@ -246,7 +301,9 @@ describe('resolveSettings', () => {
     );
 
     const settings = resolveSettings(serverless);
-    expect(settings.endpoints[0].gatewayResourceName).toBe('ApiGatewayMethodUsersIdVarGet');
+    expect(settings.endpoints[0].gatewayResourceName).toBe(
+      'ApiGatewayMethodUsersIdVarGet',
+    );
   });
 
   it('prepends basePath for shared gateways', () => {
@@ -281,11 +338,15 @@ describe('resolveSettings', () => {
 
 describe('buildGatewayResourceName', () => {
   it('builds simple path', () => {
-    expect(buildGatewayResourceName('/users', 'get')).toBe('ApiGatewayMethodUsersGet');
+    expect(buildGatewayResourceName('/users', 'get')).toBe(
+      'ApiGatewayMethodUsersGet',
+    );
   });
 
   it('builds path with param', () => {
-    expect(buildGatewayResourceName('/users/{id}', 'get')).toBe('ApiGatewayMethodUsersIdVarGet');
+    expect(buildGatewayResourceName('/users/{id}', 'get')).toBe(
+      'ApiGatewayMethodUsersIdVarGet',
+    );
   });
 
   it('builds nested path', () => {

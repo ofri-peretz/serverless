@@ -1,0 +1,85 @@
+---
+title: Competitive Landscape
+description: Reproducible benchmark comparing @interlace/serverless plugins to community alternatives.
+---
+
+Every product claim in this docs site is backed by a reproducible benchmark. This page is the truth source.
+
+For the methodology behind these numbers — what we measure, why these dimensions, how we score — see [How We Measure](../concepts/how-we-measure).
+
+## API Gateway Caching
+
+Last verified **2026-05-03**. Re-run from `serverless/packages/benchmarks/`:
+
+```bash
+npm run bench:caching
+```
+
+Result file: [`packages/benchmarks/results/api-gateway-caching/latest.json`](https://github.com/ofri-peretz/serverless/blob/main/packages/benchmarks/results/api-gateway-caching/latest.json).
+
+| Rank | Plugin | Version | Direct deps | Size (KB) | Days since publish | Releases (12mo) | Ships types | Composite |
+|---:|---|---|---:|---:|---:|---:|:---:|---:|
+| 1 | **`@interlace/serverless-api-gateway-caching`** | 0.0.0 (pre-publish, local source) | 0 | 77 | 0 | — | ✓ | **75.0%** |
+| 2 | `serverless-api-gateway-caching` (community) | 1.11.0 | 2 | 47 | 379 | 0 | ✗ | 25.0% |
+
+### Why the gap
+
+- **Maintenance Signal (15% weight):** community plugin's last publish is 379 days ago, with 0 releases in the last 12 months. Score: 0.0. Active maintenance is a hard requirement for production infrastructure plugins.
+- **TypeScript Coverage (15% weight):** community plugin ships no `.d.ts`. Misconfigurations are caught only at deploy time, not edit time. Score: 0.0 vs Interlace's 1.0.
+- **Bundle Weight (10% weight):** Interlace is heavier (77 KB vs 47 KB) — we ship `.d.ts` declarations and additional CLI commands. We **lose** this dimension by ~16%, but the composite still wins by 50 percentage points.
+
+### What's not yet measured
+
+Three dimensions (totaling 50% of the rubric) require local source from the competitor checked out alongside ours:
+
+- **Lifecycle Correctness (25%)** — does `sls remove` clean up cache clusters? Backs the "no ghost billing" claim.
+- **Hook Coverage (10%)** — number of Serverless Framework hooks listened to.
+- **CLI Surface (15%)** — number of `sls <plugin> <cmd>` subcommands.
+
+These will be filled in by the [`cleanup-correctness` suite](https://github.com/ofri-peretz/agents/blob/main/interlace/serverless/evidence-plan.md), which deploys a real cache cluster, runs `sls remove`, and asserts no orphaned resources for 10 minutes.
+
+Until then, those dimensions are reported as `null` in the result JSON and excluded from the composite (so the score is over the 4 measurable dimensions, not 7). The gap is expected to **widen** when the missing dimensions land — we have cleanup hooks, the community plugin doesn't.
+
+## Live release verification (E2E)
+
+Beyond the static benchmark above, the plugin ships an **11-step end-to-end test** that's run against real AWS before every release. This is what backs the cleanup-correctness and CLI-behavior claims today, ahead of the competitive benchmark covering them statically.
+
+```bash
+cd packages/serverless-api-gateway-caching
+npm run e2e
+```
+
+What it verifies:
+
+1. Pre-flight (AWS creds, dist/ built, region set)
+2. Stage fixture into a temp dir, link plugin via `npm pack`
+3. `sls deploy` — provisions real cache cluster + Lambda + API Gateway
+4. **Cache MISS test** — first request returns a fresh `generatedAt` timestamp
+5. **Cache HIT test** — second request within TTL returns IDENTICAL body (Lambda was not re-invoked → served from cache)
+6. `sls caching status` — asserts cluster is enabled
+7. `sls caching flush` — invalidates the entire stage cache
+8. **Post-flush MISS** — next request has a NEW `generatedAt` (flush worked)
+9. `sls caching disable` — disables cluster (safe-offboarding command)
+10. `sls remove` — full teardown
+11. **Verify clean** — CloudFormation reports stack absent or `DELETE_COMPLETE` (the "no ghost billing" assertion)
+
+Cost: ~$0.05–$0.10 per run (cache cluster × 5–10 min). Always cleans up via `try/finally` — even on failure, an emergency `sls remove` runs so AWS isn't left billing for orphans.
+
+Source: [`scripts/e2e/run.ts`](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-api-gateway-caching/scripts/e2e/run.ts). Full prereqs and troubleshooting in the [E2E README](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-api-gateway-caching/scripts/e2e/README.md).
+
+## Honest losses
+
+When Interlace loses on a dimension, the table shows it. We don't tune dimensions to win; we tune them to be informative.
+
+- **Bundle weight:** community plugin wins (47 vs 77 KB). The gap is ~30 KB of `.d.ts` files + extra commands. Acceptable trade — typed configs save users hours of debug time per misconfig.
+- **Weekly downloads:** community plugin has 38,462 dl/wk; Interlace is pre-publish (0 dl/wk). This is a popularity signal, not a quality one — it does NOT enter the composite score. As Interlace publishes and adoption grows, this number will move; the rubric won't change to inflate it.
+
+## Re-run policy
+
+Per the [Interlace Evidence Framework](https://github.com/ofri-peretz/agents/blob/main/interlace/evidence-framework.md), this benchmark is re-run:
+
+- **Quarterly** to refresh competitor versions (catches new releases that might shift scores)
+- **On every PR** that touches `@interlace/serverless-api-gateway-caching` source (catches regressions)
+- **Manually** before any major release
+
+Each re-run produces a dated JSON file in `packages/benchmarks/results/api-gateway-caching/`. Trends are visible via `git log` on that directory.

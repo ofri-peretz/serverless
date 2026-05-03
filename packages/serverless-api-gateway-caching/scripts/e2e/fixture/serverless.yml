@@ -1,0 +1,48 @@
+# Minimal fixture for the @interlace/serverless-api-gateway-caching E2E test.
+#
+# DO NOT EDIT manually outside the E2E test context — the orchestrator
+# (scripts/e2e/run.ts) expects this exact shape and substitutes a few
+# values at runtime (service name suffix, region, plugin path).
+#
+# This fixture is deployed to your AWS account, exercised, and removed.
+# Cost: ~$0.10/run (cache cluster 0.5 GB × 5-10 minutes).
+
+service: interlace-cache-e2e
+
+frameworkVersion: '>=3.0.0'
+
+plugins:
+  - '@interlace/serverless-api-gateway-caching'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: e2e
+  # Speed up deploy/remove — no point retaining empty CloudWatch log groups
+  logRetentionInDays: 1
+  apiGateway:
+    metrics: false
+
+custom:
+  interlaceCaching:
+    enabled: true
+    clusterSize: '0.5'
+    ttlInSeconds: 60
+    flushOnDeploy: false
+    perKeyInvalidation:
+      requireAuthorization: false
+      handleUnauthorizedRequests: 'Ignore'
+
+functions:
+  hello:
+    handler: handler.hello
+    timeout: 6
+    memorySize: 256
+    events:
+      - http:
+          path: /hello
+          method: get
+          caching:
+            enabled: true
+            ttlInSeconds: 60

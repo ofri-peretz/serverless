@@ -19,7 +19,15 @@ export interface CachingConfig {
   /** Enable or disable the cache cluster. Default: false */
   enabled?: boolean;
   /** Cache cluster size in GB. */
-  clusterSize?: '0.5' | '1.6' | '6.1' | '13.5' | '28.4' | '58.2' | '118' | '237';
+  clusterSize?:
+    | '0.5'
+    | '1.6'
+    | '6.1'
+    | '13.5'
+    | '28.4'
+    | '58.2'
+    | '118'
+    | '237';
   /** Default TTL in seconds (0-3600). Default: 300 */
   ttlInSeconds?: number;
   /** Encrypt cached data at rest. Default: false */
@@ -42,7 +50,9 @@ export interface CachingConfig {
  * });
  * ```
  */
-export function cachingConfig(config: CachingConfig): { interlaceCaching: CachingConfig } {
+export function cachingConfig(config: CachingConfig): {
+  interlaceCaching: CachingConfig;
+} {
   return { interlaceCaching: config };
 }
 
@@ -77,9 +87,9 @@ export interface DomainManagerConfig {
 /**
  * Generate typed `custom.customDomain` configuration for serverless-domain-manager.
  */
-export function domainManagerConfig(
-  config: DomainManagerConfig,
-): { customDomain: DomainManagerConfig } {
+export function domainManagerConfig(config: DomainManagerConfig): {
+  customDomain: DomainManagerConfig;
+} {
   return { customDomain: config };
 }
 

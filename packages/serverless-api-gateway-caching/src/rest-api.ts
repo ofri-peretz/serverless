@@ -5,7 +5,7 @@
  * or from explicit configuration.
  */
 
-import type { AwsProvider } from '@interlace/serverless-devkit';
+import type { AwsProvider } from './framework.js';
 
 const REST_API_OUTPUT_KEY = 'InterlaceCachingRestApiId';
 
@@ -29,7 +29,11 @@ export async function resolveRestApiId(
   if (providerRestApiId) return providerRestApiId;
 
   // 3. Stack resource
-  const resourceId = await findStackResource(provider, stackName, 'ApiGatewayRestApi');
+  const resourceId = await findStackResource(
+    provider,
+    stackName,
+    'ApiGatewayRestApi',
+  );
   if (resourceId) return resourceId;
 
   // 4. Stack output (split-stacks compatibility)
@@ -39,9 +43,9 @@ export async function resolveRestApiId(
 /**
  * Add the REST API ID to CloudFormation outputs for split-stack compatibility.
  */
-export function addRestApiIdOutput(
-  compiledTemplate: { Outputs?: Record<string, unknown> },
-): void {
+export function addRestApiIdOutput(compiledTemplate: {
+  Outputs?: Record<string, unknown>;
+}): void {
   if (!compiledTemplate.Outputs) {
     compiledTemplate.Outputs = {};
   }
@@ -55,9 +59,9 @@ export function addRestApiIdOutput(
 /**
  * Check if a REST API exists in the CloudFormation template.
  */
-export function restApiExistsInTemplate(
-  compiledTemplate: { Resources: Record<string, { Type: string }> },
-): boolean {
+export function restApiExistsInTemplate(compiledTemplate: {
+  Resources: Record<string, { Type: string }>;
+}): boolean {
   return Object.values(compiledTemplate.Resources).some(
     (resource) => resource.Type === 'AWS::ApiGateway::RestApi',
   );
@@ -73,9 +77,13 @@ async function findStackResource(
   logicalId: string,
 ): Promise<string | undefined> {
   try {
-    const response = await provider.request('CloudFormation', 'listStackResources', {
-      StackName: stackName,
-    });
+    const response = await provider.request(
+      'CloudFormation',
+      'listStackResources',
+      {
+        StackName: stackName,
+      },
+    );
     const summaries = (response.StackResourceSummaries ?? []) as Array<{
       LogicalResourceId: string;
       PhysicalResourceId: string;
@@ -93,9 +101,13 @@ async function findStackOutput(
   outputKey: string,
 ): Promise<string | undefined> {
   try {
-    const response = await provider.request('CloudFormation', 'describeStacks', {
-      StackName: stackName,
-    });
+    const response = await provider.request(
+      'CloudFormation',
+      'describeStacks',
+      {
+        StackName: stackName,
+      },
+    );
     const stacks = (response.Stacks ?? []) as Array<{
       Outputs?: Array<{ OutputKey: string; OutputValue: string }>;
     }>;

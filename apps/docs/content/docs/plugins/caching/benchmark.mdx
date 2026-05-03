@@ -1,0 +1,60 @@
+---
+title: Benchmark
+description: Reproducible competitive benchmark — @interlace/serverless-api-gateway-caching vs the community plugin, scored on TypeScript coverage, maintenance, bundle weight, and more.
+---
+
+How do you decide between two open-source plugins that solve the same problem? You read the README, scan the issue tracker, maybe check the last commit date — and then you guess. We don't think guessing is good enough.
+
+This page reports the **head-to-head static benchmark** between `@interlace/serverless-api-gateway-caching` and the community alternative it forks from. Every measurement is reproducible from public data; every weight is documented; the dated JSON is committed to the repo. Run it yourself in 30 seconds and verify.
+
+## Latest results — 2026-05-03
+
+| Rank | Plugin | Version | Deps | Size (KB) | Releases/yr | Days Since Publish | TypeScript | Composite |
+|---|---|---|---|---|---|---|---|---|
+| 1 | **`@interlace/serverless-api-gateway-caching`** | 0.0.0 (pre-publish) | 0 | 77 | — | 0 | ✓ | **75.0%** |
+| 2 | `serverless-api-gateway-caching` | 1.11.0 | 2 | 47 | 0 | 379 | ✗ | 25.0% |
+
+### Why the gap
+
+- **Maintenance.** The community plugin's last publish is over a year old, with 0 releases in the last 12 months. The original maintainer has moved on.
+- **TypeScript.** The community plugin ships no `.d.ts` files. You can't get IntelliSense for config keys, lifecycle hooks, or return types. Misconfigurations surface at deploy time, not in your editor.
+- **Zero dependencies.** We've audited every transitive dep out. The community plugin pulls in 2 direct deps (transitively more); ours pulls in 0.
+- **Bundle weight.** We're heavier (77KB vs 47KB). That cost buys typed declarations, additional CLI commands, and AWS API coverage we ship that the community plugin doesn't.
+
+Three of seven dimensions (lifecycle correctness, CLI surface, hook coverage) are not yet measured — they require source-level analysis of the community plugin. We expect those to widen the gap further.
+
+## Methodology
+
+Seven weighted dimensions:
+
+| Dimension | Weight | What it measures |
+|---|---|---|
+| Lifecycle Correctness | 25% | Does `sls remove` clean up the cache cluster? |
+| CLI Surface | 15% | Working `sls caching <cmd>` subcommand count |
+| TypeScript Coverage | 15% | Ships `.d.ts`? Validates config schema? |
+| Maintenance Signal | 15% | Days since last publish on npm |
+| Bundle Weight | 10% | Unpacked tarball KB + direct dep count |
+| Hook Coverage | 10% | Serverless Framework lifecycle hooks listened to |
+| Documentation Quality | 10% | Has Installation, Usage, TypeScript, Lifecycle sections |
+
+Weights live in [`benchmarks/lib/score.ts`](https://github.com/ofri-peretz/serverless/blob/main/benchmarks/lib/score.ts). Per-run JSON outputs are written to [`benchmarks/benchmark-results/api-gateway-caching/`](https://github.com/ofri-peretz/serverless/tree/main/benchmarks/benchmark-results/api-gateway-caching) (one dated file per run, plus a `latest.json` symlink).
+
+## Run it yourself
+
+```bash
+git clone https://github.com/ofri-peretz/serverless.git
+npm install --prefix serverless
+npm --prefix serverless run bench:caching
+```
+
+No AWS credentials. No flaky network tests. Pure static metrics — npm registry data, tarball inspection, local source grep. Output goes to a dated JSON file you can diff against ours.
+
+## What we don't measure (yet)
+
+Static metrics only. Runtime behavior — actual deployment correctness, cache hit-rate measurement, cold-start impact — needs an AWS account and a longer-running test harness. That's a future benchmark.
+
+We also don't measure community signals like GitHub stars or issue counts directly in the composite. Those metrics conflate "popular" with "good," and we'd rather report on technical dimensions that an engineer can verify in a PR review.
+
+## Honesty notes
+
+We lose on bundle size — 77KB vs 47KB. The community plugin is leaner because it ships fewer features: no `.d.ts`, no CLI subcommands, no jittered backoff, no cleanup-on-removal. If size is your primary constraint, the community plugin wins on that dimension. The composite still favors us because TypeScript coverage and maintenance carry more weight in our scoring model — but the per-dimension breakdown is published so you can apply your own weights.

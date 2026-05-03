@@ -1,42 +1,110 @@
-# Codecov Configuration for ofri-peretz/serverless monorepo
+# Codecov configuration for ofri-peretz/serverless monorepo
 # https://docs.codecov.com/docs/codecov-yaml
+#
+# DX standard: every published package owns a Codecov component with a 90%
+# project floor and a 90% patch floor. Coverage below the floor blocks merge
+# (status: error). The local vitest configs enforce the same thresholds so
+# regressions fail at `npm test` before they reach CI.
 
 coverage:
   precision: 2
   round: down
-  range: '70...100'
+  range: '85...100'
+
   status:
+    # Whole-project coverage: don't drop below 90%, don't ratchet down.
     project:
       default:
-        target: auto
-        threshold: 5%
+        target: 90%
+        threshold: 1%
+        if_ci_failed: error
+    # Patch coverage: any new code must be ≥ 90% covered.
     patch:
       default:
-        target: auto
-        threshold: 5%
+        target: 90%
+        threshold: 1%
+        if_ci_failed: error
 
 comment:
-  layout: 'header, diff, flags, components'
+  layout: 'header, diff, flags, components, footer'
   behavior: default
   require_changes: false
+  show_carryforward_flags: true
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# COMPONENT MANAGEMENT FOR MONOREPO
+# FLAGS — one per package; lets us see per-package coverage independently
 # ═══════════════════════════════════════════════════════════════════════════════
-# Each @interlace/serverless-plugin-* gets its own component.
-# Components are added as plugins are created.
+
+flag_management:
+  default_rules:
+    carryforward: true
+    statuses:
+      - type: project
+        target: 90%
+        threshold: 1%
+      - type: patch
+        target: 90%
+        threshold: 1%
+
+  individual_flags:
+    - name: serverless-api-gateway-caching
+      paths:
+        - packages/serverless-api-gateway-caching/src/
+      carryforward: true
+      statuses:
+        - type: project
+          target: 90%
+          threshold: 1%
+
+    - name: serverless-devkit
+      paths:
+        - packages/serverless-devkit/src/
+      carryforward: true
+      statuses:
+        - type: project
+          target: 100%
+          threshold: 0%
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPONENTS — group files for monorepo navigation in the Codecov UI
+# ═══════════════════════════════════════════════════════════════════════════════
 
 component_management:
   default_rules:
     statuses:
       - type: project
-        target: auto
+        target: 90%
+        threshold: 1%
         branches:
           - '!main'
 
+  individual_components:
+    - component_id: serverless-api-gateway-caching
+      name: '@interlace/serverless-api-gateway-caching'
+      paths:
+        - packages/serverless-api-gateway-caching/src/**
+      statuses:
+        - type: project
+          target: 90%
+          threshold: 1%
+
+    - component_id: serverless-devkit
+      name: '@interlace/serverless-devkit'
+      paths:
+        - packages/serverless-devkit/src/**
+      statuses:
+        - type: project
+          target: 100%
+          threshold: 0%
+
 # ═══════════════════════════════════════════════════════════════════════════════
-# IGNORE PATHS
+# IGNORE — paths excluded from coverage reporting entirely
 # ═══════════════════════════════════════════════════════════════════════════════
+#
+# Important: do NOT exclude `packages/*/src/index.ts`. The plugin entry file
+# contains lifecycle hooks, command handlers, and validation schema — all
+# real code that must be covered. (An earlier draft of this file excluded it,
+# masking 27% coverage on the most important file in the package.)
 
 ignore:
   - '**/*.test.ts'
@@ -44,10 +112,12 @@ ignore:
   - '**/node_modules/**'
   - '**/dist/**'
   - '**/.turbo/**'
-  - '**/types/**'
   - '**/coverage/**'
   - '**/test-results/**'
   - '**/*.config.ts'
   - '**/*.config.mts'
-  # Plugin entry points (configuration code, not tested)
-  - 'packages/*/src/index.ts'
+  - '**/*.config.mjs'
+  # Out-of-source upstream clones used as type/source reference, not our code
+  - 'oos/**'
+  # Per-package framework-types shims (inlined, no logic)
+  - 'packages/*/src/framework.ts'

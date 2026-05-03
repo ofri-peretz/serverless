@@ -10,8 +10,12 @@
  * Supports path, querystring, header, and body-based cache keys.
  */
 
-import type { ServerlessInstance } from '@interlace/serverless-devkit';
-import type { ResolvedCachingSettings, EndpointSettings, CacheKeyParameterConfig } from './types.js';
+import type { ServerlessInstance } from './framework.js';
+import type {
+  ResolvedCachingSettings,
+  EndpointSettings,
+  CacheKeyParameterConfig,
+} from './types.js';
 
 /**
  * Add cache key parameter configuration to the CloudFormation template.
@@ -20,7 +24,8 @@ export function addCacheKeyParametersToTemplate(
   serverless: ServerlessInstance,
   settings: ResolvedCachingSettings,
 ): void {
-  const resources = serverless.service.provider.compiledCloudFormationTemplate.Resources;
+  const resources =
+    serverless.service.provider.compiledCloudFormationTemplate.Resources;
 
   // Process function endpoints
   for (const endpoint of settings.endpoints) {
@@ -44,7 +49,10 @@ export function addCacheKeyParametersToTemplate(
 // ---------------------------------------------------------------------------
 
 function applyToResource(
-  resources: Record<string, { Type: string; Properties?: Record<string, unknown> }>,
+  resources: Record<
+    string,
+    { Type: string; Properties?: Record<string, unknown> }
+  >,
   endpoint: EndpointSettings,
   serverless: ServerlessInstance,
 ): void {
@@ -53,7 +61,7 @@ function applyToResource(
   if (!methodResource || methodResource.Type !== 'AWS::ApiGateway::Method') {
     serverless.cli.log(
       `[interlace-caching] Warning: Could not find CF resource '${endpoint.gatewayResourceName}' ` +
-      `for ${endpoint.httpMethod} ${endpoint.resourcePath}. Cache key parameters will not be applied.`,
+        `for ${endpoint.httpMethod} ${endpoint.resourcePath}. Cache key parameters will not be applied.`,
     );
     return;
   }
@@ -73,8 +81,14 @@ function applyToResource(
     props.RequestParameters = {};
   }
 
-  const methodRequestParams = props.RequestParameters as Record<string, boolean>;
-  const integrationRequestParams = integration.RequestParameters as Record<string, string>;
+  const methodRequestParams = props.RequestParameters as Record<
+    string,
+    boolean
+  >;
+  const integrationRequestParams = integration.RequestParameters as Record<
+    string,
+    string
+  >;
   const cacheKeyParams = integration.CacheKeyParameters as string[];
 
   for (const param of endpoint.cacheKeyParameters) {
@@ -158,9 +172,18 @@ function applyMappedParam(
   integrationRequestParams: Record<string, string>,
   cacheKeyParams: string[],
 ): void {
-  const mappedFrom = param.mappedFrom!;
+  // Caller (`applyToResource`) only invokes this branch when `param.mappedFrom`
+  // is defined, so a runtime fallback isn't strictly required — but use a
+  // narrowing guard rather than a non-null assertion to satisfy strict lint
+  // and avoid silent breakage if a caller pathway changes.
+  const mappedFrom = param.mappedFrom;
+  if (!mappedFrom) return;
 
-  // Add method.request.* params to RequestParameters (not body — body doesn't go here)
+  // Only register `method.request.*` keys for the locations AWS API Gateway accepts
+  // in `RequestParameters` maps: `path`, `querystring`, `header`.
+  // Multi-value sources (`multivaluequerystring`, `multivalueheader`) are NOT valid
+  // here — AWS rejects them as "Invalid mapping expression". They're accessible only
+  // from VTL mapping templates, not as cache key parameter declarations.
   if (
     mappedFrom.includes('method.request.querystring') ||
     mappedFrom.includes('method.request.header') ||
@@ -174,20 +197,29 @@ function applyMappedParam(
   cacheKeyParams.push(param.name);
 }
 
+const LEGACY_PREFIXES = ['path.', 'querystring.', 'header.'];
+
 /**
  * Normalize parameter names to the API Gateway format.
  *
- * Accepted inputs:
- * - `request.path.id` → `request.path.id`
- * - `request.querystring.page` → `request.querystring.page`
- * - `request.header.Accept` → `request.header.Accept`
- * - `path.id` → `request.path.id` (legacy shorthand)
+ * Accepted inputs (canonical):
+ * - `request.path.<name>`
+ * - `request.querystring.<name>`
+ * - `request.header.<name>`
+ *
+ * Legacy shorthand (auto-prefixed with `request.`):
+ * - `path.<name>`, `querystring.<name>`, `header.<name>`
+ *
+ * **Multi-value query strings and headers are NOT supported** as cache key
+ * parameters — this is an AWS API Gateway limitation, not a plugin choice.
+ * AWS rejects `method.request.multivaluequerystring.<name>` and
+ * `method.request.multivalueheader.<name>` with "Invalid mapping expression".
+ * The community `serverless-api-gateway-caching` plugin notes the same limitation.
  */
 function normalizeParameterName(name: string): string {
   if (name.startsWith('request.')) return name;
 
-  // Legacy format support
-  if (name.startsWith('path.') || name.startsWith('querystring.') || name.startsWith('header.')) {
+  if (LEGACY_PREFIXES.some((prefix) => name.startsWith(prefix))) {
     return `request.${name}`;
   }
 

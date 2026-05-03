@@ -1,4 +1,4 @@
-import { source } from '@/lib/source';
+import { source } from '#interlace/lib/source';
 import {
   DocsPage,
   DocsBody,
@@ -6,7 +6,7 @@ import {
   DocsTitle,
 } from 'fumadocs-ui/layouts/docs/page';
 import { notFound } from 'next/navigation';
-import defaultMdxComponents from 'fumadocs-ui/mdx';
+import { getDefaultMDXComponents } from '#interlace/lib/mdx-components';
 import type { Metadata } from 'next';
 
 interface PageProps {
@@ -25,7 +25,7 @@ export default async function Page(props: PageProps) {
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <MDX components={{ ...defaultMdxComponents }} />
+        <MDX components={getDefaultMDXComponents()} />
       </DocsBody>
     </DocsPage>
   );

@@ -1,8 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { buildPatchOperations } from './stage-cache.js';
-import type { ResolvedCachingSettings, EndpointSettings, StageMethodSettings } from './types.js';
+import type {
+  ResolvedCachingSettings,
+  EndpointSettings,
+  StageMethodSettings,
+} from './types.js';
 
-function createEndpoint(overrides: Partial<EndpointSettings> = {}): EndpointSettings {
+function createEndpoint(
+  overrides: Partial<EndpointSettings> = {},
+): EndpointSettings {
   return {
     resourcePath: '/test',
     httpMethod: 'GET',
@@ -44,7 +50,10 @@ function createSettings(
 
 describe('buildPatchOperations', () => {
   it('generates global cache cluster operations when enabled', () => {
-    const settings = createSettings({ cachingEnabled: true, clusterSize: '1.6' });
+    const settings = createSettings({
+      cachingEnabled: true,
+      clusterSize: '1.6',
+    });
     const ops = buildPatchOperations(settings);
 
     expect(ops).toContainEqual({
@@ -148,7 +157,11 @@ describe('buildPatchOperations', () => {
     const settings = createSettings({
       endpoints: [
         createEndpoint({ resourcePath: '/users', httpMethod: 'GET' }),
-        createEndpoint({ resourcePath: '/users/{id}', httpMethod: 'GET', ttlInSeconds: 600 }),
+        createEndpoint({
+          resourcePath: '/users/{id}',
+          httpMethod: 'GET',
+          ttlInSeconds: 600,
+        }),
       ],
     });
 
@@ -201,12 +214,18 @@ describe('buildPatchOperations', () => {
     const ops = buildPatchOperations(settings);
 
     // Should NOT include stage-level operations
-    expect(ops.find((op) => op.path === '/cacheClusterEnabled')).toBeUndefined();
+    expect(
+      ops.find((op) => op.path === '/cacheClusterEnabled'),
+    ).toBeUndefined();
     expect(ops.find((op) => op.path === '/cacheClusterSize')).toBeUndefined();
-    expect(ops.find((op) => op.path === '/*/*/caching/enabled')).toBeUndefined();
+    expect(
+      ops.find((op) => op.path === '/*/*/caching/enabled'),
+    ).toBeUndefined();
 
     // Should still include per-endpoint operations
-    expect(ops.find((op) => op.path.includes('/caching/enabled'))).toBeDefined();
+    expect(
+      ops.find((op) => op.path.includes('/caching/enabled')),
+    ).toBeDefined();
   });
 
   it('handles ANY method — enables GET only', () => {
@@ -226,8 +245,17 @@ describe('buildPatchOperations', () => {
     expect(getOp?.value).toBe('true');
 
     // Other methods should be explicitly disabled
-    for (const method of ['DELETE', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT']) {
-      const methodOp = ops.find((op) => op.path.includes(`/${method}/caching/enabled`));
+    for (const method of [
+      'DELETE',
+      'HEAD',
+      'OPTIONS',
+      'PATCH',
+      'POST',
+      'PUT',
+    ]) {
+      const methodOp = ops.find((op) =>
+        op.path.includes(`/${method}/caching/enabled`),
+      );
       expect(methodOp?.value).toBe('false');
     }
   });
@@ -281,7 +309,9 @@ describe('buildPatchOperations', () => {
     });
 
     const ops = buildPatchOperations(settings);
-    const additionalOps = ops.filter((op) => op.path.includes('~1serverless/GET'));
+    const additionalOps = ops.filter((op) =>
+      op.path.includes('~1serverless/GET'),
+    );
     expect(additionalOps.length).toBeGreaterThan(0);
   });
 });

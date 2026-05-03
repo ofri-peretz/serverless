@@ -1,26 +1,22 @@
 ---
 title: Roadmap
-description: Upcoming @interlace serverless plugins and features.
+description: Status of every @interlace serverless plugin — shipped, planned, or under research.
 ---
 
-## Active Development
+Every plugin in the ecosystem under one table — what's shipping, what's next, and the npm download volume of the community alternatives we plan to replace.
 
-### @interlace/serverless-api-gateway-caching `v0.1.0` ✅
+## Plugin status
 
-API Gateway caching with proper cleanup, CLI commands, and TypeScript support.
+| Plugin | Replaces | Weekly Downloads | Version | Status |
+|---|---|---|---|---|
+| `@interlace/serverless-api-gateway-caching` | `serverless-api-gateway-caching` | ~20K | `v0.1.0` | ✅ Shipped — API Gateway caching with proper cleanup, CLI commands, jittered retries, full TypeScript |
+| `@interlace/serverless-devkit` | — | — | `v0.1.0` | ✅ Shipped — `defineConfig()`, `defineFunction()`, plugin-development types |
+| `@interlace/serverless-plugin-warmup` | `serverless-plugin-warmup` | ~150K | — | 🟡 Planned |
+| `@interlace/serverless-plugin-prune` | `serverless-prune-plugin` | ~200K | — | 🟡 Planned |
+| `@interlace/serverless-plugin-canary` | `serverless-plugin-canary-deployments` | ~30K | — | 🟡 Planned |
+| `@interlace/serverless-plugin-split-stacks` | `serverless-plugin-split-stacks` | ~50K | — | 🔬 Research |
 
-### @interlace/serverless-devkit `v0.1.0` ✅
-
-TypeScript configuration toolkit with `defineConfig()`, `defineFunction()`, and plugin development interfaces.
-
-## Planned Plugins
-
-| Plugin | Replaces | Weekly Downloads | Status |
-|---|---|---|---|
-| `@interlace/serverless-plugin-warmup` | `serverless-plugin-warmup` | ~150K | Planned |
-| `@interlace/serverless-plugin-prune` | `serverless-prune-plugin` | ~200K | Planned |
-| `@interlace/serverless-plugin-canary` | `serverless-plugin-canary-deployments` | ~30K | Planned |
-| `@interlace/serverless-plugin-split-stacks` | `serverless-plugin-split-stacks` | ~50K | Research |
+Status legend: ✅ Shipped · 🟡 Planned · 🔬 Research · ⏳ In progress
 
 ## Design Principles
 
@@ -30,5 +26,5 @@ Every `@interlace` plugin follows these non-negotiable standards:
 2. **TypeScript-native** — full IntelliSense, JSON schema validation
 3. **Cleanup hooks** — `before:remove:remove` prevents resource leaks
 4. **CLI commands** — manage resources without the AWS console
-5. **Fail-to-Test** — no release without comprehensive test coverage
+5. **Fail-to-Test** — no release without comprehensive test coverage (≥ 90% lines / 100% functions)
 6. **Jittered retries** — no thundering herd on concurrent deploys

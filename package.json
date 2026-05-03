@@ -1,13 +1,14 @@
 {
-  "name": "serverless",
-  "version": "1.0.0",
+  "name": "@interlace/serverless-monorepo",
+  "version": "0.0.0",
   "description": "Open-source Serverless Framework plugins — security, performance, and developer experience in a Turborepo monorepo",
   "private": true,
   "type": "module",
   "workspaces": [
     "apps/*",
     "packages/*",
-    "tools/*"
+    "tools/*",
+    "benchmarks"
   ],
   "engines": {
     "node": "24.x"
@@ -27,6 +28,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "dev": "turbo run dev",
+    "bench": "turbo run bench",
+    "bench:caching": "npm run bench:caching --workspace=@interlace/serverless-benchmarks",
     "ci:format": "prettier --check \"**/*.{md,yml,yaml,json,ts,mts,js,mjs}\"",
     "ci:oxlint": "oxlint -c .oxlintrc.json --deny=correctness --deny=suspicious --deny=perf --allow=no-await-in-loop --allow=no-shadow --allow=no-underscore-dangle --allow=unicorn/no-array-sort .",
     "ci:lint": "eslint .",

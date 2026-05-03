@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-05-03T23:12:03.675Z",
+  "status": "failed-with-emergency-cleanup",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "steps": [
+    {
+      "id": -1,
+      "label": "failure",
+      "startedAt": "2026-05-03T23:18:11.712Z",
+      "status": "fail",
+      "error": "Cache never hit after 13 attempts over 65s. First generatedAt=1777850224597, last=1777850266034 (103ms)."
+    }
+  ],
+  "awsObservations": {
+    "deployDurationSec": 112,
+    "cacheClusterCreateSec": 178,
+    "cacheClusterCreateStatusHistory": [
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 1
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 17
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 33
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 49
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 65
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 81
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 98
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 114
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 129
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 146
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 162
+      },
+      {
+        "status": "AVAILABLE",
+        "elapsedSec": 178
+      }
+    ]
+  },
+  "region": "us-east-1",
+  "serviceName": "interlace-cache-e2e-qdy3mj",
+  "pluginVersion": "0.0.0",
+  "awsIdentity": "arn:aws:iam::346133547796:user/interlace-cli",
+  "endpoint": "https://nmlnwgtxf2.execute-api.us-east-1.amazonaws.com/e2e/hello",
+  "failedAtStep": -1,
+  "endedAt": "2026-05-03T23:18:39.847Z"
+}

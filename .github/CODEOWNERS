@@ -1,1 +1,47 @@
+# Code Owners
+# Defines code ownership for the @interlace/serverless monorepo.
+# Used by GitHub for PR auto-review-request and AI/LLM discoverability.
+
+# Global owners
 * @ofri-peretz
+
+# Published packages
+/packages/serverless-api-gateway-caching/ @ofri-peretz
+/packages/serverless-devkit/ @ofri-peretz
+
+# Documentation site
+/apps/docs/ @ofri-peretz
+
+# Engineering reference docs (competitive deep-dive, ghost-billing repro, etc.)
+/docs/ @ofri-peretz
+
+# Benchmarks suite + result history
+/benchmarks/ @ofri-peretz
+
+# GitHub configuration (workflows, issue templates, dependabot, etc.)
+/.github/ @ofri-peretz
+/.github/workflows/ @ofri-peretz
+
+# Release plumbing
+/.changeset/ @ofri-peretz
+/codecov.yml @ofri-peretz
+
+# Repo-level configuration
+/turbo.json @ofri-peretz
+/package.json @ofri-peretz
+/tsconfig.base.json @ofri-peretz
+/eslint.config.mjs @ofri-peretz
+/lefthook.yml @ofri-peretz
+/commitlint.config.mjs @ofri-peretz
+
+# License & legal
+LICENSE @ofri-peretz
+
+# Top-level docs the entire ecosystem references
+README.md @ofri-peretz
+CONTRIBUTING.md @ofri-peretz
+SECURITY.md @ofri-peretz
+CODE_OF_CONDUCT.md @ofri-peretz
+ROADMAP.md @ofri-peretz
+ARCHITECTURE.md @ofri-peretz
+CLAIMS.md @ofri-peretz

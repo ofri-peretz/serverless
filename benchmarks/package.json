@@ -1,0 +1,23 @@
+{
+  "name": "@interlace/serverless-benchmarks",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Reproducible competitive benchmarks for @interlace/serverless plugins",
+  "type": "module",
+  "scripts": {
+    "bench:caching": "tsx suites/api-gateway-caching/run.ts",
+    "bench:deploy-latency": "tsx suites/deploy-latency/run.ts",
+    "bench:cold-start": "tsx suites/cold-start/run.ts",
+    "bench:feature-coverage": "tsx suites/feature-coverage/run.ts",
+    "bench": "npm run bench:caching",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  }
+}

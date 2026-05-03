@@ -13,18 +13,20 @@ npm install @interlace/serverless-api-gateway-caching
 
 ## Why switch?
 
-| Feature | Community Plugin | @interlace |
+Everything the community plugin does, plus the things it does badly or not at all. See the [migration guide](/docs/plugins/caching/migration#full-capability-matrix) for the full feature-by-feature comparison.
+
+Headline differences:
+
+| Capability | Community plugin | @interlace |
 |---|---|---|
-| **Cleanup on `sls remove`** | ❌ Cache cluster keeps running | ✅ Disabled before delete |
-| **Safe offboarding** | ❌ Remove plugin → orphaned cache | ✅ `sls caching disable` |
-| **CLI commands** | ❌ | ✅ `flush`, `status`, `disable` |
-| **Flush on deploy** | ❌ | ✅ `flushOnDeploy: true` |
-| **Retry strategy** | Pure exponential | Jittered backoff |
-| **Prototype pollution** | 🔴 `String.prototype.replaceAll` | ✅ Zero |
-| **Dependencies** | lodash.get, lodash.isempty | ✅ Zero |
-| **TypeScript** | ❌ | ✅ Full IntelliSense |
-| **Config validation** | Partial | ✅ Complete JSON schema |
-| **`ANY` method** | Partial | ✅ GET-only caching |
+| **`before:remove:remove` cleanup hook** | ❌ ghost billing | ✅ |
+| **`sls caching flush` / `status` / `disable` / `preview`** | ❌ | ✅ |
+| **Auto-flush on deploy** | ❌ | ✅ `flushOnDeploy: true` |
+| **Jittered retry (no thundering herd)** | ❌ pure exponential | ✅ |
+| **`ANY` method → GET-only caching** | ❌ partial | ✅ |
+| **Zero runtime dependencies** | ❌ `lodash.isempty` | ✅ |
+| **No prototype pollution** | 🔴 monkey-patches `String.prototype.replaceAll` | ✅ |
+| **TypeScript types & IntelliSense** | ❌ | ✅ |
 
 ## Quick Start
 

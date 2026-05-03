@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-05-03T23:10:22.542Z",
+  "status": "failed-with-emergency-cleanup",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "steps": [
+    {
+      "id": -1,
+      "label": "failure",
+      "startedAt": "2026-05-03T23:11:13.614Z",
+      "status": "fail",
+      "error": "npx serverless deploy failed (exit 1)"
+    }
+  ],
+  "awsObservations": {},
+  "region": "us-east-1",
+  "serviceName": "interlace-cache-e2e-qdw5a0",
+  "pluginVersion": "0.0.0",
+  "failedAtStep": -1,
+  "endedAt": "2026-05-03T23:11:19.557Z"
+}

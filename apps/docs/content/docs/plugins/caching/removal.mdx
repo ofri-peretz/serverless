@@ -23,8 +23,8 @@ The `sls caching disable` command solves this.
 ### Step 1: Disable the cache on AWS
 
 ```bash
-sls caching disable --stage dev
-sls caching disable --stage prod
+sls caching disable --stage development
+sls caching disable --stage production
 # Repeat for each stage that has caching enabled
 ```
 
@@ -58,8 +58,8 @@ functions:
 ### Step 3: Deploy clean
 
 ```bash
-sls deploy --stage dev
-sls deploy --stage prod
+sls deploy --stage development
+sls deploy --stage production
 ```
 
 ### Step 4: Uninstall the package
@@ -73,7 +73,7 @@ npm uninstall @interlace/serverless-api-gateway-caching
 If you're **deleting the entire stack** (not just removing the plugin), the cleanup happens automatically. Our `before:remove:remove` hook disables the cache cluster before CloudFormation deletes the API Gateway.
 
 ```bash
-sls remove --stage dev  # cache is automatically disabled first
+sls remove --stage development  # cache is automatically disabled first
 ```
 
 The manual disable step is only needed when removing the **plugin** while keeping the service running.
@@ -92,7 +92,7 @@ Or use the AWS CLI:
 ```bash
 aws apigateway update-stage \
   --rest-api-id YOUR_API_ID \
-  --stage-name prod \
+  --stage-name production \
   --patch-operations op=replace,path=/cacheClusterEnabled,value=false \
   --profile interlace
 ```

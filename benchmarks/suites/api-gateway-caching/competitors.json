@@ -1,0 +1,20 @@
+{
+  "$schema": "../../lib/competitors.schema.json",
+  "category": "API Gateway Caching",
+  "competitors": [
+    {
+      "name": "Interlace",
+      "package": "@interlace/serverless-api-gateway-caching",
+      "githubRepo": "ofri-peretz/serverless",
+      "githubPath": "packages/serverless-api-gateway-caching",
+      "localSource": "../../../packages/serverless-api-gateway-caching",
+      "isOurs": true
+    },
+    {
+      "name": "Community",
+      "package": "serverless-api-gateway-caching",
+      "githubRepo": "DianaIonita/serverless-api-gateway-caching",
+      "githubPath": ""
+    }
+  ]
+}

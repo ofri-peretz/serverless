@@ -27,17 +27,17 @@ import { join } from 'node:path';
 
 /** Same as `@commitlint/config-conventional` `type-enum`. */
 const COMMIT_TYPES = [
-  "build",
-  "chore",
-  "ci",
-  "docs",
-  "feat",
-  "fix",
-  "perf",
-  "refactor",
-  "revert",
-  "style",
-  "test",
+  'build',
+  'chore',
+  'ci',
+  'docs',
+  'feat',
+  'fix',
+  'perf',
+  'refactor',
+  'revert',
+  'style',
+  'test',
 ];
 
 /**
@@ -57,11 +57,11 @@ function getPackageScopes() {
 const WORKSPACE_SCOPES = getPackageScopes();
 
 /** Cross-cutting scopes. */
-const META_SCOPES = ["ci", "deps", "docs", "monorepo", "release"];
+const META_SCOPES = ['ci', 'deps', 'docs', 'monorepo', 'release'];
 
 const ALLOWED = new Set([...WORKSPACE_SCOPES, ...META_SCOPES]);
 
-const ALLOWED_SCOPES_SORTED = Array.from(ALLOWED).sort().join(", ");
+const ALLOWED_SCOPES_SORTED = Array.from(ALLOWED).sort().join(', ');
 
 /**
  * @param {{ scope?: string | null }} parsed
@@ -69,20 +69,20 @@ const ALLOWED_SCOPES_SORTED = Array.from(ALLOWED).sort().join(", ");
  */
 function scopeWorkspace(parsed) {
   const scope = parsed.scope;
-  if (scope === null || scope === undefined || scope === "") {
+  if (scope === null || scope === undefined || scope === '') {
     return [
       false,
-      "add a scope, e.g. feat(serverless-plugin-security): … or chore(monorepo): … — see commitlint.config.mjs",
+      'add a scope, e.g. feat(serverless-plugin-security): … or chore(monorepo): … — see commitlint.config.mjs',
     ];
   }
 
   const parts = scope
-    .split(",")
+    .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
 
   if (parts.length === 0) {
-    return [false, "scope is empty after parsing"];
+    return [false, 'scope is empty after parsing'];
   }
 
   for (const p of parts) {
@@ -91,22 +91,22 @@ function scopeWorkspace(parsed) {
     }
   }
 
-  return [true, ""];
+  return [true, ''];
 }
 
 export default {
-  extends: ["@commitlint/config-conventional"],
+  extends: ['@commitlint/config-conventional'],
   plugins: [
     {
       rules: {
-        "scope-workspace": scopeWorkspace,
+        'scope-workspace': scopeWorkspace,
       },
     },
   ],
   rules: {
-    "scope-empty": [0],
-    "scope-workspace": [2, "always"],
-    "type-enum": [2, "always", [...COMMIT_TYPES]],
-    "header-max-length": [2, "always", 120],
+    'scope-empty': [0],
+    'scope-workspace': [2, 'always'],
+    'type-enum': [2, 'always', [...COMMIT_TYPES]],
+    'header-max-length': [2, 'always', 120],
   },
 };

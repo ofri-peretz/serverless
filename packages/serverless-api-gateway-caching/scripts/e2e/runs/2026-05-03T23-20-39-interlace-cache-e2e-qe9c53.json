@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-05-03T23:20:39.155Z",
+  "status": "failed-with-emergency-cleanup",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "steps": [
+    {
+      "id": -1,
+      "label": "failure",
+      "startedAt": "2026-05-03T23:29:33.217Z",
+      "status": "fail",
+      "error": "Cache HIT after flush — flush did not invalidate within 30s. Cached value still 1777850925646."
+    }
+  ],
+  "awsObservations": {
+    "deployDurationSec": 123,
+    "cacheClusterCreateSec": 301,
+    "cacheClusterCreateStatusHistory": [
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 2
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 18
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 34
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 50
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 66
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 82
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 98
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 114
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 130
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 146
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 162
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 178
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 194
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 210
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 226
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 253
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 269
+      },
+      {
+        "status": "CREATE_IN_PROGRESS",
+        "elapsedSec": 285
+      },
+      {
+        "status": "AVAILABLE",
+        "elapsedSec": 301
+      }
+    ]
+  },
+  "region": "us-east-1",
+  "serviceName": "interlace-cache-e2e-qe9c53",
+  "pluginVersion": "0.0.0",
+  "awsIdentity": "arn:aws:iam::346133547796:user/interlace-cli",
+  "endpoint": "https://3hfisyvgy1.execute-api.us-east-1.amazonaws.com/e2e/hello",
+  "failedAtStep": -1,
+  "endedAt": "2026-05-03T23:30:04.706Z"
+}
