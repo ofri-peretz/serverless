@@ -1,0 +1,29 @@
+# Pre-commit: prettier + eslint + typecheck.
+# PATH wrapper ensures Homebrew binaries are available in GUI git clients.
+pre-commit:
+  parallel: true
+  commands:
+    prettier:
+      glob: "*.{md,yml,yaml,json,ts,mts,js,mjs}"
+      run: sh scripts/lefthook-with-node-path.sh npx --no -- prettier --check {staged_files}
+      fail_text: "Run `npm run fix` to auto-format, then re-stage."
+    eslint:
+      glob: "*.{js,ts,mjs,mts,cjs,cts}"
+      run: sh scripts/lefthook-with-node-path.sh npx --no eslint .
+      fail_text: "Fix ESLint errors. Run `npx eslint --fix .` for auto-fixable issues."
+    typecheck:
+      glob: "**/*.ts"
+      run: sh scripts/lefthook-with-node-path.sh npx --no tsc --noEmit
+      fail_text: "TypeScript error. Run `npx tsc --noEmit` to see details."
+
+pre-push:
+  commands:
+    build:
+      run: sh scripts/lefthook-with-node-path.sh npx --no -- turbo run build --output-logs errors-only
+      fail_text: "Build failed. Fix errors before pushing."
+
+commit-msg:
+  commands:
+    commitlint:
+      run: sh scripts/lefthook-with-node-path.sh npx --no -- commitlint --edit {1}
+      fail_text: "Commit message doesn't follow convention. Format: type(scope): description — see commitlint.config.mjs."

@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "!README.md"
+      - ".github/ISSUE_TEMPLATE/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: CI (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 20, 22, 24]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if changes are docs-only
+        id: docs_only
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD 2>/dev/null || echo "")
+          DOCS_ONLY=true
+          while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+            if ! [[ "$file" =~ ^docs/ || "$file" =~ \.md$ || "$file" =~ README || "$file" =~ CHANGELOG ]]; then
+              DOCS_ONLY=false
+              break
+            fi
+          done <<< "$CHANGED_FILES"
+          if [[ "$DOCS_ONLY" == "true" && -n "$CHANGED_FILES" ]]; then
+            echo "docs_only=true" >> $GITHUB_OUTPUT
+          else
+            echo "docs_only=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ✅ Skip CI for docs-only changes
+        if: steps.docs_only.outputs.docs_only == 'true'
+        run: echo "✅ CI passed — only documentation files were changed"
+
+      - name: ⚙️ Setup Node.js
+        if: steps.docs_only.outputs.docs_only != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: 📦 Install dependencies
+        if: steps.docs_only.outputs.docs_only != 'true'
+        run: npm ci
+
+      - name: 🗄️ Restore Turbo cache
+        if: steps.docs_only.outputs.docs_only != 'true'
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            turbo-${{ runner.os }}-
+
+      - name: 🧪 Test
+        if: steps.docs_only.outputs.docs_only != 'true'
+        run: npx turbo run test --output-logs errors-only
+
+      - name: 🔨 Build
+        if: steps.docs_only.outputs.docs_only != 'true'
+        run: npx turbo run build --output-logs errors-only
+
+      - name: 🔍 Lint
+        if: steps.docs_only.outputs.docs_only != 'true'
+        run: npx turbo run lint --output-logs errors-only
+
+      - name: 🔍 Typecheck
+        if: steps.docs_only.outputs.docs_only != 'true'
+        run: npx turbo run typecheck --output-logs errors-only
+
+      - name: 📊 CI Summary
+        if: always() && steps.docs_only.outputs.docs_only != 'true'
+        run: |
+          echo "## 📊 CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Node:** $(node --version)" >> $GITHUB_STEP_SUMMARY
+          echo "- **npm:** $(npm --version)" >> $GITHUB_STEP_SUMMARY

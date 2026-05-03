@@ -1,0 +1,53 @@
+# Codecov Configuration for ofri-peretz/serverless monorepo
+# https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  precision: 2
+  round: down
+  range: '70...100'
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5%
+    patch:
+      default:
+        target: auto
+        threshold: 5%
+
+comment:
+  layout: 'header, diff, flags, components'
+  behavior: default
+  require_changes: false
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# COMPONENT MANAGEMENT FOR MONOREPO
+# ═══════════════════════════════════════════════════════════════════════════════
+# Each @interlace/serverless-plugin-* gets its own component.
+# Components are added as plugins are created.
+
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+        branches:
+          - '!main'
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# IGNORE PATHS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+ignore:
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/.turbo/**'
+  - '**/types/**'
+  - '**/coverage/**'
+  - '**/test-results/**'
+  - '**/*.config.ts'
+  - '**/*.config.mts'
+  # Plugin entry points (configuration code, not tested)
+  - 'packages/*/src/index.ts'

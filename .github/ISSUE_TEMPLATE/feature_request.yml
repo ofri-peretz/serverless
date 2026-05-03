@@ -1,0 +1,32 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      description: Which package is this for?
+      options:
+        - "@interlace/serverless-devkit"
+        - "@interlace/serverless-plugin-openapi"
+        - "@interlace/serverless-plugin-package"
+        - "@interlace/serverless-plugin-proxy"
+        - "@interlace/serverless-plugin-build-layers"
+        - "@interlace/serverless-plugin-throttling"
+        - New plugin idea
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What feature would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: How would you use this feature?
