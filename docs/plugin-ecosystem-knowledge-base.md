@@ -835,15 +835,206 @@ functions:
 
 ### `@snappygifts/serverless` + `serverless-toolkit` → `@interlace/serverless-devkit`
 
-**What it does**:
-- `buildServerlessConfig()` — typed configuration builder
+> **Core Principle**: Promote `serverless.ts` over `serverless.yml` — but support all formats.
+
+#### The Problem with YAML
+
+Most Serverless Framework projects use `serverless.yml`. This creates several pain points:
+
+1. **No IntelliSense** — YAML editors give no autocomplete for plugin-specific config
+2. **No type safety** — typos in property names fail silently at deploy time
+3. **No refactoring** — renaming a function doesn't update references
+4. **String-based composition** — `${self:custom.foo}` is fragile and unvalidated
+5. **No imports** — large configs become 500+ line walls of YAML
+6. **Plugin config is undiscoverable** — you must read plugin README to know what keys exist
+
+#### The `serverless.ts` Advantage
+
+The Serverless Framework natively supports `serverless.ts` — but without types,
+it's just untyped JavaScript in a `.ts` file. The devkit changes this:
+
+```typescript
+// serverless.ts — WITH @interlace/serverless-devkit
+import { defineConfig } from '@interlace/serverless-devkit';
+import { openApiConfig } from '@interlace/serverless-plugin-openapi';
+import { packageConfig } from '@interlace/serverless-plugin-package';
+import { cloudfrontConfig } from '@interlace/serverless-plugin-cloudfront';
+
+export default defineConfig({
+  service: 'my-api',
+
+  provider: {
+    name: 'aws',
+    runtime: 'nodejs22.x',        // ← autocomplete shows valid runtimes
+    region: 'us-east-1',          // ← autocomplete shows valid regions
+    stage: '${opt:stage, "dev"}',
+    memorySize: 512,
+    timeout: 30,
+  },
+
+  plugins: [
+    '@interlace/serverless-plugin-openapi',
+    '@interlace/serverless-plugin-package',
+    '@interlace/serverless-plugin-cloudfront',
+  ],
+
+  custom: {
+    // Full IntelliSense — every key is typed, documented, and validated
+    ...openApiConfig({
+      specVersion: '3.1.0',
+      swaggerUI: { enabled: true, path: '/docs' },
+      zod: { outputDir: './src/generated' },
+    }),
+
+    ...packageConfig({
+      regions: ['us-east-1', 'eu-west-1'],
+      workspaceIsolation: true,
+    }),
+
+    ...cloudfrontConfig({
+      domain: 'api.example.com',
+      caching: {
+        defaultTtl: 300,
+        behaviors: [
+          { path: '/api/v1/products/*', ttl: 3600 },
+          { path: '/api/v1/auth/*', ttl: 0 },
+        ],
+      },
+    }),
+  },
+
+  functions: {
+    getUser: {
+      handler: 'src/handlers/user.get',
+      events: [{ http: { method: 'get', path: '/users/{id}' } }],
+    },
+  },
+});
+```
+
+**What you get**:
+- ✅ **Full autocomplete** for every property (provider, functions, resources, custom)
+- ✅ **Plugin config is typed** — `openApiConfig()` shows exactly what options exist
+- ✅ **Compile-time validation** — typos caught before deploy
+- ✅ **Composable** — import shared configs, merge with spread
+- ✅ **Refactorable** — rename a function, find all references
+- ✅ **Documented inline** — JSDoc on every property
+
+#### Format Support Matrix
+
+The devkit provides types for `serverless.ts` but all @interlace plugins work
+with every format the Serverless Framework supports:
+
+| Format | Supported | IntelliSense | Type Safety | Recommended |
+|---|---|---|---|---|
+| `serverless.ts` | ✅ | ✅ Full | ✅ Compile-time | ⭐ **Yes** |
+| `serverless.js` | ✅ | ⚠️ JSDoc only | ⚠️ Runtime only | Good |
+| `serverless.yml` | ✅ | ❌ None | ❌ None | Works fine |
+| `serverless.json` | ✅ | ❌ None | ❌ None | Works fine |
+
+Plugins read config from `serverless.service.custom.*` at runtime — they are
+format-agnostic. The type layer is purely for developer experience.
+
+#### Devkit API Surface
+
+```typescript
+// Main export — typed config builder
+import { defineConfig } from '@interlace/serverless-devkit';
+
+// Type for manual composition
+import type { InterlaceServerlessConfig } from '@interlace/serverless-devkit';
+
+// Layer helpers
+import { defineLayer, commonLayers } from '@interlace/serverless-devkit/layers';
+
+// Function helpers
+import { defineFunction, defineFunctions } from '@interlace/serverless-devkit/functions';
+
+// Shared types (re-exported for convenience)
+import type {
+  AwsProvider,
+  AwsFunction,
+  AwsHttpEvent,
+  AwsSqsEvent,
+  AwsScheduleEvent,
+} from '@interlace/serverless-devkit/types';
+```
+
+#### Each Plugin Exports Its Own Config Helper
+
+```typescript
+// Every @interlace plugin provides a typed config function:
+import { openApiConfig } from '@interlace/serverless-plugin-openapi';
+import { packageConfig } from '@interlace/serverless-plugin-package';
+import { cloudfrontConfig } from '@interlace/serverless-plugin-cloudfront';
+import { securityConfig } from '@interlace/serverless-plugin-security';
+import { nestjsConfig } from '@interlace/serverless-plugin-nestjs';
+import { throttlingConfig } from '@interlace/serverless-plugin-throttling';
+import { proxyConfig } from '@interlace/serverless-plugin-proxy';
+
+// Each returns a typed object that spreads into `custom`:
+export default defineConfig({
+  custom: {
+    ...openApiConfig({ /* fully typed */ }),
+    ...packageConfig({ /* fully typed */ }),
+  },
+});
+```
+
+#### Migration from YAML to TS
+
+```yaml
+# serverless.yml (before)
+service: my-api
+provider:
+  name: aws
+  runtime: nodejs22.x
+  region: us-east-1
+plugins:
+  - '@interlace/serverless-plugin-openapi'
+custom:
+  interlaceOpenApi:
+    specVersion: '3.1.0'
+functions:
+  getUser:
+    handler: src/handlers/user.get
+    events:
+      - http:
+          method: get
+          path: /users/{id}
+```
+
+```typescript
+// serverless.ts (after — same result, but with full IntelliSense)
+import { defineConfig } from '@interlace/serverless-devkit';
+import { openApiConfig } from '@interlace/serverless-plugin-openapi';
+
+export default defineConfig({
+  service: 'my-api',
+  provider: { name: 'aws', runtime: 'nodejs22.x', region: 'us-east-1' },
+  plugins: ['@interlace/serverless-plugin-openapi'],
+  custom: {
+    ...openApiConfig({ specVersion: '3.1.0' }),
+  },
+  functions: {
+    getUser: {
+      handler: 'src/handlers/user.get',
+      events: [{ http: { method: 'get', path: '/users/{id}' } }],
+    },
+  },
+});
+```
+
+#### What the devkit also provides:
+
+- `buildServerlessConfig()` — legacy API from `@snappygifts/serverless`
 - `TApplicationServerlessConfig` — full TypeScript interface for `serverless.ts`
-- Layer helpers (`layers.buildLayerDefinition()`, `CORALOGIX_LAYERS`)
+- Layer helpers (`defineLayer()`, `commonLayers.coralogix`, etc.)
 - Lambda function name builder
 - MSK/Kafka event builder helpers
 - Shared types for provider, functions, custom config
 
----
+
 
 ## 14. Top 20 Community Plugins — Ranked
 
