@@ -92,6 +92,22 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
             usage: 'Show cache cluster status',
             lifecycleEvents: ['show'],
           },
+          disable: {
+            usage: 'Disable the cache cluster entirely. Run this BEFORE removing the plugin from serverless.yml to prevent ghost billing.',
+            lifecycleEvents: ['disable'],
+            options: {
+              stage: {
+                usage: 'Stage to disable caching for',
+                shortcut: 's',
+                type: 'string',
+              },
+              region: {
+                usage: 'Region',
+                shortcut: 'r',
+                type: 'string',
+              },
+            },
+          },
         },
       },
     };
@@ -110,6 +126,7 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
       // Custom commands
       'caching:flush:flush': this.onCachingFlush.bind(this),
       'caching:status:show': this.onCachingStatus.bind(this),
+      'caching:disable:disable': this.onCachingDisable.bind(this),
     };
 
     this.defineValidationSchema();
@@ -283,6 +300,57 @@ class InterlaceCachingPlugin implements ServerlessPlugin {
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       this.log(`Failed to get cache status: ${message}`);
+    }
+  }
+
+  /**
+   * Fully disable caching on the live AWS environment.
+   *
+   * This is the safe offboarding command. The workflow is:
+   *   1. sls caching disable --stage prod
+   *   2. Remove the plugin from serverless.yml
+   *   3. Redeploy
+   *
+   * Without this step, removing the plugin leaves the cache cluster running → ghost billing.
+   */
+  private async onCachingDisable(): Promise<void> {
+    const restApiId = await this.getRestApiId();
+    if (!restApiId) {
+      this.log('Unable to determine REST API ID.');
+      return;
+    }
+
+    const stageName = this.options.stage ?? this.provider.getStage();
+
+    this.log(`Disabling cache cluster for stage '${stageName}'...`);
+
+    try {
+      // Step 1: Disable all per-method caching + the cluster
+      await updateStageCache(
+        this.provider,
+        restApiId,
+        stageName,
+        [
+          { op: 'replace', path: '/*/*/caching/enabled', value: 'false' },
+          { op: 'replace', path: '/cacheClusterEnabled', value: 'false' },
+        ],
+        this.log.bind(this),
+      );
+
+      this.log('');
+      this.log('✅ Cache cluster disabled successfully.');
+      this.log('');
+      this.log('You can now safely remove the plugin from your serverless.yml:');
+      this.log('');
+      this.log('  1. Remove "@interlace/serverless-plugin-caching" from plugins');
+      this.log('  2. Remove the "interlaceCaching" section from custom');
+      this.log('  3. Remove "caching" from function http events');
+      this.log('  4. Run "sls deploy" to apply');
+      this.log('');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.log(`Failed to disable cache: ${message}`);
+      this.log('The cache cluster may still be running. Check the AWS console.');
     }
   }
 
