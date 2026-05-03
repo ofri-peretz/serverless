@@ -1,0 +1,66 @@
+{
+  "name": "@interlace/serverless-devkit",
+  "version": "0.1.0",
+  "description": "TypeScript-first configuration toolkit for Serverless Framework — defineConfig, types, and plugin helpers",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./compat": {
+      "import": "./dist/compat/index.js",
+      "require": "./dist/compat/index.cjs",
+      "types": "./dist/compat/index.d.ts"
+    },
+    "./functions": {
+      "import": "./dist/functions.js",
+      "require": "./dist/functions.cjs",
+      "types": "./dist/functions.d.ts"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "serverless",
+    "serverless-framework",
+    "serverless-plugin",
+    "typescript",
+    "defineConfig",
+    "types",
+    "developer-experience",
+    "interlace"
+  ],
+  "author": "Ofri Peretz <ofriperetzdev@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/ofri-peretz/serverless/tree/main/packages/serverless-devkit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ofri-peretz/serverless.git",
+    "directory": "packages/serverless-devkit"
+  },
+  "bugs": {
+    "url": "https://github.com/ofri-peretz/serverless/issues"
+  },
+  "peerDependencies": {
+    "serverless": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "serverless": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
