@@ -16,7 +16,6 @@
     "fumadocs-ui": "^16.5.0",
     "fumadocs-twoslash": "^3.1.0",
     "@fumadocs/mdx-remote": "^1.4.4",
-    "@radix-ui/react-slot": "^1.2.4",
     "@tailwindcss/postcss": "^4.1.18",
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",

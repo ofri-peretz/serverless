@@ -9,12 +9,23 @@ import {
   Trash2,
   RefreshCw,
 } from 'lucide-react';
+import { Spotlight } from '@/components/ui/spotlight';
+import { FlipWords } from '@/components/ui/flip-words';
+import { BorderBeam } from '@/components/ui/border-beam';
+
+const heroWords = ['clean up', 'deploy safely', 'zero out bills', 'just work'];
 
 export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col">
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center gap-6 overflow-hidden px-6 py-24 text-center md:py-36">
+        {/* Spotlight background */}
+        <Spotlight
+          className="-top-40 left-0 md:-top-20 md:left-60"
+          fill="hsl(250 95% 64%)"
+        />
+
         {/* Gradient background */}
         <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-fd-background via-fd-background to-fd-accent/5" />
         <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-fd-primary/8 blur-[120px]" />
@@ -24,11 +35,13 @@ export default function HomePage() {
           <span>Now available — v0.1.0</span>
         </div>
 
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight md:text-6xl">
-          Serverless plugins that{' '}
-          <span className="bg-gradient-to-r from-fd-primary to-purple-400 bg-clip-text text-transparent">
-            clean up after themselves
-          </span>
+        <h1 className="max-w-4xl text-4xl font-bold tracking-tight md:text-6xl">
+          Serverless plugins that
+          <br />
+          <FlipWords
+            words={heroWords}
+            className="bg-gradient-to-r from-fd-primary to-purple-400 bg-clip-text text-transparent"
+          />
         </h1>
 
         <p className="max-w-2xl text-lg text-fd-muted-foreground md:text-xl">
@@ -39,7 +52,7 @@ export default function HomePage() {
         <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/docs/getting-started"
-            className="inline-flex items-center gap-2 rounded-lg bg-fd-primary px-6 py-3 text-sm font-medium text-fd-primary-foreground transition-colors hover:bg-fd-primary/90"
+            className="inline-flex items-center gap-2 rounded-lg bg-fd-primary px-6 py-3 text-sm font-medium text-fd-primary-foreground transition-all hover:bg-fd-primary/90 hover:shadow-lg hover:shadow-fd-primary/25"
           >
             Get started
             <ArrowRight className="h-4 w-4" />
@@ -53,9 +66,16 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Install snippet */}
-        <div className="mt-8 rounded-lg border border-fd-border bg-fd-card px-6 py-3 font-mono text-sm text-fd-muted-foreground">
+        {/* Install snippet with subtle glow */}
+        <div className="relative mt-8 overflow-hidden rounded-lg border border-fd-border bg-fd-card px-6 py-3 font-mono text-sm text-fd-muted-foreground">
           npm install @interlace/serverless-plugin-caching
+          <BorderBeam
+            size={80}
+            duration={8}
+            colorFrom="hsl(250 95% 64%)"
+            colorTo="hsl(280 80% 60%)"
+            borderWidth={1}
+          />
         </div>
       </section>
 
@@ -155,8 +175,8 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="rounded-xl border border-fd-border bg-fd-card p-6 transition-colors hover:border-fd-primary/30 hover:bg-fd-accent/5">
-      <div className="mb-3 inline-flex rounded-lg bg-fd-primary/10 p-2.5 text-fd-primary">
+    <div className="group relative rounded-xl border border-fd-border bg-fd-card p-6 transition-all duration-300 hover:border-fd-primary/30 hover:bg-fd-accent/5 hover:shadow-lg hover:shadow-fd-primary/5">
+      <div className="mb-3 inline-flex rounded-lg bg-fd-primary/10 p-2.5 text-fd-primary transition-transform duration-300 group-hover:scale-110">
         {icon}
       </div>
       <h3 className="mb-2 text-lg font-semibold">{title}</h3>
@@ -179,9 +199,9 @@ function PackageCard({
   return (
     <Link
       href={href}
-      className="group rounded-xl border border-fd-border bg-fd-card p-6 transition-all hover:border-fd-primary/40 hover:shadow-lg hover:shadow-fd-primary/5"
+      className="group relative overflow-hidden rounded-xl border border-fd-border bg-fd-card p-6 transition-all duration-300 hover:border-fd-primary/40 hover:shadow-xl hover:shadow-fd-primary/10"
     >
-      <h3 className="mb-2 font-mono text-lg font-semibold text-fd-primary group-hover:text-fd-primary/80">
+      <h3 className="mb-2 font-mono text-lg font-semibold text-fd-primary transition-colors group-hover:text-fd-primary/80">
         {name}
       </h3>
       <p className="mb-4 text-sm leading-relaxed text-fd-muted-foreground">{description}</p>
@@ -195,6 +215,14 @@ function PackageCard({
           </span>
         ))}
       </div>
+      <BorderBeam
+        size={60}
+        duration={10}
+        colorFrom="hsl(250 95% 64%)"
+        colorTo="hsl(280 80% 60%)"
+        borderWidth={1}
+        delay={Math.random() * 5}
+      />
     </Link>
   );
 }
