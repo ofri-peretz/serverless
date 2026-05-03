@@ -1,27 +1,33 @@
 @import 'tailwindcss';
-@import 'fumadocs-ui/css/shadcn.css';
+@import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-/* ------------------------------------------------------------------ */
-/* Brand tokens                                                       */
-/* ------------------------------------------------------------------ */
+@custom-variant dark (&:is(.dark *));
 
+/* Scan fumadocs packages from app-level node_modules (symlinked to workspace root) */
+@source "../../node_modules/fumadocs-ui";
+
+/* =========================================
+   BRAND COLORS - @interlace/serverless
+   Purple accent with WCAG AA compliance
+   ========================================= */
+
+/* Light mode */
 :root {
-  --interlace-accent: 250 95% 64%;
-  --interlace-accent-foreground: 0 0% 100%;
-  --interlace-surface: 240 10% 4%;
-  --interlace-surface-hover: 240 10% 8%;
+  --color-fd-primary: hsl(250, 80%, 50%) !important;
+  --color-fd-primary-foreground: hsl(0, 0%, 100%) !important;
+  --color-fd-foreground: hsl(0, 0%, 3.9%) !important;
+  --color-fd-muted-foreground: hsl(0, 0%, 40%) !important;
+  --color-fd-ring: hsl(250, 70%, 55%) !important;
 }
 
-/* Override Fumadocs primary to match Interlace brand */
-:root {
-  --fd-primary: 250 95% 64%;
-  --fd-primary-foreground: 0 0% 100%;
-}
-
+/* Dark mode */
 .dark {
-  --fd-primary: 250 95% 64%;
-  --fd-primary-foreground: 0 0% 100%;
+  --color-fd-primary: hsl(255, 75%, 75%) !important;
+  --color-fd-primary-foreground: hsl(0, 0%, 5%) !important;
+  --color-fd-foreground: hsl(0, 0%, 92%) !important;
+  --color-fd-muted-foreground: hsl(0, 0%, 65%) !important;
+  --color-fd-ring: hsl(255, 70%, 70%) !important;
 }
 
 /* Spotlight animation (Aceternity) */
@@ -38,4 +44,34 @@
 
 .animate-spotlight {
   animation: spotlight 2s ease 0.75s 1 forwards;
+}
+
+/* Shimmer button animations (MagicUI) */
+@keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+  }
+}
+
+@keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+  }
+  15%, 35% {
+    transform: translateZ(0) rotate(90deg);
+  }
+  65%, 85% {
+    transform: translateZ(0) rotate(270deg);
+  }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+  }
+}
+
+.animate-shimmer-slide {
+  animation: shimmer-slide var(--speed) ease-in-out infinite alternate;
+}
+
+.animate-spin-around {
+  animation: spin-around calc(var(--speed) * 2) infinite linear;
 }

@@ -1,17 +1,12 @@
-import './global.css';
-import type { ReactNode } from 'react';
-import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
 import { RootProvider } from 'fumadocs-ui/provider/next';
+import './global.css';
+import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
+  display: 'swap',
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -20,45 +15,47 @@ export const metadata: Metadata = {
     template: '%s | @interlace/serverless',
   },
   description:
-    'TypeScript-native Serverless Framework plugins — caching, devkit, and more. Zero dependencies, full IntelliSense, proper cleanup.',
+    'TypeScript-native replacements for community Serverless Framework plugins. Zero dependencies. Full IntelliSense. No ghost billing.',
+  keywords: [
+    'Serverless Framework',
+    'AWS',
+    'API Gateway',
+    'caching',
+    'TypeScript',
+    'plugins',
+    'serverless',
+    'infrastructure',
+  ],
+  authors: [{ name: 'Ofri Peretz', url: 'https://ofriperetz.dev' }],
+  creator: 'Ofri Peretz',
   metadataBase: new URL('https://serverless.interlace.tools'),
   openGraph: {
-    title: '@interlace/serverless',
-    description:
-      'TypeScript-native Serverless Framework plugins that fix what the community forgot.',
-    url: 'https://serverless.interlace.tools',
-    siteName: '@interlace/serverless',
-    locale: 'en_US',
     type: 'website',
+    locale: 'en_US',
+    siteName: '@interlace/serverless',
+    url: 'https://serverless.interlace.tools',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '@interlace/serverless',
-    description:
-      'TypeScript-native Serverless Framework plugins — caching, devkit, and more.',
   },
+  applicationName: 'Interlace Serverless',
+  category: 'technology',
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
-  ],
-  width: 'device-width',
-  initialScale: 1,
-};
-
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={inter.className} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col">
         <RootProvider>{children}</RootProvider>
       </body>
