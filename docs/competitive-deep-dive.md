@@ -25,6 +25,8 @@
 
 ## S-Tier: `serverless-api-gateway-caching`
 
+> **Source**: [github.com/DianaIonita/serverless-api-gateway-caching](https://github.com/DianaIonita/serverless-api-gateway-caching) · [npm](https://www.npmjs.com/package/serverless-api-gateway-caching)
+
 ### Source Code Review
 
 **Files analyzed**: `apiGatewayCachingPlugin.js`, `stageCache.js`, `ApiGatewayCachingSettings.js`, `cacheKeyParameters.js`, `restApiId.js`, `pathParameters.js`
@@ -171,6 +173,8 @@ sls caching status         # Show cache cluster status, hit/miss rates
 
 ## S-Tier: `serverless-associate-waf`
 
+> **Source**: [github.com/mikesouza/serverless-associate-waf](https://github.com/mikesouza/serverless-associate-waf) · [npm](https://www.npmjs.com/package/serverless-associate-waf)
+
 ### Source Code Review (190 LOC total)
 
 **File**: `lib/index.js` — single file, no tests visible in repo.
@@ -257,6 +261,8 @@ custom:
 
 ## A-Tier: `serverless-plugin-common-excludes`
 
+> **Source**: [github.com/dougmoscrop/serverless-plugin-common-excludes](https://github.com/dougmoscrop/serverless-plugin-common-excludes) · [npm](https://www.npmjs.com/package/serverless-plugin-common-excludes)
+
 ### Source Code Review
 
 **Estimated ~50 LOC** — simply appends a static list to `service.package.exclude`:
@@ -298,6 +304,8 @@ Our `plugin-package` already does smart excludes AND workspace isolation AND mul
 ---
 
 ## A-Tier: `serverless-plugin-include-dependencies`
+
+> **Source**: [github.com/dougmoscrop/serverless-plugin-include-dependencies](https://github.com/dougmoscrop/serverless-plugin-include-dependencies) · [npm](https://www.npmjs.com/package/serverless-plugin-include-dependencies)
 
 ### Source Code Review
 
@@ -355,6 +363,8 @@ We provide types + IntelliSense for domain-manager, not a replacement.
 
 ## B-Tier: `serverless-iam-roles-per-function` (Guide to Native v4)
 
+> **Source**: [github.com/functionalone/serverless-iam-roles-per-function](https://github.com/functionalone/serverless-iam-roles-per-function) · [npm](https://www.npmjs.com/package/serverless-iam-roles-per-function)
+
 ### Why We Skip This
 
 Serverless Framework v4 natively supports per-function IAM roles:
@@ -397,7 +407,9 @@ export const hello = defineFunction({
 
 ---
 
-## B-Tier: `serverless-domain-manager` (Track, Don't Compete — But Type It)
+## B-Tier → A-Tier: `serverless-domain-manager` (Replace)
+
+> **Source**: [github.com/amplify-education/serverless-domain-manager](https://github.com/amplify-education/serverless-domain-manager) · [npm](https://www.npmjs.com/package/serverless-domain-manager)
 
 ### Source Code Review (~500 LOC entry, ~2K LOC total)
 
@@ -464,7 +476,9 @@ The doctor CLI should detect domain-manager and offer typed config instead.
 
 ---
 
-## C-Tier: `serverless-prune-plugin` (Source Reviewed — Good Plugin)
+## C-Tier → A-Tier: `serverless-prune-plugin` (Replace)
+
+> **Source**: [github.com/claygregory/serverless-prune-plugin](https://github.com/claygregory/serverless-prune-plugin) · [npm](https://www.npmjs.com/package/serverless-prune-plugin)
 
 ### Source Code Review (~390 LOC)
 
@@ -498,7 +512,9 @@ import { pruneConfig } from '@interlace/serverless-devkit/compat';
 
 ---
 
-## C-Tier: `serverless-plugin-warmup` (Source Reviewed)
+## C-Tier: `serverless-plugin-warmup` (Skip for now)
+
+> **Source**: [github.com/juanjoDiaz/serverless-plugin-warmup](https://github.com/juanjoDiaz/serverless-plugin-warmup) · [npm](https://www.npmjs.com/package/serverless-plugin-warmup)
 
 ### Source Code Review (~275 LOC entry, ~500 LOC total)
 
@@ -527,7 +543,9 @@ Not a quick win. Warmup is less relevant with:
 
 ---
 
-## C-Tier: `serverless-step-functions` (Complex — Track Only)
+## C-Tier → A-Tier: `serverless-step-functions` (Replace)
+
+> **Source**: [github.com/serverless-operations/serverless-step-functions](https://github.com/serverless-operations/serverless-step-functions) · [npm](https://www.npmjs.com/package/serverless-step-functions)
 
 ### Source Code Review (~200+ LOC entry, 5K+ LOC total)
 
@@ -535,13 +553,17 @@ Not a quick win. Warmup is less relevant with:
 
 ---
 
-## C-Tier: `serverless-plugin-split-stacks` (Infrastructure — Track Only)
+## C-Tier: `serverless-plugin-split-stacks` (Skip — Infrastructure)
+
+> **Source**: [github.com/dougmoscrop/serverless-plugin-split-stacks](https://github.com/dougmoscrop/serverless-plugin-split-stacks) · [npm](https://www.npmjs.com/package/serverless-plugin-split-stacks)
 
 Splits large CloudFormation templates into nested stacks to avoid the 500-resource limit. This is infrastructure-level, not application-level. **Track, don't compete**.
 
 ---
 
-## C-Tier: `serverless-plugin-canary-deployments` (Deployment — Track Only)
+## C-Tier: `serverless-plugin-canary-deployments` (Skip — Deployment)
+
+> **Source**: [github.com/davidgf/serverless-plugin-canary-deployments](https://github.com/davidgf/serverless-plugin-canary-deployments) · [npm](https://www.npmjs.com/package/serverless-plugin-canary-deployments)
 
 Creates CodeDeploy applications for traffic shifting. Well-built, specific purpose. Our devkit can provide typed config.
 
