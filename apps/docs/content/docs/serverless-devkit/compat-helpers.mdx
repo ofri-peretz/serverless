@@ -1,0 +1,51 @@
+---
+title: Compatibility Helpers
+description: Typed config shims for popular community plugins during migration.
+---
+
+## Overview
+
+The `compat` module provides typed configuration helpers for popular community plugins. Use these as a bridge while you migrate to native `@interlace` plugins.
+
+```ts
+import { defineConfig, compat } from '@interlace/serverless-devkit';
+
+export default defineConfig({
+  service: 'my-api',
+  provider: { name: 'aws', runtime: 'nodejs20.x' },
+  custom: {
+    // Typed — catches typos and invalid values
+    ...compat.apiGatewayCaching({
+      enabled: true,
+      clusterSize: '0.5',
+      ttlInSeconds: 300,
+    }),
+
+    ...compat.domainManager({
+      domainName: 'api.example.com',
+      basePath: '',
+    }),
+
+    ...compat.prune({
+      automatic: true,
+      number: 3,
+    }),
+  },
+});
+```
+
+## Available Helpers
+
+| Helper | Community Plugin | Status |
+|---|---|---|
+| `compat.apiGatewayCaching()` | `serverless-api-gateway-caching` | Migrate to `@interlace/serverless-plugin-caching` |
+| `compat.domainManager()` | `serverless-domain-manager` | Compat only |
+| `compat.prune()` | `serverless-prune-plugin` | Compat only |
+
+## Migration Path
+
+Once you're ready to switch to the native `@interlace` plugin:
+
+1. Replace `compat.apiGatewayCaching()` with `interlaceCaching` config
+2. Swap the plugin in your `plugins` array
+3. See the [migration guide](/docs/plugins/caching/migration) for details

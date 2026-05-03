@@ -1,0 +1,109 @@
+---
+title: Serverless Devkit
+description: TypeScript-first configuration toolkit for Serverless Framework — defineConfig, defineFunction, and typed plugin helpers.
+---
+
+## Overview
+
+`@interlace/serverless-devkit` provides type-safe configuration primitives for Serverless Framework. Write your `serverless.ts` with full IntelliSense — every option, every event, every AWS resource.
+
+```bash
+npm install @interlace/serverless-devkit
+```
+
+## API
+
+### `defineConfig(config)`
+
+Returns a typed Serverless configuration object:
+
+```ts title="serverless.ts"
+import { defineConfig } from '@interlace/serverless-devkit';
+
+export default defineConfig({
+  service: 'my-api',
+  provider: {
+    name: 'aws',
+    runtime: 'nodejs20.x',
+    region: 'us-east-1',
+    memorySize: 512,
+  },
+});
+```
+
+### `defineFunction(config)`
+
+Type-safe function definition with full event support:
+
+```ts
+import { defineFunction } from '@interlace/serverless-devkit';
+
+const getUser = defineFunction({
+  handler: 'src/handlers/getUser.handler',
+  memorySize: 256,
+  timeout: 10,
+  events: [
+    {
+      http: {
+        path: '/users/{id}',
+        method: 'get',
+      },
+    },
+  ],
+});
+```
+
+### `defineFunctions(map)`
+
+Batch-define multiple functions:
+
+```ts
+import { defineFunctions } from '@interlace/serverless-devkit';
+
+const functions = defineFunctions({
+  createUser: {
+    handler: 'src/handlers/createUser.handler',
+    events: [{ http: { path: '/users', method: 'post' } }],
+  },
+  deleteUser: {
+    handler: 'src/handlers/deleteUser.handler',
+    events: [{ http: { path: '/users/{id}', method: 'delete' } }],
+  },
+});
+```
+
+## Plugin Development
+
+Build Serverless plugins with full type safety:
+
+```ts
+import type {
+  ServerlessInstance,
+  ServerlessOptions,
+  ServerlessPlugin,
+  AwsProvider,
+} from '@interlace/serverless-devkit';
+
+class MyPlugin implements ServerlessPlugin {
+  hooks: Record<string, () => Promise<void>>;
+  commands: Record<string, unknown>;
+
+  constructor(
+    private serverless: ServerlessInstance,
+    private options: ServerlessOptions,
+  ) {
+    this.hooks = {
+      'after:deploy:deploy': this.afterDeploy.bind(this),
+    };
+    this.commands = {};
+  }
+
+  private async afterDeploy(): Promise<void> {
+    const provider = this.serverless.providers.aws as AwsProvider;
+    const stage = provider.getStage();
+    this.serverless.cli.log(`Deployed to ${stage}`);
+  }
+}
+
+export default MyPlugin;
+```

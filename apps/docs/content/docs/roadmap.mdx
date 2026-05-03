@@ -1,0 +1,34 @@
+---
+title: Roadmap
+description: Upcoming @interlace serverless plugins and features.
+---
+
+## Active Development
+
+### @interlace/serverless-plugin-caching `v0.1.0` ✅
+
+API Gateway caching with proper cleanup, CLI commands, and TypeScript support.
+
+### @interlace/serverless-devkit `v0.1.0` ✅
+
+TypeScript configuration toolkit with `defineConfig()`, `defineFunction()`, and plugin development interfaces.
+
+## Planned Plugins
+
+| Plugin | Replaces | Weekly Downloads | Status |
+|---|---|---|---|
+| `@interlace/serverless-plugin-warmup` | `serverless-plugin-warmup` | ~150K | Planned |
+| `@interlace/serverless-plugin-prune` | `serverless-prune-plugin` | ~200K | Planned |
+| `@interlace/serverless-plugin-canary` | `serverless-plugin-canary-deployments` | ~30K | Planned |
+| `@interlace/serverless-plugin-split-stacks` | `serverless-plugin-split-stacks` | ~50K | Research |
+
+## Design Principles
+
+Every `@interlace` plugin follows these non-negotiable standards:
+
+1. **Zero runtime dependencies** — no lodash, no axios, no supply chain surface
+2. **TypeScript-native** — full IntelliSense, JSON schema validation
+3. **Cleanup hooks** — `before:remove:remove` prevents resource leaks
+4. **CLI commands** — manage resources without the AWS console
+5. **Fail-to-Test** — no release without comprehensive test coverage
+6. **Jittered retries** — no thundering herd on concurrent deploys

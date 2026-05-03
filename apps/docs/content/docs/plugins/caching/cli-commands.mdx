@@ -1,0 +1,66 @@
+---
+title: CLI Commands
+description: Manage your API Gateway cache from the command line.
+---
+
+## `sls caching status`
+
+Show the current cache cluster state:
+
+```bash
+sls caching status
+```
+
+Output:
+
+```
+[interlace-caching] --- Cache Status ---
+[interlace-caching]   Enabled:  true
+[interlace-caching]   Size:     0.5 GB
+[interlace-caching]   Status:   AVAILABLE
+[interlace-caching]   Stage:    dev
+[interlace-caching]   API ID:   abc123xyz
+```
+
+## `sls caching flush`
+
+Flush all cached responses for a stage:
+
+```bash
+sls caching flush
+sls caching flush --stage prod --region us-west-2
+```
+
+Use `flushOnDeploy: true` in your config to flush automatically after every deploy:
+
+```yaml
+custom:
+  interlaceCaching:
+    enabled: true
+    flushOnDeploy: true
+```
+
+## `sls caching disable`
+
+**Fully disable the cache cluster on AWS.** This is the safe offboarding command — run it before removing the plugin from `serverless.yml`:
+
+```bash
+sls caching disable
+sls caching disable --stage prod
+```
+
+Output:
+
+```
+[interlace-caching] Disabling cache cluster for stage 'prod'...
+[interlace-caching] ✅ Cache cluster disabled successfully.
+[interlace-caching]
+[interlace-caching] You can now safely remove the plugin from your serverless.yml:
+[interlace-caching]
+[interlace-caching]   1. Remove "@interlace/serverless-plugin-caching" from plugins
+[interlace-caching]   2. Remove the "interlaceCaching" section from custom
+[interlace-caching]   3. Remove "caching" from function http events
+[interlace-caching]   4. Run "sls deploy" to apply
+```
+
+See the [removal guide](/docs/plugins/caching/removal) for the complete offboarding procedure.

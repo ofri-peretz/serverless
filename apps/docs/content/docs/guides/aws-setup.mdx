@@ -1,0 +1,64 @@
+---
+title: AWS Setup
+description: Configure your local AWS environment for @interlace plugin development and testing.
+---
+
+## Prerequisites
+
+- AWS CLI installed (`aws --version`)
+- An AWS account with IAM permissions
+
+## Create an IAM User
+
+Create a dedicated user for Serverless plugin development:
+
+```bash
+aws iam create-user --user-name interlace-cli
+aws iam attach-user-policy \
+  --user-name interlace-cli \
+  --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+aws iam tag-user \
+  --user-name interlace-cli \
+  --tags Key=project,Value=interlace Key=environment,Value=development
+```
+
+## Configure AWS Profile
+
+```bash
+aws configure --profile interlace
+# AWS Access Key ID: <your-key>
+# AWS Secret Access Key: <your-secret>
+# Default region name: us-east-1
+# Default output format: json
+```
+
+Disable the pager (prevents interactive `vim`/`less` sessions):
+
+```bash
+aws configure set cli_pager "" --profile interlace
+```
+
+## Verify
+
+```bash
+aws sts get-caller-identity --profile interlace
+```
+
+## Environment Variables
+
+Copy the example env file for your project:
+
+```bash
+cp .env.example .env
+```
+
+```bash title=".env"
+AWS_PROFILE=interlace
+AWS_REGION=us-east-1
+```
+
+## Deploy
+
+```bash
+sls deploy --aws-profile interlace
+```

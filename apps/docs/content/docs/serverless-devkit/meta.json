@@ -1,0 +1,4 @@
+{
+  "title": "Serverless Devkit",
+  "pages": ["index", "typescript-config", "compat-helpers"]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Caching Plugin",
+  "pages": [
+    "index",
+    "configuration",
+    "cache-keys",
+    "shared-gateway",
+    "cli-commands",
+    "migration",
+    "removal"
+  ]
+}

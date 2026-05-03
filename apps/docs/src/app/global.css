@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/shadcn.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/* ------------------------------------------------------------------ */
+/* Brand tokens                                                       */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --interlace-accent: 250 95% 64%;
+  --interlace-accent-foreground: 0 0% 100%;
+  --interlace-surface: 240 10% 4%;
+  --interlace-surface-hover: 240 10% 8%;
+}
+
+/* Override Fumadocs primary to match Interlace brand */
+:root {
+  --fd-primary: 250 95% 64%;
+  --fd-primary-foreground: 0 0% 100%;
+}
+
+.dark {
+  --fd-primary: 250 95% 64%;
+  --fd-primary-foreground: 0 0% 100%;
+}

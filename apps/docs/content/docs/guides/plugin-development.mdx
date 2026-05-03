@@ -1,0 +1,130 @@
+---
+title: Plugin Development
+description: Build Serverless Framework plugins with @interlace/serverless-devkit.
+---
+
+## Overview
+
+`@interlace/serverless-devkit` provides all the types you need to build a Serverless Framework plugin with full TypeScript support.
+
+## Scaffold
+
+```bash
+mkdir my-serverless-plugin
+cd my-serverless-plugin
+npm init -y
+npm install @interlace/serverless-devkit
+```
+
+## Plugin Structure
+
+```ts title="src/index.ts"
+import type {
+  ServerlessInstance,
+  ServerlessOptions,
+  ServerlessPlugin,
+  ServerlessHooks,
+  ServerlessCommands,
+  AwsProvider,
+} from '@interlace/serverless-devkit';
+
+class MyPlugin implements ServerlessPlugin {
+  public hooks: ServerlessHooks;
+  public commands: ServerlessCommands;
+
+  private serverless: ServerlessInstance;
+  private provider: AwsProvider;
+
+  constructor(serverless: ServerlessInstance, options: ServerlessOptions) {
+    this.serverless = serverless;
+    this.provider = serverless.providers.aws;
+
+    this.commands = {
+      'my-command': {
+        usage: 'Description of my command',
+        lifecycleEvents: ['run'],
+        options: {
+          stage: {
+            usage: 'Stage to run against',
+            shortcut: 's',
+            type: 'string',
+          },
+        },
+      },
+    };
+
+    this.hooks = {
+      'before:package:finalize': this.onPackageFinalize.bind(this),
+      'after:deploy:deploy': this.onDeploy.bind(this),
+      'my-command:run': this.onMyCommand.bind(this),
+    };
+  }
+
+  private async onPackageFinalize(): Promise<void> {
+    // Modify CloudFormation template before packaging
+    const template =
+      this.serverless.service.provider.compiledCloudFormationTemplate;
+    // ...
+  }
+
+  private async onDeploy(): Promise<void> {
+    // Run after deployment completes
+    const stage = this.provider.getStage();
+    this.serverless.cli.log(`Deployed to ${stage}`);
+  }
+
+  private async onMyCommand(): Promise<void> {
+    // Custom CLI command handler
+  }
+}
+
+export default MyPlugin;
+```
+
+## Lifecycle Hooks
+
+Common hooks for plugin development:
+
+| Hook | When |
+|---|---|
+| `before:package:initialize` | Before packaging starts |
+| `before:package:finalize` | After CF template is compiled |
+| `after:deploy:deploy` | After deployment completes |
+| `before:remove:remove` | Before stack removal |
+
+## Making AWS API Calls
+
+Use the provider's `request` method:
+
+```ts
+const response = await this.provider.request(
+  'APIGateway',
+  'getStage',
+  {
+    restApiId: 'abc123',
+    stageName: 'dev',
+  },
+);
+```
+
+## Config Validation
+
+Register a JSON schema for your plugin's config:
+
+```ts
+const handler = this.serverless.configSchemaHandler;
+if (handler?.defineCustomProperties) {
+  handler.defineCustomProperties({
+    type: 'object',
+    properties: {
+      myPluginConfig: {
+        type: 'object',
+        properties: {
+          enabled: { type: 'boolean' },
+          timeout: { type: 'number', minimum: 0 },
+        },
+      },
+    },
+  });
+}
+```

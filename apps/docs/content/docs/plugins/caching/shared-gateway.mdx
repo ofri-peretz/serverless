@@ -1,0 +1,85 @@
+---
+title: Shared API Gateway
+description: Configure caching when multiple services share a single API Gateway.
+---
+
+## When to use
+
+When your API Gateway is shared across multiple Serverless services, use `sharedApiGateway: true` in the secondary services. This prevents them from overwriting the cache cluster settings configured by the primary service.
+
+## Setup
+
+### Primary service (owns the API Gateway)
+
+```yaml
+# Creates the cache cluster
+custom:
+  interlaceCaching:
+    enabled: true
+    clusterSize: '1.6'
+    ttlInSeconds: 300
+```
+
+### Secondary services (share the API Gateway)
+
+```yaml
+custom:
+  interlaceCaching:
+    enabled: true
+    sharedApiGateway: true
+    restApiId: ${cf:api-gateway-${self:provider.stage}.RestApiId}
+    basePath: /animals
+
+functions:
+  getCats:
+    handler: getCats.handle
+    events:
+      - http:
+          path: /cats
+          method: get
+          caching:
+            enabled: true
+```
+
+## How it works
+
+When `sharedApiGateway` is `true`, the plugin:
+
+1. **Skips** stage-level operations (cache cluster enable/disable, cluster size)
+2. **Still applies** per-endpoint settings (TTL, encryption, invalidation, cache keys)
+3. Uses the provided `restApiId` to find the correct API Gateway
+
+## Cross-stack references
+
+If the API Gateway is in a different CloudFormation stack, export its `RestApiId` and reference it:
+
+```yaml
+# In the primary stack
+resources:
+  Outputs:
+    RestApiId:
+      Value:
+        Ref: ApiGatewayRestApi
+      Export:
+        Name: api-gateway-${self:provider.stage}-RestApiId
+
+# In the secondary stack
+custom:
+  interlaceCaching:
+    restApiId: ${cf:api-gateway-${self:provider.stage}.RestApiId}
+```
+
+If the API Gateway is in the **same** stack, you don't need to specify `restApiId` — the plugin finds it automatically.
+
+## Base path
+
+When the shared gateway has a default base path that is not part of your endpoint configuration:
+
+```yaml
+custom:
+  interlaceCaching:
+    sharedApiGateway: true
+    basePath: /animals  # prepended to all endpoint paths
+```
+
+Your endpoint `/cats` becomes `/animals/cats` when looking up the API Gateway resource.

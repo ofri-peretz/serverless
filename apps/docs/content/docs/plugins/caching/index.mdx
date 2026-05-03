@@ -1,0 +1,67 @@
+---
+title: Caching Plugin
+description: API Gateway caching for Serverless Framework — done right.
+---
+
+## Overview
+
+`@interlace/serverless-plugin-caching` is a TypeScript-native replacement for [`serverless-api-gateway-caching`](https://github.com/DianaIonita/serverless-api-gateway-caching) that fixes ghost billing, adds CLI commands, and provides full config validation.
+
+```bash
+npm install @interlace/serverless-plugin-caching
+```
+
+## Why switch?
+
+| Feature | Community Plugin | @interlace |
+|---|---|---|
+| **Cleanup on `sls remove`** | ❌ Cache cluster keeps running | ✅ Disabled before delete |
+| **Safe offboarding** | ❌ Remove plugin → orphaned cache | ✅ `sls caching disable` |
+| **CLI commands** | ❌ | ✅ `flush`, `status`, `disable` |
+| **Flush on deploy** | ❌ | ✅ `flushOnDeploy: true` |
+| **Retry strategy** | Pure exponential | Jittered backoff |
+| **Prototype pollution** | 🔴 `String.prototype.replaceAll` | ✅ Zero |
+| **Dependencies** | lodash.get, lodash.isempty | ✅ Zero |
+| **TypeScript** | ❌ | ✅ Full IntelliSense |
+| **Config validation** | Partial | ✅ Complete JSON schema |
+| **`ANY` method** | Partial | ✅ GET-only caching |
+
+## Quick Start
+
+```yaml
+plugins:
+  - '@interlace/serverless-plugin-caching'
+
+custom:
+  interlaceCaching:
+    enabled: true
+    clusterSize: '0.5'
+    ttlInSeconds: 300
+
+functions:
+  getUser:
+    handler: src/handler.get
+    events:
+      - http:
+          path: /users/{id}
+          method: get
+          caching:
+            enabled: true
+            cacheKeyParameters:
+              - name: request.path.id
+```
+
+<Callout type="info">
+Enabling caching globally does **not** automatically cache all endpoints — you must set `caching.enabled: true` on each endpoint individually.
+</Callout>
+
+## REST API Only
+
+This plugin only supports **REST API** (`http` events). HTTP API (`httpApi`) does not support API Gateway caching. See [AWS docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html).
+
+## Next Steps
+
+- [Configuration reference](/docs/plugins/caching/configuration)
+- [Cache key parameters](/docs/plugins/caching/cache-keys)
+- [CLI commands](/docs/plugins/caching/cli-commands)
+- [Migration from community plugin](/docs/plugins/caching/migration)

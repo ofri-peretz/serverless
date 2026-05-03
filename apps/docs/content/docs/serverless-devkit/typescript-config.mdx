@@ -1,0 +1,77 @@
+---
+title: TypeScript Configuration
+description: Write serverless.ts instead of serverless.yml for full type safety.
+---
+
+## Why TypeScript?
+
+YAML files have no type checking. A typo in `memorySize` vs `MemorySize` or an invalid `runtime` string won't fail until deploy time — sometimes not even then.
+
+With `@interlace/serverless-devkit`, every configuration option is typed. Your editor catches errors as you type.
+
+## Setup
+
+### 1. Install
+
+```bash
+npm install @interlace/serverless-devkit
+```
+
+### 2. Create `serverless.ts`
+
+```ts title="serverless.ts"
+import { defineConfig, defineFunction } from '@interlace/serverless-devkit';
+
+export default defineConfig({
+  service: 'my-api',
+  provider: {
+    name: 'aws',
+    runtime: 'nodejs20.x',
+    region: 'us-east-1',
+    memorySize: 512,
+    environment: {
+      TABLE_NAME: 'my-table',
+    },
+  },
+  plugins: ['@interlace/serverless-plugin-caching'],
+  custom: {
+    interlaceCaching: {
+      enabled: true,
+      clusterSize: '0.5',
+      ttlInSeconds: 300,
+    },
+  },
+  functions: {
+    getUser: defineFunction({
+      handler: 'src/handlers/getUser.handler',
+      events: [
+        {
+          http: {
+            path: '/users/{id}',
+            method: 'get',
+            caching: {
+              enabled: true,
+              cacheKeyParameters: [{ name: 'request.path.id' }],
+            },
+          },
+        },
+      ],
+    }),
+  },
+});
+```
+
+### 3. Deploy
+
+The Serverless Framework natively supports `.ts` config files:
+
+```bash
+sls deploy
+```
+
+## Benefits
+
+- **Autocomplete** — every AWS provider option, event type, and plugin setting
+- **Type errors** — invalid values caught before deploy
+- **Refactoring** — rename a function and all references update
+- **Reusable patterns** — share typed configs across services via imports

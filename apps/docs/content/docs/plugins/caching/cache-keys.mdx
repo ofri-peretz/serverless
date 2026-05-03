@@ -1,0 +1,106 @@
+---
+title: Cache Key Parameters
+description: Define what makes a cache entry unique — path, query string, header, and body parameters.
+---
+
+## Overview
+
+Without cache key parameters, all requests to the same path return the same cached response. Cache key parameters tell API Gateway to create separate cache entries based on request values.
+
+## Path, Query String, and Header
+
+```yaml
+caching:
+  enabled: true
+  cacheKeyParameters:
+    - name: request.path.id
+    - name: request.querystring.page
+    - name: request.querystring.limit
+    - name: request.header.Accept-Language
+```
+
+### How cache entries are created
+
+Given this configuration:
+
+```yaml
+caching:
+  enabled: true
+  cacheKeyParameters:
+    - name: request.path.pawId
+    - name: request.querystring.catName
+```
+
+- `GET /cats/4` → cache entry for `pawId=4`, `catName=undefined`
+- `GET /cats/34?catName=Dixon` → cache entry for `pawId=34`, `catName=Dixon`
+- `GET /cats/72?catName=Tsunami&furColour=white` → cache entry for `pawId=72`, `catName=Tsunami` (ignores `furColour`)
+
+<Callout type="warn">
+Cache key parameter names are **case sensitive**. `request.header.accept-language` and `request.header.Accept-Language` create different cache entries.
+</Callout>
+
+## Body-Based Cache Keys
+
+For POST endpoints (e.g., GraphQL), cache based on the request body:
+
+### Entire body
+
+```yaml
+caching:
+  enabled: true
+  cacheKeyParameters:
+    - name: integration.request.header.bodyValue
+      mappedFrom: method.request.body
+```
+
+### JSONPath expression
+
+Cache by a specific field in the body:
+
+```yaml
+caching:
+  enabled: true
+  cacheKeyParameters:
+    - name: integration.request.header.cityCount
+      mappedFrom: method.request.body.cities[0].petCount
+```
+
+### Mixed sources
+
+Combine query string and body parameters:
+
+```yaml
+caching:
+  enabled: true
+  cacheKeyParameters:
+    - name: request.querystring.catName
+    - name: integration.request.header.furColour
+      mappedFrom: method.request.body.furColour
+```
+
+## Catch-All Path Parameters
+
+For greedy path routes (`{proxy+}`):
+
+```yaml
+functions:
+  proxy:
+    handler: src/proxy.handle
+    events:
+      - http:
+          path: /api/{proxy+}
+          method: get
+          caching:
+            enabled: true
+            cacheKeyParameters:
+              - name: request.path.proxy
+```
+
+Cache entries:
+- `GET /api/users` → `proxy=users`
+- `GET /api/users/123` → `proxy=users/123`
+
+## Limitations
+
+- Multi-value query strings and multi-value headers are **not supported** by API Gateway caching
+- Body-based cache keys require an integration request mapping (handled automatically by the plugin)
