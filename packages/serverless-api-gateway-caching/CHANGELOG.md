@@ -26,6 +26,12 @@ plugin.
 - TypeScript types and IntelliSense for every config option (re-exports
   `CachingPluginConfig`, `EndpointCachingConfig`, `CacheKeyParameterConfig`,
   `CacheClusterSize`, `PerKeyInvalidationConfig`, `AdditionalEndpointConfig`).
+- **Auto-typed `defineConfig` integration.** When used alongside
+  `@interlace/serverless-devkit`, the plugin extends the devkit's
+  `PluginConfigRegistry` via TypeScript module augmentation — so
+  `defineConfig({ custom: { interlaceCaching: { ... } } })` is fully typed
+  with no manual imports or compat wrappers. See
+  [docs: Extending defineConfig types](https://serverless.interlace.tools/docs/serverless-devkit/extending-types).
 - Zero runtime dependencies. Zero global prototype mutation (the community
   plugin assigns `String.prototype.replaceAll` at module load).
 - Drop-in defaults match the community plugin (`ttlInSeconds: 3600`,

@@ -67,15 +67,16 @@ export function buildPillarIcons(pillars: Record<string, PillarConfig>) {
     );
   }
 
-  // Build the transform function for DocsLayout sidebar tabs
-  const transform = (
-    option: { icon?: ReactNode; [key: string]: unknown },
+  // Build the transform function for DocsLayout sidebar tabs.
+  // Generic over the input shape so it satisfies fumadocs's `LayoutTab`-typed
+  // `transform` slot without the consumer needing a cast.
+  const transform = <T extends { icon?: ReactNode }>(
+    option: T,
     node: { name: string | ReactNode },
-  ) => {
+  ): T => {
     const nodeName = typeof node.name === 'string' ? node.name : '';
     const folderName = nodeName.toLowerCase().replace(/\s+/g, '-');
 
-    // Try direct match first, then strip common words
     const slug =
       icons[folderName] !== undefined
         ? folderName

@@ -9,7 +9,7 @@ description: How to safely remove the caching plugin without ghost billing.
 
 ## Why is this necessary?
 
-API Gateway cache clusters are provisioned resources that cost **~$0.02/hour** ($14.40/month for 0.5 GB). They are **not** part of your CloudFormation stack — they're managed via the `UpdateStage` API at deploy time.
+API Gateway cache clusters are provisioned resources that cost real money — see the [official AWS API Gateway pricing page](https://aws.amazon.com/api-gateway/pricing/) under "API caching" for the per-region rate. They are **not** part of your CloudFormation stack — they're managed via the `UpdateStage` API at deploy time.
 
 When you remove a caching plugin and redeploy:
 1. CloudFormation doesn't know about the cache cluster → it stays running
@@ -64,9 +64,7 @@ sls deploy --stage production
 
 ### Step 4: Uninstall the package
 
-```bash
-npm uninstall @interlace/serverless-api-gateway-caching
-```
+<InstallSnippet pkg="@interlace/serverless-api-gateway-caching" command="uninstall" />
 
 ## What about `sls remove`?
 

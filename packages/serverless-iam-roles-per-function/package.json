@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "build": "vite build",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/"

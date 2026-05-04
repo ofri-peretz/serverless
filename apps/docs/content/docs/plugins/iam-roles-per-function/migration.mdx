@@ -3,8 +3,6 @@ title: Migration Guide
 description: Migrate from serverless-iam-roles-per-function to @interlace/serverless-iam-roles-per-function.
 ---
 
-import { ComparisonMatrix } from '#interlace/components/docs/comparison-matrix';
-
 > **Compatibility:** Serverless Framework v3 + v4. Community plugin tested at v3.2.0.
 
 The `@interlace` plugin is config-compatible with the community plugin. **Existing function-level config keys (`iamRoleStatements`, `iamRoleStatementsInherit`, `iamRoleStatementsName`, `iamPermissionsBoundary`) work without changes.** The only required edit is the entry under `plugins:`.
@@ -17,10 +15,9 @@ The `@interlace` plugin is config-compatible with the community plugin. **Existi
 +  - '@interlace/serverless-iam-roles-per-function'
 ```
 
-```bash
-npm uninstall serverless-iam-roles-per-function
-npm install --save-dev @interlace/serverless-iam-roles-per-function
-```
+<InstallSnippet pkg="serverless-iam-roles-per-function" command="uninstall" />
+
+<InstallSnippet pkg="@interlace/serverless-iam-roles-per-function" dev />
 
 That's it. Your existing `iamRoleStatements` and global `defaultInherit` / `iamGlobalPermissionsBoundary` continue to work. The plugin reads both `custom.interlaceIamRolesPerFunction` (the new canonical key) and `custom.serverless-iam-roles-per-function` (the community key) as a backwards-compat alias.
 
@@ -74,8 +71,6 @@ If you have integration tests that read the synthesized template (e.g. from `sls
 
 ## Full feature-by-feature comparison
 
-<ComparisonMatrix slug="iam-roles-per-function" rows="all" />
-
 For source-line citations behind every row, see the contributor doc at [`docs/community-plugin-comparison.md`](https://github.com/ofri-peretz/serverless/blob/main/docs/community-plugin-comparison.md).
 
 ## Rollback
@@ -88,10 +83,9 @@ The migration is fully reversible. To go back:
 +  - serverless-iam-roles-per-function
 ```
 
-```bash
-npm uninstall @interlace/serverless-iam-roles-per-function
-npm install --save-dev serverless-iam-roles-per-function
-```
+<InstallSnippet pkg="@interlace/serverless-iam-roles-per-function" command="uninstall" />
+
+<InstallSnippet pkg="serverless-iam-roles-per-function" dev />
 
 Caveats if you'd already adopted the new features:
 

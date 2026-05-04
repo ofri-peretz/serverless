@@ -45,6 +45,11 @@ plugin. Everything that plugin does, plus the things it does badly or not at all
   monkey-patches `String.prototype.replaceAll`)
 - Drop-in defaults match the community plugin (`ttlInSeconds: 3600`,
   `IgnoreWithWarning` invalidation strategy) — same YAML produces same first-deploy behavior
+- **Auto-typed `defineConfig` integration via `PluginConfigRegistry`** —
+  importing this plugin automatically extends `@interlace/serverless-devkit`'s
+  `defineConfig({ custom: { interlaceCaching: { ... } } })` with full
+  IntelliSense. No manual type imports, no `cachingConfig()` wrapper.
+  Pattern documented in `docs/serverless-devkit/extending-types`.
 
 See the [migration guide](https://serverless.interlace.tools/docs/plugins/caching/migration)
 for the full capability matrix and step-by-step swap instructions.
@@ -55,6 +60,18 @@ TypeScript-first configuration toolkit for Serverless Framework. Ships
 `defineConfig()`, `defineFunction()`, plugin-development types, and
 compatibility helpers — zero dependencies, full IntelliSense across the
 Serverless v3/v4 config surface.
+
+**Plugin type composition** — exposes `PluginConfigRegistry`, an extension
+point that any `@interlace/*` plugin can augment via TypeScript module
+augmentation. Adding a plugin to your project automatically extends
+`defineConfig({ custom: { ... } })` with that plugin's typed config slot,
+without devkit ever needing knowledge of it. See
+`docs/serverless-devkit/extending-types`.
+
+The redundant `cachingConfig()` compat helper has been removed (the caching
+plugin now ships types directly via augmentation). Compat helpers remain for
+**community plugins without their own types** (`domainManagerConfig`,
+`pruneConfig`).
 
 ## Compatibility
 

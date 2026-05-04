@@ -6,7 +6,6 @@ import {
   Package,
   ArrowRight,
   Code2,
-  Trash2,
   RefreshCw,
 } from 'lucide-react';
 import { Spotlight } from '@/components/ui/spotlight';
@@ -91,34 +90,34 @@ export default function HomePage() {
 
           <div className="grid gap-6 md:grid-cols-3">
             <FeatureCard
-              icon={<Trash2 className="h-5 w-5" />}
-              title="Safe offboarding"
-              description="`sls caching disable` stops the cluster before you remove the plugin. No silent ghost billing when uninstalling."
+              icon={<Code2 className="h-5 w-5" />}
+              title="TypeScript-native"
+              description="Full IntelliSense for every config option in serverless.ts — types are exported from each plugin. Catch misconfigurations before deploy."
+            />
+            <FeatureCard
+              icon={<Package className="h-5 w-5" />}
+              title="Serverless v3 and v4"
+              description="Tested against both framework versions. Same plugin, same types, same config — no separate distributions."
             />
             <FeatureCard
               icon={<Terminal className="h-5 w-5" />}
               title="CLI commands"
-              description="sls caching status, flush, and disable — manage your cache without touching the AWS console."
+              description="Each plugin ships subcommands the community plugin lacks — preview, audit, validate, flush, status — for ops without touching the AWS console."
             />
             <FeatureCard
               icon={<Shield className="h-5 w-5" />}
-              title="Zero prototype pollution"
-              description="No String.prototype.replaceAll override. No lodash micro-packages. Zero runtime dependencies."
-            />
-            <FeatureCard
-              icon={<Zap className="h-5 w-5" />}
-              title="Jittered backoff"
-              description="Exponential retry with jitter prevents thundering herd during concurrent deployments."
-            />
-            <FeatureCard
-              icon={<Code2 className="h-5 w-5" />}
-              title="TypeScript-native"
-              description="Full IntelliSense for every config option. Catch misconfigurations before deploy."
+              title="Zero runtime dependencies"
+              description="No prototype pollution. No lodash. No transitive bloat. Just the plugin and the AWS SDK that comes with the framework."
             />
             <FeatureCard
               icon={<RefreshCw className="h-5 w-5" />}
               title="Stricter config validation"
-              description="clusterSize enum-validated to AWS-allowed sizes. ttlInSeconds enforced to 0–3600. Catch typos at edit time, not deploy time."
+              description="Schema-enforced enums, ranges, and grammars. Catch typos at edit time — not at deploy time, and certainly not at runtime."
+            />
+            <FeatureCard
+              icon={<Zap className="h-5 w-5" />}
+              title="Reproducible benchmarks"
+              description="Every claim is backed by a dated, source-cited scorecard. No marketing without evidence — see /docs/concepts/evidence-framework."
             />
           </div>
         </div>
@@ -133,8 +132,14 @@ export default function HomePage() {
             <PackageCard
               name="@interlace/serverless-api-gateway-caching"
               description="API Gateway caching done right. Replaces serverless-api-gateway-caching with proper cleanup, CLI commands, and TypeScript config validation."
-              href="/docs/plugins/caching"
+              href="/docs/plugins/api-gateway-caching"
               tags={['REST API', 'Cache Cluster', 'Cleanup', 'CLI']}
+            />
+            <PackageCard
+              name="@interlace/serverless-iam-roles-per-function"
+              description="Per-function IAM roles, strict + typed. Drop-in replacement for the 5-year-stale community plugin — adds CLI introspection, EventBridge / S3 auto-permissions, and statement templates."
+              href="/docs/plugins/iam-roles-per-function"
+              tags={['IAM', 'Least Privilege', 'CLI', 'v3 + v4']}
             />
             <PackageCard
               name="@interlace/serverless-devkit"

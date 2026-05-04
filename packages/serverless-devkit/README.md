@@ -62,28 +62,42 @@ const functions = defineFunctions({
 });
 ```
 
-## Compatibility Helpers
+## Plugin Type Composition
 
-Typed shims for legacy community plugins — useful while migrating to `@interlace` native plugins. Each helper returns a `custom.*` fragment ready to spread into `defineConfig`:
+`@interlace/*` plugins extend the devkit's `PluginConfigRegistry` via TypeScript module augmentation — adding the plugin to your project automatically extends `defineConfig({ custom: { ... } })` with full IntelliSense, no manual type imports:
+
+```typescript
+import { defineConfig } from '@interlace/serverless-devkit';
+import '@interlace/serverless-api-gateway-caching'; // augmentation activates here
+
+export default defineConfig({
+  service: 'my-api',
+  provider: { name: 'aws', runtime: 'nodejs20.x', region: 'us-east-1' },
+  custom: {
+    interlaceCaching: {
+      enabled: true,
+      clusterSize: '0.5', // ← autocompletes (literal union of valid sizes)
+      ttlInSeconds: 300, // ← refuses out-of-range values
+    },
+  },
+});
+```
+
+Third-party plugins can opt in by following the same convention — see [Extending defineConfig types](https://serverless.interlace.tools/docs/serverless-devkit/extending-types) for the pattern.
+
+## Compatibility Helpers (community plugins)
+
+For community plugins that don't ship TypeScript types, the `compat` subpath provides typed wrapper functions. Each returns a `custom.*` fragment ready to spread into `defineConfig`:
 
 ```typescript
 import { defineConfig } from '@interlace/serverless-devkit';
 import {
-  cachingConfig,
   domainManagerConfig,
   pruneConfig,
 } from '@interlace/serverless-devkit/compat';
 
 export default defineConfig({
   custom: {
-    // Typed config for @interlace/serverless-api-gateway-caching
-    // (also a drop-in upgrade from serverless-api-gateway-caching)
-    ...cachingConfig({
-      enabled: true,
-      clusterSize: '0.5',
-      ttlInSeconds: 300,
-    }),
-
     // Typed config for serverless-domain-manager
     ...domainManagerConfig({
       domainName: 'api.example.com',
@@ -98,6 +112,8 @@ export default defineConfig({
   },
 });
 ```
+
+> First-party `@interlace/*` plugins use the type-composition pattern above instead of compat helpers — types stay in sync with the plugin without devkit needing to mirror them.
 
 ## Plugin Development
 

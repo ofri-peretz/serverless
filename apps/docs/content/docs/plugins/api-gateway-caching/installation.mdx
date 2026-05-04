@@ -3,14 +3,23 @@ title: Installation
 description: Install @interlace/serverless-api-gateway-caching and verify it loads.
 ---
 
+import { InstallSnippet } from '#interlace/components/docs/install-snippet';
+import {
+  ServerlessConfigTabs,
+  ServerlessConfigYaml,
+  ServerlessConfigTypescript,
+  ServerlessConfigJavascript,
+  ServerlessConfigJson,
+} from '#interlace/components/docs/serverless-config-tabs';
+
 ## Install
 
-```bash
-npm install --save-dev @interlace/serverless-api-gateway-caching
-```
+<InstallSnippet pkg="@interlace/serverless-api-gateway-caching" dev />
 
 ## Wire into the project
 
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
 ```yaml title="serverless.yml"
 plugins:
   - '@interlace/serverless-api-gateway-caching'
@@ -21,6 +30,50 @@ custom:
     clusterSize: '0.5'
     ttlInSeconds: 300
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+const serverlessConfiguration = {
+  plugins: ['@interlace/serverless-api-gateway-caching'],
+  custom: {
+    interlaceCaching: {
+      enabled: true,
+      clusterSize: '0.5',
+      ttlInSeconds: 300,
+    },
+  },
+};
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+module.exports = {
+  plugins: ['@interlace/serverless-api-gateway-caching'],
+  custom: {
+    interlaceCaching: {
+      enabled: true,
+      clusterSize: '0.5',
+      ttlInSeconds: 300,
+    },
+  },
+};
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "plugins": ["@interlace/serverless-api-gateway-caching"],
+  "custom": {
+    "interlaceCaching": {
+      "enabled": true,
+      "clusterSize": "0.5",
+      "ttlInSeconds": 300
+    }
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 ## Smoke test
 

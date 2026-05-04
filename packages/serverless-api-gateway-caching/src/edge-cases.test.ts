@@ -114,44 +114,44 @@ describe('settings — trailing-slash normalization', () => {
   });
 });
 
+function endpoint(overrides: Partial<EndpointSettings> = {}): EndpointSettings {
+  return {
+    resourcePath: '/items',
+    httpMethod: 'GET',
+    cachingEnabled: true,
+    ttlInSeconds: 300,
+    dataEncrypted: false,
+    perKeyInvalidation: {
+      requireAuthorization: true,
+      handleUnauthorizedRequests: 'Ignore',
+    },
+    cacheKeyParameters: [],
+    inheritCloudWatchSettingsFromStage: true,
+    gatewayResourceName: 'ApiGatewayMethodItemsGet',
+    isAdditionalEndpoint: false,
+    functionName: 'list',
+    ...overrides,
+  };
+}
+
+function settings(endpoints: EndpointSettings[]): ResolvedCachingSettings {
+  return {
+    cachingEnabled: true,
+    clusterSize: '0.5',
+    ttlInSeconds: 300,
+    dataEncrypted: false,
+    flushOnDeploy: false,
+    perKeyInvalidation: {
+      requireAuthorization: true,
+      handleUnauthorizedRequests: 'Ignore',
+    },
+    sharedApiGateway: false,
+    endpoints,
+    additionalEndpoints: [],
+  };
+}
+
 describe('cache-key-params — mappedFrom branches & legacy shorthand', () => {
-  function endpoint(
-    overrides: Partial<EndpointSettings> = {},
-  ): EndpointSettings {
-    return {
-      resourcePath: '/items',
-      httpMethod: 'GET',
-      cachingEnabled: true,
-      ttlInSeconds: 300,
-      dataEncrypted: false,
-      perKeyInvalidation: {
-        requireAuthorization: true,
-        handleUnauthorizedRequests: 'Ignore',
-      },
-      cacheKeyParameters: [],
-      inheritCloudWatchSettingsFromStage: true,
-      gatewayResourceName: 'ApiGatewayMethodItemsGet',
-      isAdditionalEndpoint: false,
-      functionName: 'list',
-      ...overrides,
-    };
-  }
-  function settings(endpoints: EndpointSettings[]): ResolvedCachingSettings {
-    return {
-      cachingEnabled: true,
-      clusterSize: '0.5',
-      ttlInSeconds: 300,
-      dataEncrypted: false,
-      flushOnDeploy: false,
-      perKeyInvalidation: {
-        requireAuthorization: true,
-        handleUnauthorizedRequests: 'Ignore',
-      },
-      sharedApiGateway: false,
-      endpoints,
-      additionalEndpoints: [],
-    };
-  }
   function makeSlsForCfMutation(
     resources: Record<string, unknown>,
   ): ServerlessInstance {

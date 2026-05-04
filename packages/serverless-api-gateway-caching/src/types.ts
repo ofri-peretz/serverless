@@ -163,3 +163,33 @@ export interface StageMethodSettings {
   dataTraceEnabled?: boolean;
   metricsEnabled?: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// `@interlace/serverless-devkit` integration — typed `custom.interlaceCaching`
+// ---------------------------------------------------------------------------
+//
+// Module augmentation: when this plugin is imported alongside the devkit,
+// `defineConfig({ custom: { interlaceCaching: { ... } } })` gets full
+// IntelliSense and rejects unknown keys. Pure type-level concern — no
+// runtime dependency on the devkit (it's an `optional` peerDependency).
+// Users who skip it (e.g. hand-written `serverless.yml`) are unaffected.
+//
+// The empty `import type {}` line below forces TypeScript to resolve the
+// devkit module so the augmentation target binds correctly under Node16
+// module resolution. It compiles to nothing.
+//
+// Convention for future Interlace plugins: add an analogous block to your
+// own `src/types.ts`. See `apps/docs/content/docs/serverless-devkit/extending-types.mdx`.
+
+// oxlint-disable-next-line unicorn/require-module-specifiers -- intentional empty type import; binds augmentation target under Node16 module resolution
+import type {} from '@interlace/serverless-devkit';
+
+declare module '@interlace/serverless-devkit' {
+  interface PluginConfigRegistry {
+    /**
+     * `@interlace/serverless-api-gateway-caching` configuration.
+     * Lives under `custom.interlaceCaching` in serverless config.
+     */
+    interlaceCaching?: CachingPluginConfig;
+  }
+}

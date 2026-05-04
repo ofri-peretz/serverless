@@ -1,0 +1,98 @@
+---
+title: Extending defineConfig types
+description: How third-party @interlace plugins can opt into typed `custom.*` config without devkit ever knowing about them — via TypeScript module augmentation.
+---
+
+`@interlace/serverless-devkit` exposes a single extension point — the `PluginConfigRegistry` interface — that any plugin can augment to register its own typed `custom.*` slot. Adding a plugin to your project then automatically extends `defineConfig({ custom: { ... } })` with full IntelliSense, without devkit ever needing to ship knowledge of that plugin.
+
+This is the convention every first-party `@interlace/*` plugin follows. The pattern is the same one used by `@types/express`, `vitest/globals`, and other ecosystem libraries.
+
+## How it works
+
+`devkit` ships an empty extension point:
+
+```ts
+// inside @interlace/serverless-devkit
+export interface PluginConfigRegistry {}
+
+export interface ServerlessConfig {
+  // ...
+  custom?: PluginConfigRegistry & Record<string, unknown>;
+}
+```
+
+A plugin augments the registry with its own slot:
+
+```ts
+// inside @interlace/serverless-some-plugin/src/types.ts
+import type {} from '@interlace/serverless-devkit';
+
+declare module '@interlace/serverless-devkit' {
+  interface PluginConfigRegistry {
+    somePlugin?: SomePluginConfig;
+  }
+}
+```
+
+That's it. Importing the plugin (or any of its types) pulls the augmentation in. From the user's perspective:
+
+```ts
+import { defineConfig } from '@interlace/serverless-devkit';
+import '@interlace/serverless-some-plugin'; // augmentation activates here
+
+export default defineConfig({
+  service: 'my-api',
+  provider: { name: 'aws', runtime: 'nodejs20.x', region: 'us-east-1' },
+  custom: {
+    somePlugin: {
+      // ✓ fully typed, autocompletes, refuses unknown keys
+    },
+  },
+});
+```
+
+Arbitrary `custom.*` keys still work via the `& Record<string, unknown>` intersection — you don't need to augment the registry to use a plugin, only to _type_ it.
+
+## Why we use this instead of compat helpers
+
+Earlier versions of devkit shipped wrapper functions (`cachingConfig()`, etc.) that returned typed `{ <key>: T }` objects for `custom.*` blocks. That worked but had two real downsides:
+
+1. **Drift.** The wrapper's interface lived inside devkit, separate from the plugin's actual config interface. Every plugin release risked the two diverging silently.
+2. **Friction.** Users had to import a separate symbol per plugin and spread it into `custom`. The augmentation pattern surfaces types directly on the natural object literal.
+
+Compat helpers are still maintained for **community plugins that don't ship their own types** — see [`@interlace/serverless-devkit/compat`](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-devkit/src/compat/index.ts). For first-party plugins, augmentation is the convention.
+
+## Conventions
+
+When adding a new `@interlace/*` plugin, follow these conventions so the registry stays predictable:
+
+- **Use the same key the plugin reads at runtime.** If your plugin reads `serverless.service.custom.somePlugin`, register `somePlugin?: SomePluginConfig` — not `'@interlace/somePlugin'`, not `some-plugin`.
+- **Mark the slot optional** (`?:`). All `custom.*` slots are optional by definition.
+- **Reference the plugin's own exported config interface.** Don't redefine the type inside the augmentation block — that reintroduces drift. Re-export it from the plugin and reference it.
+- **Place the augmentation in `src/types.ts`.** The convention helps reviewers find it; co-locating with the plugin's config types keeps both in lockstep.
+- **Anchor the import.** Add `import type {} from '@interlace/serverless-devkit';` above the `declare module` block. Under TypeScript's Node16 module resolution this is required for the augmentation target to bind correctly.
+
+## Optional peer dependency
+
+Plugins should declare `@interlace/serverless-devkit` as an **optional peer dependency** so users who don't use the devkit aren't forced to install it:
+
+```json
+{
+  "peerDependencies": {
+    "@interlace/serverless-devkit": "*"
+  },
+  "peerDependenciesMeta": {
+    "@interlace/serverless-devkit": {
+      "optional": true
+    }
+  }
+}
+```
+
+The augmentation is purely type-level — there's no runtime import of devkit from the plugin, so an optional peer is the right scope.
+
+## Reference
+
+- Live example: [`packages/serverless-api-gateway-caching/src/types.ts`](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-api-gateway-caching/src/types.ts) — the bottom of the file shows the augmentation block.
+- Mechanism test: [`packages/serverless-devkit/src/plugin-registry.test.ts`](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-devkit/src/plugin-registry.test.ts) — exercises the pattern with `@ts-expect-error` directives that fail typecheck if the registry stops working.
+- TypeScript handbook: [Module Augmentation](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation).

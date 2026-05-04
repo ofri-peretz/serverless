@@ -4,6 +4,8 @@
 
 A TypeScript-native replacement for [`serverless-api-gateway-caching`](https://github.com/DianaIonita/serverless-api-gateway-caching) that fixes ghost billing, adds CLI commands, and provides full config validation.
 
+Supports **Serverless Framework v3 and v4** out of the box — runtime _and_ TypeScript types. The plugin's default export shape works with both versions' loader (verified via the `output.exports: 'default'` build flag), and the exported config types (`CachingPluginConfig`, `EndpointCachingConfig`) are usable from `serverless.ts` regardless of framework version.
+
 ## Why switch?
 
 Everything the community plugin does, plus the things it does badly or not at all. **Source-backed:** every win in this table is verified against the community plugin's npm tarball or a live AWS measurement. Full comparison with line-numbered citations: [`docs/community-plugin-comparison.md`](../../docs/community-plugin-comparison.md).

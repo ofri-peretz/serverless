@@ -66,7 +66,7 @@ export interface ComparisonMatrixProps {
   rows?: 'headline' | 'all';
 }
 
-async function loadComparison(props: ComparisonMatrixProps): Promise<ComparisonData> {
+async function loadComparison(props: ComparisonMatrixProps): Promise<ComparisonData | null> {
   if (props.data) return props.data;
   const baseDir =
     process.env.NEXT_PUBLIC_INTERLACE_COMPARISONS_DIR ?? 'apps/docs/src/data/comparisons';
@@ -76,8 +76,12 @@ async function loadComparison(props: ComparisonMatrixProps): Promise<ComparisonD
     throw new Error('ComparisonMatrix: provide `slug`, `dataPath`, or `data`.');
   }
   const absolute = path.startsWith('/') ? path : resolve(process.cwd(), path);
-  const raw = await readFile(absolute, 'utf8');
-  return JSON.parse(raw) as ComparisonData;
+  try {
+    const raw = await readFile(absolute, 'utf8');
+    return JSON.parse(raw) as ComparisonData;
+  } catch {
+    return null;
+  }
 }
 
 function rowClass(verdict: ComparisonVerdict | undefined): string {
@@ -88,6 +92,9 @@ function rowClass(verdict: ComparisonVerdict | undefined): string {
 
 export async function ComparisonMatrix(props: ComparisonMatrixProps) {
   const data = await loadComparison(props);
+  if (!data) {
+    return <ComparisonPending slug={props.slug} />;
+  }
   const rows =
     props.rows === 'headline'
       ? data.rows.filter((r) => r.headline === true)
@@ -128,6 +135,17 @@ export async function ComparisonMatrix(props: ComparisonMatrixProps) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function ComparisonPending({ slug }: { slug?: string }) {
+  return (
+    <div className="my-4 rounded-lg border border-dashed border-fd-border bg-fd-card/50 px-4 py-3 text-sm text-fd-muted-foreground">
+      <strong>Comparison data pending.</strong> The structured comparison JSON for{' '}
+      {slug ? <code className="font-mono">{slug}</code> : 'this plugin'} hasn't been
+      committed yet. The narrative comparison above (or in the migration page) is the
+      source of truth until then.
     </div>
   );
 }

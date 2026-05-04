@@ -1,31 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { cachingConfig, domainManagerConfig, pruneConfig } from './index.js';
+import { domainManagerConfig, pruneConfig } from './index.js';
 
-describe('cachingConfig', () => {
-  it('wraps config under interlaceCaching key', () => {
-    const result = cachingConfig({
-      enabled: true,
-      clusterSize: '0.5',
-      ttlInSeconds: 300,
-      dataEncrypted: true,
-      flushOnDeploy: true,
-      perKeyInvalidation: {
-        requireAuthorization: true,
-        handleUnauthorizedRequests: 'Ignore',
-      },
-    });
-
-    expect(result).toHaveProperty('interlaceCaching');
-    expect(result.interlaceCaching.enabled).toBe(true);
-    expect(result.interlaceCaching.clusterSize).toBe('0.5');
-    expect(result.interlaceCaching.flushOnDeploy).toBe(true);
-  });
-
-  it('works with minimal config', () => {
-    const result = cachingConfig({ enabled: false });
-    expect(result.interlaceCaching.enabled).toBe(false);
-  });
-});
+// Note: `cachingConfig` was removed in v1.0.0 — the caching plugin now
+// ships types directly via `PluginConfigRegistry` module augmentation
+// (see `apps/docs/content/docs/serverless-devkit/extending-types.mdx`).
+// Compat helpers are reserved for community plugins without their own
+// types; first-party Interlace plugins should always use augmentation.
 
 describe('domainManagerConfig', () => {
   it('wraps config under customDomain key', () => {

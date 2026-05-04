@@ -723,7 +723,7 @@ function verifyClean(ctx: RunContext): void {
       `aws cloudformation describe-stacks --stack-name ${stackName} --output text --query "Stacks[0].StackStatus" 2>&1 || true`,
       { encoding: 'utf-8', env },
     );
-  } catch (_err) {
+  } catch {
     // describe-stacks errors when the stack is fully gone — that's the success case
     info('describe-stacks errored, which is the expected post-remove state.');
     ok('no live stack named ' + stackName);
@@ -763,7 +763,7 @@ async function emergencyRemove(): Promise<void> {
     const env = { ...process.env, AWS_REGION: CTX.region };
     runStreaming('npx', ['serverless', 'remove'], CTX.workDir, env);
     console.log(`${COLORS.green}✓ emergency remove succeeded.${COLORS.reset}`);
-  } catch (_err) {
+  } catch {
     console.log(
       `${COLORS.red}✗ emergency remove FAILED. Manual cleanup required:${COLORS.reset}\n` +
         `  Stack: ${CTX.serviceName}-${CTX.stage}\n` +

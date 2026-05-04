@@ -1,0 +1,43 @@
+---
+title: Evidence Framework
+description: The contract for every claim that ships in @interlace/serverless docs — source-cited, reproducible, dated.
+---
+
+> Marketing copy makes claims. Engineering copy proves them. This page is the contract for which kind of copy goes where.
+
+## The rule
+
+**Every product claim on this site is backed by a reproducible benchmark, a source-line citation, or a dated AWS measurement.** If a row in a comparison table doesn't have one of those three, it doesn't ship.
+
+## Where claims live
+
+| Claim type | Where | Backed by |
+| --- | --- | --- |
+| Headline diffs (top of plugin `index.mdx`) | Plugin folder | `<ComparisonMatrix slug="..." rows="headline" />` — pulls from the same source as the migration page |
+| Full migration matrix | `migration.mdx` | `<ComparisonMatrix slug="..." rows="all" />` |
+| Composite scorecard | `benchmark.mdx` | `<PluginScorecard slug="..." />` — reads `benchmark-results/<slug>/latest.json` |
+| Methodology | [How We Measure](./how-we-measure) | The rubric — what we measure, what we don't, how the composite works |
+| Source-line citations | [`docs/community-plugin-comparison.md`](https://github.com/ofri-peretz/serverless/blob/main/docs/community-plugin-comparison.md) | Hand-written audit doc with file/line citations against the community plugin's npm tarball |
+
+The first three are user-facing. The fourth is contributor-facing — it's the audit trail for the user-facing tables.
+
+## When a claim changes
+
+1. Update the source-line citation in [`docs/community-plugin-comparison.md`](https://github.com/ofri-peretz/serverless/blob/main/docs/community-plugin-comparison.md).
+2. Re-run the benchmark to refresh `latest.json` for the affected plugin.
+3. The user-facing components re-render automatically.
+
+If you skip step 1 because "the source already changed and the table just needs to match" — that's fine, but mention it in the PR description. We treat the contributor doc as the audit record.
+
+## Anti-patterns we don't ship
+
+- "Our plugin is faster" — without numbers.
+- "Our plugin is more secure" — without a CVE, an audit, or a property the community plugin lacks.
+- "Our plugin has better DX" — DX claims must reduce to a measurable thing (TypeScript coverage, CLI surface, IntelliSense).
+- A comparison row marked ✅/❌ without a citation in the contributor doc.
+
+If you find one in the wild, [open an issue](https://github.com/ofri-peretz/serverless/issues). We'll either cite it or remove it.
+
+## Cross-product truth source
+
+The framework as a doc lives at [`agents/interlace/evidence-framework.md`](https://github.com/ofri-peretz/agents/blob/main/interlace/evidence-framework.md). This page is the consumer-facing summary specific to the `@interlace/serverless` plugins; the framework doc is the cross-product source of truth.

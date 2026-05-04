@@ -3,33 +3,199 @@ title: Cache Key Parameters
 description: Define what makes a cache entry unique — path, query string, header, and body parameters.
 ---
 
+import {
+  ServerlessConfigTabs,
+  ServerlessConfigYaml,
+  ServerlessConfigTypescript,
+  ServerlessConfigJavascript,
+  ServerlessConfigJson,
+} from '#interlace/components/docs/serverless-config-tabs';
+
 ## Overview
 
 Without cache key parameters, all requests to the same path return the same cached response. Cache key parameters tell API Gateway to create separate cache entries based on request values.
 
+The same recipe in all four config formats Serverless Framework supports — pick whichever your project uses.
+
+<Callout type="info" title="TypeScript users — typing the `caching:` field">
+The official `@types/serverless` (`serverless/aws.d.ts`) doesn't include a `caching` shape on `http` events — that's a plugin-level extension. Two options to keep `serverless.ts` clean:
+
+1. **Recommended.** Import the typed shapes our plugin exports and assert at the assignment site:
+
+   ```ts
+   import type { EndpointCachingConfig } from '@interlace/serverless-api-gateway-caching';
+
+   const caching: EndpointCachingConfig = {
+     enabled: true,
+     cacheKeyParameters: [{ name: 'request.path.id' }],
+   };
+
+   // attach to the http event with `as unknown as Record<string, unknown>`
+   // or extend the framework's `Http` type via module augmentation.
+   ```
+
+2. **Quick escape hatch.** Inline cast: `caching: ({ enabled: true, ... } as unknown as never)`. Keeps the rest of the config typed; loses safety on the caching subtree only.
+
+The TypeScript snippets below assume option 1 — replace the inline objects with values typed against `EndpointCachingConfig`. We're tracking native `@types/serverless` integration in the plugin's roadmap.
+</Callout>
+
 ## Path, Query String, and Header
 
-```yaml
-caching:
-  enabled: true
-  cacheKeyParameters:
-    - name: request.path.id
-    - name: request.querystring.page
-    - name: request.querystring.limit
-    - name: request.header.Accept-Language
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
+```yaml title="serverless.yml"
+functions:
+  listCats:
+    handler: src/handler.list
+    events:
+      - http:
+          path: /cats
+          method: get
+          caching:
+            enabled: true
+            cacheKeyParameters:
+              - name: request.path.id
+              - name: request.querystring.page
+              - name: request.querystring.limit
+              - name: request.header.Accept-Language
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+const serverlessConfiguration: AWS = {
+  functions: {
+    listCats: {
+      handler: 'src/handler.list',
+      events: [
+        {
+          http: {
+            path: '/cats',
+            method: 'get',
+            caching: {
+              enabled: true,
+              cacheKeyParameters: [
+                { name: 'request.path.id' },
+                { name: 'request.querystring.page' },
+                { name: 'request.querystring.limit' },
+                { name: 'request.header.Accept-Language' },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  },
+};
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+module.exports = {
+  functions: {
+    listCats: {
+      handler: 'src/handler.list',
+      events: [
+        {
+          http: {
+            path: '/cats',
+            method: 'get',
+            caching: {
+              enabled: true,
+              cacheKeyParameters: [
+                { name: 'request.path.id' },
+                { name: 'request.querystring.page' },
+                { name: 'request.querystring.limit' },
+                { name: 'request.header.Accept-Language' },
+              ],
+            },
+          },
+        },
+      ],
+    },
+  },
+};
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "functions": {
+    "listCats": {
+      "handler": "src/handler.list",
+      "events": [
+        {
+          "http": {
+            "path": "/cats",
+            "method": "get",
+            "caching": {
+              "enabled": true,
+              "cacheKeyParameters": [
+                { "name": "request.path.id" },
+                { "name": "request.querystring.page" },
+                { "name": "request.querystring.limit" },
+                { "name": "request.header.Accept-Language" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 ### How cache entries are created
 
-Given this configuration:
+Given the configuration:
 
-```yaml
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
+```yaml title="serverless.yml"
 caching:
   enabled: true
   cacheKeyParameters:
     - name: request.path.pawId
     - name: request.querystring.catName
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    { name: 'request.path.pawId' },
+    { name: 'request.querystring.catName' },
+  ],
+}
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    { name: 'request.path.pawId' },
+    { name: 'request.querystring.catName' },
+  ],
+}
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "caching": {
+    "enabled": true,
+    "cacheKeyParameters": [
+      { "name": "request.path.pawId" },
+      { "name": "request.querystring.catName" }
+    ]
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 - `GET /cats/4` → cache entry for `pawId=4`, `catName=undefined`
 - `GET /cats/34?catName=Dixon` → cache entry for `pawId=34`, `catName=Dixon`
@@ -41,35 +207,127 @@ Cache key parameter names are **case sensitive**. `request.header.accept-languag
 
 ## Body-Based Cache Keys
 
-For POST endpoints (e.g., GraphQL), cache based on the request body:
+For POST endpoints (e.g., GraphQL), cache based on the request body.
 
 ### Entire body
 
-```yaml
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
+```yaml title="serverless.yml"
 caching:
   enabled: true
   cacheKeyParameters:
     - name: integration.request.header.bodyValue
       mappedFrom: method.request.body
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    {
+      name: 'integration.request.header.bodyValue',
+      mappedFrom: 'method.request.body',
+    },
+  ],
+}
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    {
+      name: 'integration.request.header.bodyValue',
+      mappedFrom: 'method.request.body',
+    },
+  ],
+}
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "caching": {
+    "enabled": true,
+    "cacheKeyParameters": [
+      {
+        "name": "integration.request.header.bodyValue",
+        "mappedFrom": "method.request.body"
+      }
+    ]
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 ### JSONPath expression
 
 Cache by a specific field in the body:
 
-```yaml
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
+```yaml title="serverless.yml"
 caching:
   enabled: true
   cacheKeyParameters:
     - name: integration.request.header.cityCount
       mappedFrom: method.request.body.cities[0].petCount
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    {
+      name: 'integration.request.header.cityCount',
+      mappedFrom: 'method.request.body.cities[0].petCount',
+    },
+  ],
+}
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    {
+      name: 'integration.request.header.cityCount',
+      mappedFrom: 'method.request.body.cities[0].petCount',
+    },
+  ],
+}
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "caching": {
+    "enabled": true,
+    "cacheKeyParameters": [
+      {
+        "name": "integration.request.header.cityCount",
+        "mappedFrom": "method.request.body.cities[0].petCount"
+      }
+    ]
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 ### Mixed sources
 
 Combine query string and body parameters:
 
-```yaml
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
+```yaml title="serverless.yml"
 caching:
   enabled: true
   cacheKeyParameters:
@@ -77,12 +335,60 @@ caching:
     - name: integration.request.header.furColour
       mappedFrom: method.request.body.furColour
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    { name: 'request.querystring.catName' },
+    {
+      name: 'integration.request.header.furColour',
+      mappedFrom: 'method.request.body.furColour',
+    },
+  ],
+}
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+caching: {
+  enabled: true,
+  cacheKeyParameters: [
+    { name: 'request.querystring.catName' },
+    {
+      name: 'integration.request.header.furColour',
+      mappedFrom: 'method.request.body.furColour',
+    },
+  ],
+}
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "caching": {
+    "enabled": true,
+    "cacheKeyParameters": [
+      { "name": "request.querystring.catName" },
+      {
+        "name": "integration.request.header.furColour",
+        "mappedFrom": "method.request.body.furColour"
+      }
+    ]
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 ## Catch-All Path Parameters
 
 For greedy path routes (`{proxy+}`):
 
-```yaml
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
+```yaml title="serverless.yml"
 functions:
   proxy:
     handler: src/proxy.handle
@@ -95,13 +401,81 @@ functions:
             cacheKeyParameters:
               - name: request.path.proxy
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+functions: {
+  proxy: {
+    handler: 'src/proxy.handle',
+    events: [
+      {
+        http: {
+          path: '/api/{proxy+}',
+          method: 'get',
+          caching: {
+            enabled: true,
+            cacheKeyParameters: [{ name: 'request.path.proxy' }],
+          },
+        },
+      },
+    ],
+  },
+}
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+functions: {
+  proxy: {
+    handler: 'src/proxy.handle',
+    events: [
+      {
+        http: {
+          path: '/api/{proxy+}',
+          method: 'get',
+          caching: {
+            enabled: true,
+            cacheKeyParameters: [{ name: 'request.path.proxy' }],
+          },
+        },
+      },
+    ],
+  },
+}
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "functions": {
+    "proxy": {
+      "handler": "src/proxy.handle",
+      "events": [
+        {
+          "http": {
+            "path": "/api/{proxy+}",
+            "method": "get",
+            "caching": {
+              "enabled": true,
+              "cacheKeyParameters": [{ "name": "request.path.proxy" }]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 Cache entries:
+
 - `GET /api/users` → `proxy=users`
 - `GET /api/users/123` → `proxy=users/123`
 
 ## Limitations
 
 - Multi-value query strings (`request.multivaluequerystring.*`) and multi-value headers (`request.multivalueheader.*`) are **not supported** as cache key parameters. This is an AWS API Gateway limitation, not a plugin choice — AWS rejects these as `Invalid mapping expression`. The same limitation applies to the community `serverless-api-gateway-caching` plugin.
-- Body-based cache keys require an integration request mapping (handled automatically by the plugin)
-- `httpApi` (HTTP API) events are not supported — API Gateway HTTP APIs do not support caching ([AWS docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html))
+- Body-based cache keys require an integration request mapping (handled automatically by the plugin).
+- `httpApi` (HTTP API) events are not supported — API Gateway HTTP APIs do not support caching ([AWS docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html)).

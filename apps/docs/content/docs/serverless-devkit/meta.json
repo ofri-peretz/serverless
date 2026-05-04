@@ -1,4 +1,4 @@
 {
   "title": "Serverless Devkit",
-  "pages": ["index", "typescript-config", "compat-helpers"]
+  "pages": ["index", "typescript-config", "extending-types", "compat-helpers"]
 }

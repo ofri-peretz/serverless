@@ -3,18 +3,50 @@ title: Installation
 description: Install @interlace/serverless-iam-roles-per-function and verify it loads.
 ---
 
+import { InstallSnippet } from '#interlace/components/docs/install-snippet';
+import {
+  ServerlessConfigTabs,
+  ServerlessConfigYaml,
+  ServerlessConfigTypescript,
+  ServerlessConfigJavascript,
+  ServerlessConfigJson,
+} from '#interlace/components/docs/serverless-config-tabs';
+
 ## Install
 
-```bash
-npm install --save-dev @interlace/serverless-iam-roles-per-function
-```
+<InstallSnippet pkg="@interlace/serverless-iam-roles-per-function" dev />
 
 ## Wire into the project
 
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
 ```yaml title="serverless.yml"
 plugins:
   - '@interlace/serverless-iam-roles-per-function'
 ```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+const serverlessConfiguration = {
+  plugins: ['@interlace/serverless-iam-roles-per-function'],
+};
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+module.exports = {
+  plugins: ['@interlace/serverless-iam-roles-per-function'],
+};
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "plugins": ["@interlace/serverless-iam-roles-per-function"]
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
 
 ## Smoke test
 

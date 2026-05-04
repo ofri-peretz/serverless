@@ -575,8 +575,8 @@ describe('REST API ID resolution chain (getRestApiId)', () => {
     });
     const plugin = new InterlaceCachingPlugin(sls, {});
     await plugin.hooks['caching:flush:flush']();
-    const flushCalls = awsCalls.filter((c) => c.method === 'flushStageCache');
-    expect((flushCalls[0].params as { restApiId: string }).restApiId).toBe(
+    const flushCall = awsCalls.find((c) => c.method === 'flushStageCache');
+    expect((flushCall!.params as { restApiId: string }).restApiId).toBe(
       'shared-id',
     );
   });
@@ -597,8 +597,8 @@ describe('REST API ID resolution chain (getRestApiId)', () => {
     });
     const plugin = new InterlaceCachingPlugin(sls, {});
     await plugin.hooks['caching:flush:flush']();
-    const flushCalls = awsCalls.filter((c) => c.method === 'flushStageCache');
-    expect((flushCalls[0].params as { restApiId: string }).restApiId).toBe(
+    const flushCall = awsCalls.find((c) => c.method === 'flushStageCache');
+    expect((flushCall!.params as { restApiId: string }).restApiId).toBe(
       'from-stack',
     );
   });
@@ -633,7 +633,8 @@ describe('defineValidationSchema', () => {
     const { sls } = makeServerless({
       custom: { interlaceCaching: { enabled: true } },
     });
-    new InterlaceCachingPlugin(sls, {});
+    const _plugin = new InterlaceCachingPlugin(sls, {});
+    void _plugin;
 
     const handler = sls.configSchemaHandler!;
     const customCalls = (

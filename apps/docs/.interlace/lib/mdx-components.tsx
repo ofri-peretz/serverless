@@ -24,6 +24,23 @@ import { Tabs, Tab } from 'fumadocs-ui/components/tabs';
 import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import type { MDXComponents } from 'mdx/types';
 import { Mermaid } from '../components/mdx/mermaid';
+import {
+  ServerlessConfigTabs,
+  Yaml as ServerlessConfigYaml,
+  Typescript as ServerlessConfigTypescript,
+  Javascript as ServerlessConfigJavascript,
+  Json as ServerlessConfigJson,
+} from '../components/docs/serverless-config-tabs';
+import {
+  InstallSnippet,
+  PackageManagerTabs,
+  NpmTab,
+  PnpmTab,
+  YarnTab,
+  BunTab,
+} from '../components/docs/install-snippet';
+import { PluginScorecard } from '../components/docs/plugin-scorecard';
+import { ComparisonMatrix } from '../components/docs/comparison-matrix';
 
 /**
  * Returns the baseline MDX component map. Consumer wrappers should call this
@@ -55,5 +72,18 @@ export function getDefaultMDXComponents(): MDXComponents {
     Tab,
     Accordion,
     Accordions,
+    ServerlessConfigTabs,
+    ServerlessConfigYaml,
+    ServerlessConfigTypescript,
+    ServerlessConfigJavascript,
+    ServerlessConfigJson,
+    InstallSnippet,
+    PackageManagerTabs,
+    NpmTab,
+    PnpmTab,
+    YarnTab,
+    BunTab,
+    PluginScorecard,
+    ComparisonMatrix,
   };
 }

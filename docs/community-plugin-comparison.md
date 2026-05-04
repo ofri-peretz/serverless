@@ -1,5 +1,14 @@
 # `@interlace/*` vs community Serverless plugins — source-backed comparison
 
+> **Audience: contributors.** This file is the source-line citation audit trail behind every user-facing comparison table.
+>
+> The user-facing migration stories live on each plugin's docs page:
+>
+> - API Gateway caching → [docs site /docs/plugins/api-gateway-caching/migration](../apps/docs/content/docs/plugins/api-gateway-caching/migration.mdx)
+> - IAM roles per function → [docs site /docs/plugins/iam-roles-per-function/migration](../apps/docs/content/docs/plugins/iam-roles-per-function/migration.mdx)
+>
+> When a row in either user-facing table changes, update the citation here too. See [Evidence Framework](https://github.com/ofri-peretz/agents/blob/main/interlace/evidence-framework.md) for the contract.
+>
 > Honest, source-backed comparison. Every row cites either npm package metadata, source-code line numbers, or a dated AWS measurement. Marketing-bench-mark line: **if a row isn't cited, it's not in this table.**
 >
 > Plugins covered:

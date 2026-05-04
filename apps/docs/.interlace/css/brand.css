@@ -52,6 +52,32 @@
   --color-destructive-foreground: hsl(0, 0%, 100%);
   --color-fd-destructive: hsl(0, 75%, 38%);
   --color-fd-destructive-foreground: hsl(0, 0%, 100%);
+
+  /* Unprefixed shadcn token aliases. The shadcn primitives (button, input,
+   * badge, card, etc.) reference utilities like `ring-ring`, `bg-input`,
+   * `border-border`, `bg-background`, `text-foreground`. Tailwind v4 only
+   * generates these utilities when the matching `--color-*` is registered
+   * with `@theme`. Register here as aliases of the `--color-fd-*` tokens
+   * fumadocs already manages — single source of truth, automatic dark-mode
+   * tracking. Without these, focus rings on form primitives literally don't
+   * render (the utility resolves to `var(--color-ring)` which is undefined). */
+  --color-ring: var(--color-fd-ring);
+  --color-input: var(--color-fd-border);
+  --color-border: var(--color-fd-border);
+  --color-background: var(--color-fd-background);
+  --color-foreground: var(--color-fd-foreground);
+  --color-primary: var(--color-fd-primary);
+  --color-primary-foreground: var(--color-fd-primary-foreground);
+  --color-secondary: var(--color-fd-secondary);
+  --color-secondary-foreground: var(--color-fd-secondary-foreground);
+  --color-accent: var(--color-fd-accent);
+  --color-accent-foreground: var(--color-fd-accent-foreground);
+  --color-muted: var(--color-fd-muted);
+  --color-muted-foreground: var(--color-fd-muted-foreground);
+  --color-popover: var(--color-fd-popover);
+  --color-popover-foreground: var(--color-fd-popover-foreground);
+  --color-card: var(--color-fd-card);
+  --color-card-foreground: var(--color-fd-card-foreground);
 }
 
 /* Dark-mode overrides — runtime cascade, no token registration needed. */
@@ -66,4 +92,58 @@
   --color-destructive-foreground: hsl(0, 0%, 100%);
   --color-fd-destructive: hsl(0, 65%, 42%);
   --color-fd-destructive-foreground: hsl(0, 0%, 100%);
+}
+
+/* =========================================
+   UX BEST PRACTICES — global resets
+   =========================================
+ *
+ * Reduced-motion (WCAG 2.3.3 + media query for vestibular disorders).
+ * Disables non-essential animations for users who request it. Set duration
+ * and iteration to short/zero values rather than `none` so transitions still
+ * fire (some components use the `transitionend` event for state machines).
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessible focus-visible default for any element that becomes interactive
+ * via `tabindex` or role swap and doesn't carry its own `focus-visible:*`
+ * utility. Component primitives (button, input, badge) override this with
+ * their own ring; this is the safety net so a custom interactive element
+ * never ships without a visible focus indicator. WCAG 2.4.7. */
+:where(:focus-visible) {
+  outline: 2px solid var(--color-fd-ring);
+  outline-offset: 2px;
+}
+
+/* Skip-link styling — a screen-reader-only "Skip to content" link is the
+ * single biggest keyboard-UX win for any layout. The pattern: render the
+ * link first in the DOM with `.sr-only`, expose it on focus. Layouts opt in
+ * by including `<a href="#main" class="skip-link">Skip to content</a>` near
+ * the top of `<body>`. */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.75rem 1rem;
+  background: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+  font-weight: 600;
+  border: 2px solid var(--color-fd-ring);
+  border-radius: 0.5rem;
+  transform: translateY(-150%);
+  transition: transform 150ms ease-out;
+  z-index: 100;
+}
+.skip-link:focus-visible {
+  transform: translateY(0.5rem);
+  outline: none;
 }

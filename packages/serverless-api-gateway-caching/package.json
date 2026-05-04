@@ -53,9 +53,16 @@
     "url": "https://github.com/ofri-peretz/serverless/issues"
   },
   "peerDependencies": {
-    "serverless": ">=3.0.0"
+    "serverless": ">=3.0.0",
+    "@interlace/serverless-devkit": "*"
+  },
+  "peerDependenciesMeta": {
+    "@interlace/serverless-devkit": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@interlace/serverless-devkit": "*",
     "tsx": "^4.20.0"
   },
   "publishConfig": {

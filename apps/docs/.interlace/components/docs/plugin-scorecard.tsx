@@ -55,7 +55,7 @@ export interface PluginScorecardProps {
   view?: 'summary' | 'dimensions';
 }
 
-async function loadScorecard(props: PluginScorecardProps): Promise<ScorecardData> {
+async function loadScorecard(props: PluginScorecardProps): Promise<ScorecardData | null> {
   if (props.data) return props.data;
   const baseDir =
     process.env.NEXT_PUBLIC_INTERLACE_BENCH_DIR ?? 'benchmarks/benchmark-results';
@@ -66,8 +66,12 @@ async function loadScorecard(props: PluginScorecardProps): Promise<ScorecardData
     throw new Error('PluginScorecard: provide `slug`, `dataPath`, or `data`.');
   }
   const absolute = path.startsWith('/') ? path : resolve(process.cwd(), path);
-  const raw = await readFile(absolute, 'utf8');
-  return JSON.parse(raw) as ScorecardData;
+  try {
+    const raw = await readFile(absolute, 'utf8');
+    return JSON.parse(raw) as ScorecardData;
+  } catch {
+    return null;
+  }
 }
 
 function formatPercent(value: number | null): string {
@@ -83,10 +87,25 @@ function formatDimensionScore(value: number | null): string {
 export async function PluginScorecard(props: PluginScorecardProps) {
   const data = await loadScorecard(props);
 
+  if (!data) {
+    return <ScorecardPending slug={props.slug} />;
+  }
+
   if (props.view === 'dimensions') {
     return <DimensionsView data={data} />;
   }
   return <SummaryView data={data} />;
+}
+
+function ScorecardPending({ slug }: { slug?: string }) {
+  return (
+    <div className="my-4 rounded-lg border border-dashed border-fd-border bg-fd-card/50 px-4 py-3 text-sm text-fd-muted-foreground">
+      <strong>Scorecard pending.</strong> Benchmark JSON for{' '}
+      {slug ? <code className="font-mono">{slug}</code> : 'this plugin'} hasn't been
+      committed yet — it ships on the first publish. Until then, see the migration
+      page for source-cited differences.
+    </div>
+  );
 }
 
 function SummaryView({ data }: { data: ScorecardData }) {

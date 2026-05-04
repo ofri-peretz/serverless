@@ -4,7 +4,7 @@
 
 A drop-in replacement for [`serverless-iam-roles-per-function`](https://github.com/functionalone/serverless-iam-roles-per-function) (community v3.2.0, last published 2021-05-21 — **5 years stale**) that keeps the same config keys, adds first-class TypeScript types, four CLI commands, EventBridge + S3 auto-permissions, and strict statement validation.
 
-Supports **Serverless Framework v3 _and_ v4** out of the box.
+Supports **Serverless Framework v3 _and_ v4** out of the box — runtime _and_ TypeScript types. The plugin's default export shape works with both versions' loader, and the exported config types (`InterlaceIamConfig`, `InterlaceFunctionIamConfig`, `ValidationFinding`) are usable from `serverless.ts` regardless of framework version.
 
 ## Why switch?
 

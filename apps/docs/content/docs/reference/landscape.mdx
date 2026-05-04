@@ -3,9 +3,16 @@ title: Competitive Landscape
 description: Reproducible benchmark comparing @interlace/serverless plugins to community alternatives.
 ---
 
-Every product claim in this docs site is backed by a reproducible benchmark. This page is the truth source.
+Every product claim in this docs site is backed by a reproducible benchmark. This page is the truth source for all plugins.
 
-For the methodology behind these numbers — what we measure, why these dimensions, how we score — see [How We Measure](../concepts/how-we-measure).
+For the methodology behind these numbers — what we measure, why these dimensions, how we score — see [How We Measure](../concepts/how-we-measure). For the broader evidence contract behind every claim that ships in our docs, see [Evidence Framework](../concepts/evidence-framework).
+
+This page is a hub. The full per-plugin breakdown — per-dimension scores, honest losses, source citations — lives on each plugin's own `benchmark.mdx` page. Click "Full benchmark →" beneath each section.
+
+| Plugin | Composite (Interlace) | Composite (Community) | Full benchmark |
+| --- | ---: | ---: | --- |
+| `@interlace/serverless-api-gateway-caching` | **88.0%** | 30.2% | [→](../plugins/api-gateway-caching/benchmark) |
+| `@interlace/serverless-iam-roles-per-function` | _TBD (pre-publish)_ | _TBD_ | [→](../plugins/iam-roles-per-function/benchmark) |
 
 ## API Gateway Caching
 
@@ -98,3 +105,22 @@ Per the [Interlace Evidence Framework](https://github.com/ofri-peretz/agents/blo
 - **Manually** before any major release
 
 Each re-run produces a dated, methodology-versioned directory in `benchmarks/benchmark-results/api-gateway-caching/<YYYY-MM-DD>_v<version>/`. Trends are visible via `git log` on that directory.
+
+## IAM Roles Per Function
+
+`@interlace/serverless-iam-roles-per-function` is a drop-in replacement for [`serverless-iam-roles-per-function`](https://www.npmjs.com/package/serverless-iam-roles-per-function) — community v3.2.0, **last published 2021-05-21** (~5 years stale at time of writing).
+
+The composite scorecard is pending — the benchmark suite will run on the first publish. Until then, the source-backed comparison is documented on the plugin's [migration page](../plugins/iam-roles-per-function/migration) with full feature-by-feature citations.
+
+Differentiators verified by source review (against the community plugin's npm tarball):
+
+- **Four CLI subcommands** the community plugin lacks: `iam preview`, `iam audit`, `iam validate`, `iam status`.
+- **Two new auto-permissions**: EventBridge (`events:PutEvents`) and S3 events (`s3:GetObject`).
+- **Statement templates** (`iamRoleStatementsTemplate`) — share base policies across functions.
+- **Least-privilege enforcement** (`suppressGlobalRole` + `requirePerFunctionRoles`).
+- **Strict statement validation** (Effect enum, Action format, Sid format) at synth time.
+- **Exported TypeScript config types** for `serverless.ts` consumers.
+- **Zero runtime dependencies** vs community's `lodash@^4.17.20`.
+- **Active maintenance** (community last release: 2021-05-21).
+
+Full benchmark page: [→ IAM benchmark](../plugins/iam-roles-per-function/benchmark).

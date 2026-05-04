@@ -39,16 +39,11 @@ custom:
 
 ### Cache Cluster Sizes
 
-| Size | Hourly Cost | Monthly Cost |
-|---|---|---|
-| `0.5` GB | ~$0.02 | ~$14.40 |
-| `1.6` GB | ~$0.04 | ~$28.80 |
-| `6.1` GB | ~$0.16 | ~$115 |
-| `13.5` GB | ~$0.32 | ~$230 |
-| `28.4` GB | ~$0.64 | ~$460 |
-| `58.2` GB | ~$1.28 | ~$920 |
-| `118` GB | ~$2.56 | ~$1,840 |
-| `237` GB | ~$5.00 | ~$3,600 |
+The plugin enum-validates `clusterSize` to the AWS-allowed values:
+
+`'0.5'`, `'1.6'`, `'6.1'`, `'13.5'`, `'28.4'`, `'58.2'`, `'118'`, `'237'` (all GB).
+
+For pricing per size, refer to the **[official API Gateway pricing page](https://aws.amazon.com/api-gateway/pricing/)** under "API caching" — AWS publishes per-region rates and the numbers change. We don't restate them here so the docs don't drift out of sync with what you'll actually be billed.
 
 ## Per-Endpoint Settings
 

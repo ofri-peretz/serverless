@@ -69,6 +69,33 @@ const config = {
       destination: '/docs/getting-started',
       permanent: true,
     },
+    // 2026-05: caching plugin folder renamed to align with the npm short-name
+    // (`api-gateway-caching`). Preserve external links into old paths.
+    {
+      source: '/docs/plugins/caching',
+      destination: '/docs/plugins/api-gateway-caching',
+      permanent: true,
+    },
+    {
+      source: '/docs/plugins/caching/cache-keys',
+      destination: '/docs/plugins/api-gateway-caching/recipes/cache-keys',
+      permanent: true,
+    },
+    {
+      source: '/docs/plugins/caching/shared-gateway',
+      destination: '/docs/plugins/api-gateway-caching/recipes/shared-gateway',
+      permanent: true,
+    },
+    {
+      source: '/docs/plugins/caching/removal',
+      destination: '/docs/plugins/api-gateway-caching/recipes/removal',
+      permanent: true,
+    },
+    {
+      source: '/docs/plugins/caching/:slug*',
+      destination: '/docs/plugins/api-gateway-caching/:slug*',
+      permanent: true,
+    },
   ],
 };
 

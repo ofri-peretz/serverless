@@ -1,60 +1,22 @@
 /**
  * @interlace/serverless-devkit — Compat helpers
  *
- * Typed configuration helpers for community plugins.
- * These provide IntelliSense for plugin `custom.*` blocks
- * without requiring the plugin to ship its own types.
- */
-
-// ---------------------------------------------------------------------------
-// @interlace/serverless-api-gateway-caching (replaces serverless-api-gateway-caching)
-// ---------------------------------------------------------------------------
-
-export interface CachingPerKeyInvalidation {
-  requireAuthorization?: boolean;
-  handleUnauthorizedRequests?: 'Ignore' | 'IgnoreWithWarning' | 'Fail';
-}
-
-export interface CachingConfig {
-  /** Enable or disable the cache cluster. Default: false */
-  enabled?: boolean;
-  /** Cache cluster size in GB. */
-  clusterSize?:
-    | '0.5'
-    | '1.6'
-    | '6.1'
-    | '13.5'
-    | '28.4'
-    | '58.2'
-    | '118'
-    | '237';
-  /** Default TTL in seconds (0-3600). Default: 300 */
-  ttlInSeconds?: number;
-  /** Encrypt cached data at rest. Default: false */
-  dataEncrypted?: boolean;
-  /** Flush the cache after every deploy. Default: false */
-  flushOnDeploy?: boolean;
-  /** Per-key invalidation settings. */
-  perKeyInvalidation?: CachingPerKeyInvalidation;
-}
-
-/**
- * Generate typed `custom.interlaceCaching` configuration.
+ * Typed configuration helpers for **community plugins** that don't ship
+ * TypeScript types of their own. Each helper returns a typed
+ * `{ <customKey>: T }` object you can spread into `defineConfig({ custom })`.
  *
- * @example
- * ```ts
- * import { cachingConfig } from '@interlace/serverless-devkit/compat';
+ * **Why this file exists for some plugins but not others:**
  *
- * export default defineConfig({
- *   custom: { ...cachingConfig({ enabled: true, clusterSize: '0.5' }) },
- * });
- * ```
+ * - For `@interlace/*` plugins (caching, etc.) we ship types directly via
+ *   {@link PluginConfigRegistry} module augmentation. Importing the plugin
+ *   automatically extends `defineConfig({ custom: { ... } })` with full
+ *   IntelliSense — no compat helper needed. See
+ *   `docs/serverless-devkit/extending-types.mdx` for the convention.
+ * - For community plugins that don't have types, the compat helpers below
+ *   provide a curated, named-parameter surface. The downside: types here
+ *   can drift from the plugin's real API (no upstream coupling), so we
+ *   only maintain compat helpers for plugins we actively use.
  */
-export function cachingConfig(config: CachingConfig): {
-  interlaceCaching: CachingConfig;
-} {
-  return { interlaceCaching: config };
-}
 
 // ---------------------------------------------------------------------------
 // serverless-domain-manager

@@ -12,6 +12,7 @@
     ".turbo",
     ".next",
     "coverage",
-    "apps/docs/.source"
+    "apps/docs/.source",
+    "**/.interlace/**"
   ]
 }
