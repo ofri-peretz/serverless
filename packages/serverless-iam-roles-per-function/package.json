@@ -27,7 +27,8 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest watch",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "e2e": "tsx scripts/e2e/run.ts"
   },
   "keywords": [
     "serverless",

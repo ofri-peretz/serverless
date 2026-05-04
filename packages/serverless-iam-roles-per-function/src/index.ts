@@ -154,9 +154,20 @@ class InterlaceIamRolesPlugin implements ServerlessPlugin {
 
   // ─── Custom commands ───
 
-  private runPreviewCommand(): void {
-    const settings = resolveSettings(this.serverless);
-    const { previewLines } = runPreview(this.serverless, settings);
+  private async runPreviewCommand(): Promise<void> {
+    // `iam preview` is a custom command — the framework doesn't run the
+    // package lifecycle for us. Spawn it manually so the compiled CFN
+    // template (and our `before:package:finalize` hook) populate before
+    // we walk the result. The spawn is in-memory only — no AWS calls.
+    if (!this.serverless.pluginManager) {
+      const ErrorClass = this.serverless.classes?.Error ?? Error;
+      throw new ErrorClass(
+        'serverless.pluginManager is not available — cannot run `iam preview`. ' +
+          'This requires Serverless Framework v3+.',
+      );
+    }
+    await this.serverless.pluginManager.spawn('package');
+    const { previewLines } = runPreview(this.serverless);
     for (const line of previewLines) this.log(line);
   }
 

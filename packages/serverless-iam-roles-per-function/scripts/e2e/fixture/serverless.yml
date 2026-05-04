@@ -1,0 +1,83 @@
+# Minimal fixture for the @interlace/serverless-iam-roles-per-function E2E test.
+#
+# DO NOT EDIT manually outside the E2E test context — the orchestrator
+# (scripts/e2e/run.ts) expects this exact shape and substitutes a few values
+# at runtime (service name suffix, region, plugin path).
+#
+# Cost: ~$0.00 per run (IAM is free; Lambda invocations are sub-cent).
+
+service: interlace-iam-e2e
+
+frameworkVersion: '>=3.0.0'
+
+plugins:
+  - '@interlace/serverless-iam-roles-per-function'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: e2e
+  logRetentionInDays: 1
+
+custom:
+  interlaceIamRolesPerFunction:
+    defaultInherit: false
+    suppressGlobalRole: false
+    requirePerFunctionRoles: false
+    statementTemplates:
+      logs-only:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+
+resources:
+  Resources:
+    E2eQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:service}-${self:provider.stage}-q
+        MessageRetentionPeriod: 60
+        VisibilityTimeout: 30
+
+functions:
+  # Function with simple inline iamRoleStatements — exercises per-function role
+  # creation + the auto-granted log statement.
+  withInline:
+    handler: handler.echo
+    timeout: 6
+    memorySize: 128
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+          - dynamodb:Query
+        Resource: 'arn:aws:dynamodb:*:*:table/non-existent-e2e-table'
+
+  # Function that references a named statement template — exercises the
+  # `iamRoleStatementsTemplate` path our plugin adds.
+  withTemplate:
+    handler: handler.echo
+    timeout: 6
+    memorySize: 128
+    iamRoleStatementsTemplate: logs-only
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+        Resource: 'arn:aws:s3:::interlace-e2e-non-existent-bucket/*'
+
+  # Function with an SQS event source — exercises auto-permission injection
+  # (the plugin should add sqs:ReceiveMessage etc. without us listing them).
+  withSqs:
+    handler: handler.echo
+    timeout: 6
+    memorySize: 128
+    iamRoleStatements: []
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [E2eQueue, Arn]
+          batchSize: 1

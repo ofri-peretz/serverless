@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-05-04T05:21:48.351Z",
+  "status": "failed-with-emergency-cleanup",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "steps": [
+    {
+      "id": 3,
+      "label": "sls iam preview",
+      "startedAt": "2026-05-04T05:21:58.829Z",
+      "durationMs": 26458,
+      "status": "pass"
+    },
+    {
+      "id": 4,
+      "label": "sls iam validate",
+      "startedAt": "2026-05-04T05:22:25.287Z",
+      "durationMs": 2098,
+      "status": "pass"
+    },
+    {
+      "id": 5,
+      "label": "sls iam audit",
+      "startedAt": "2026-05-04T05:22:27.385Z",
+      "durationMs": 1905,
+      "status": "pass"
+    },
+    {
+      "id": 6,
+      "label": "sls iam status",
+      "startedAt": "2026-05-04T05:22:29.290Z",
+      "durationMs": 1940,
+      "status": "pass",
+      "observations": {
+        "snippet": "\n[interlace-iam] --- IAM Roles Per Function — Status ---\n[interlace-iam]   Functions:                   3\n[interlace-iam]   With per-function role:      3\n[interlace-iam]   Falling back to global role"
+      }
+    },
+    {
+      "id": 7,
+      "label": "sls deploy",
+      "startedAt": "2026-05-04T05:22:31.230Z",
+      "durationMs": 177120,
+      "status": "pass"
+    },
+    {
+      "id": 8,
+      "label": "aws iam list-roles + get-role",
+      "startedAt": "2026-05-04T05:25:28.350Z",
+      "durationMs": 1499,
+      "status": "pass",
+      "observations": {
+        "roles": [
+          "interlace-iam-e2e-qr5mi0-e2e-us-east-1-lambdaRole",
+          "interlace-iam-e2e-qr5mi0-e2e-withInline-us-east-1-lambdaRole",
+          "interlace-iam-e2e-qr5mi0-e2e-withSqs-us-east-1-lambdaRole",
+          "interlace-iam-e2e-qr5mi0-e2e-withTemplate-us-east-1-lambdaRole"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "label": "aws iam get-role-policy",
+      "startedAt": "2026-05-04T05:25:29.849Z",
+      "durationMs": 2251,
+      "status": "pass"
+    },
+    {
+      "id": 10,
+      "label": "aws lambda invoke",
+      "startedAt": "2026-05-04T05:25:32.100Z"
+    },
+    {
+      "id": -1,
+      "label": "failure",
+      "startedAt": "2026-05-04T05:25:33.245Z",
+      "status": "fail",
+      "error": "Command failed: aws lambda invoke --function-name interlace-iam-e2e-qr5mi0-e2e-withInline --profile interlace --payload 'e30=' --cli-binary-format raw-in-base64-out /var/folders/sx/x7lz_ynn1rl343rtf7wq7vmc0000gp/T/interlace-iam-e2e-1prlAE/invoke-out.json\n\nAn error occurred (InvalidRequestContentException) when calling the Invoke operation: Could not parse request body into json: Could not parse payload into json: Unrecognized token 'e30': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 1]\n"
+    }
+  ],
+  "awsObservations": {
+    "deployDurationSec": 177,
+    "rolesCreated": [
+      "interlace-iam-e2e-qr5mi0-e2e-us-east-1-lambdaRole",
+      "interlace-iam-e2e-qr5mi0-e2e-withInline-us-east-1-lambdaRole",
+      "interlace-iam-e2e-qr5mi0-e2e-withSqs-us-east-1-lambdaRole",
+      "interlace-iam-e2e-qr5mi0-e2e-withTemplate-us-east-1-lambdaRole"
+    ]
+  },
+  "awsIdentity": "346133547796 / arn:aws:iam::346133547796:user/interlace-cli",
+  "region": "us-east-1",
+  "serviceName": "interlace-iam-e2e-qr5mi0",
+  "pluginVersion": "0.0.0",
+  "failedAtStep": 10,
+  "endedAt": "2026-05-04T05:27:17.181Z"
+}

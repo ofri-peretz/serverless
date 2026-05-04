@@ -184,6 +184,15 @@ export interface ServerlessInstance {
 
   /** Framework version (v3 returns string like '3.40.0'; v4 returns string like '4.5.0'). */
   version?: string;
+
+  /**
+   * Plugin manager — used by custom commands to spawn lifecycle phases they
+   * depend on (e.g. `iam preview` spawns `package` so the compiled template
+   * exists before the role-builder reads it).
+   */
+  pluginManager?: {
+    spawn(commands: string | string[]): Promise<void>;
+  };
 }
 
 export interface AwsProvider {
