@@ -30,9 +30,10 @@ const DEFAULT_SETTINGS: ResolvedSettings = {
   },
 };
 
+// Mirrors the framework's transform: `myFn` → `MyFn`.
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 function makeNaming(): AwsProvider['naming'] {
-  // Mirrors the framework's transform: `myFn` → `MyFn`.
-  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   return {
     getRoleLogicalId: () => 'IamRoleLambdaExecution',
     getNormalizedFunctionName: (n: string) => cap(n),
@@ -261,9 +262,9 @@ describe('role-builder — Bug 2 (Policies array leak)', () => {
       | undefined;
     expect(perFunctionRole).toBeDefined();
     const policies = perFunctionRole?.Properties.Policies;
-    expect(policies?.length).toBe(1);
-    expect((policies?.[0] as { PolicyName?: string }).PolicyName).toBe(
-      'iam-roles-per-function-inline',
-    );
+    expect(policies).toBeDefined();
+    expect(policies).toHaveLength(1);
+    const firstPolicy = policies?.[0] as { PolicyName?: string } | undefined;
+    expect(firstPolicy?.PolicyName).toBe('iam-roles-per-function-inline');
   });
 });
