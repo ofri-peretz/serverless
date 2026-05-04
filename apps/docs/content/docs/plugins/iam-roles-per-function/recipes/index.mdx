@@ -1,0 +1,21 @@
+---
+title: Recipes
+description: Common how-tos for the IAM Roles Per Function plugin.
+---
+
+Recipes are task-shaped — each one solves a specific problem. Use the [configuration reference](../configuration) for the full surface; recipes here just show the right combination of settings for common scenarios.
+
+## Available recipes
+
+| Recipe | When to use |
+| --- | --- |
+| [Statement templates](./statement-templates) | Many functions share the same baseline permissions — define them once, reference by name. |
+| [Least-privilege enforcement](./least-privilege) | You want to drop the broad global role and require every function to declare its permissions explicitly. |
+| [Permissions boundaries and managed policies](./boundary-policies) | Your AWS org enforces an IAM permissions boundary, or your function needs an AWS-managed policy (e.g. VPC). |
+
+## Cross-cutting reading
+
+- [Installation](../installation) — setup + smoke test
+- [Configuration](../configuration) — full reference
+- [CLI commands](../cli-commands) — `preview`, `audit`, `validate`, `status`
+- [Migration](../migration) — switching from `serverless-iam-roles-per-function`
