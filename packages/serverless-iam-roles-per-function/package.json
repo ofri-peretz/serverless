@@ -1,0 +1,66 @@
+{
+  "name": "@interlace/serverless-iam-roles-per-function",
+  "version": "0.0.0",
+  "description": "Per-function IAM roles for Serverless Framework — strict validation, role consolidation, CLI introspection, EventBridge / S3 / DLQ auto-permissions, and full v3+v4 support",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "serverless",
+    "serverless-framework",
+    "serverless-plugin",
+    "iam",
+    "iam-roles",
+    "lambda",
+    "aws",
+    "permissions",
+    "least-privilege",
+    "interlace"
+  ],
+  "author": "Ofri Peretz <ofriperetzdev@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/ofri-peretz/serverless/tree/main/packages/serverless-iam-roles-per-function",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ofri-peretz/serverless.git",
+    "directory": "packages/serverless-iam-roles-per-function"
+  },
+  "bugs": {
+    "url": "https://github.com/ofri-peretz/serverless/issues"
+  },
+  "peerDependencies": {
+    "serverless": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "serverless": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -71,6 +71,7 @@ export const BorderBeam = ({
 }: BorderBeamProps) => {
   return (
     <div
+      aria-hidden="true"
       className="pointer-events-none absolute inset-0 rounded-[inherit] border-(length:--border-beam-width) border-transparent mask-[linear-gradient(transparent,transparent),linear-gradient(#000,#000)] mask-intersect [mask-clip:padding-box,border-box]"
       style={
         {

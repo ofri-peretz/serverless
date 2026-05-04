@@ -170,10 +170,19 @@ export function countHooksInLocalSource(sourceDir: string): number {
   }
 }
 
+/**
+ * Count custom Serverless Framework subcommands declared in a local source
+ * tree. Counts occurrences of `lifecycleEvents:` — every subcommand declares
+ * exactly one. This avoids brittle multi-line regex parsing of the nested
+ * `commands: { foo: { commands: { ... } } }` structure.
+ *
+ * For the community plugin (no custom commands) → 0.
+ * For the Interlace plugin (`flush`, `status`, `disable`, `preview`) → 4.
+ */
 export function countCliCommands(sourceDir: string): number {
   try {
     const out = execSync(
-      `grep -rEoh "commands:\\s*\\{[^}]*\\}" "${sourceDir}/src" 2>/dev/null | grep -oE "[a-zA-Z][a-zA-Z0-9-]+:" | sort -u | wc -l`,
+      `grep -rEoh "lifecycleEvents\\s*:" "${sourceDir}/src" 2>/dev/null | wc -l`,
       { encoding: 'utf-8' },
     );
     return Number.parseInt(out.trim(), 10) || 0;
@@ -202,5 +211,88 @@ export function readmeQuality(readmePath: string): ReadmeQuality | null {
     };
   } catch {
     return null;
+  }
+}
+
+/**
+ * Read the latest E2E run JSON from a runs directory and report whether the
+ * run passed end-to-end. Used to score the live half of the
+ * `lifecycleCorrectness` dimension.
+ *
+ * Run JSON shape (current schemaVersion):
+ *   { status: 'passed' | 'failed' | ..., verdict?: { cleanRemoval?: boolean }, ... }
+ *
+ * Returns `null` when the directory is missing or empty — caller should
+ * surface that as `lifecycleCorrectness: null` (excluded from composite),
+ * not as a `0`.
+ */
+export function readLatestE2eVerdict(
+  runsDir: string,
+): { passed: boolean; runFile: string } | null {
+  let entries: string[];
+  try {
+    entries = readdirSync(runsDir).filter((f) => f.endsWith('.json'));
+  } catch {
+    return null;
+  }
+  if (entries.length === 0) return null;
+
+  // Filenames are ISO-prefixed (e.g. `2026-05-04T00-15-49-…json`), so a plain
+  // string sort is chronological.
+  entries.sort();
+  const latest = entries.at(-1);
+  if (!latest) return null;
+
+  try {
+    const content = readFileSync(join(runsDir, latest), 'utf-8');
+    const data = JSON.parse(content) as {
+      status?: string;
+      verdict?: { cleanRemoval?: boolean };
+    };
+    const passed =
+      data.status === 'passed' || data.verdict?.cleanRemoval === true;
+    return { passed, runFile: latest };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Detect whether a plugin source tree registers a Serverless Framework
+ * `*:remove:*` lifecycle hook (e.g. `before:remove:remove`). This is the
+ * structural prerequisite for defense-in-depth cleanup before stack
+ * deletion — without it, a plugin can't run cleanup logic during
+ * `sls remove`.
+ */
+export function hasRemovePhaseHook(sourceDir: string): boolean {
+  try {
+    const out = execSync(
+      `grep -rEoh "['\\"][a-z]+:remove:[a-z]+['\\"]" "${sourceDir}/src" 2>/dev/null | wc -l`,
+      { encoding: 'utf-8' },
+    );
+    return Number.parseInt(out.trim(), 10) > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Detect whether a plugin source tree declares a safe-offboarding CLI
+ * command — i.e. one named `disable`, `cleanup`, `teardown`, `offboard`,
+ * or `remove`. Heuristic match on the command-key form
+ * `<name>: { ... lifecycleEvents: ['<name>'] }` inside `this.commands`.
+ *
+ * For the Interlace plugin (`disable:` exists) → true.
+ * For the community plugin (no commands) → false.
+ */
+export function hasSafeOffboardingCommand(sourceDir: string): boolean {
+  try {
+    const out = execSync(
+      `grep -rEoh "(disable|cleanup|teardown|offboard|remove)\\s*:\\s*\\{" "${sourceDir}/src" 2>/dev/null | wc -l`,
+      { encoding: 'utf-8' },
+    );
+    return Number.parseInt(out.trim(), 10) > 0;
+  } catch {
+    return false;
   }
 }

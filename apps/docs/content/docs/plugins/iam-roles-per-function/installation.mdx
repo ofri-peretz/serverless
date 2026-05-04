@@ -1,0 +1,44 @@
+---
+title: Installation
+description: Install @interlace/serverless-iam-roles-per-function and verify it loads.
+---
+
+## Install
+
+```bash
+npm install --save-dev @interlace/serverless-iam-roles-per-function
+```
+
+## Wire into the project
+
+```yaml title="serverless.yml"
+plugins:
+  - '@interlace/serverless-iam-roles-per-function'
+```
+
+## Smoke test
+
+The status command verifies the plugin loaded and reads your function list, without touching AWS:
+
+```bash
+sls iam status
+```
+
+Expected output:
+
+```text
+[interlace-iam] --- IAM Roles Per Function — Status ---
+[interlace-iam]   Functions:                   3
+[interlace-iam]   With per-function role:      0
+[interlace-iam]   Falling back to global role: 3
+[interlace-iam]   defaultInherit:              false
+[interlace-iam]   suppressGlobalRole:          false
+[interlace-iam]   requirePerFunctionRoles:     false
+```
+
+(Numbers and flags will reflect your project's state — what matters is that the plugin printed at all.)
+
+## Next
+
+- [Configuration](./configuration) — every option you can set under `custom.interlaceIamRolesPerFunction`
+- [Migration](./migration) — if you're swapping out `serverless-iam-roles-per-function`

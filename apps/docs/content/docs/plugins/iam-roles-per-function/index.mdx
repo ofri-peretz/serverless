@@ -1,0 +1,42 @@
+---
+title: IAM Roles Per Function
+description: Per-function IAM roles, strict + typed.
+---
+
+import { ComparisonMatrix } from '#interlace/components/docs/comparison-matrix';
+
+## Overview
+
+`@interlace/serverless-iam-roles-per-function` is a TypeScript-native replacement for [`serverless-iam-roles-per-function`](https://www.npmjs.com/package/serverless-iam-roles-per-function) (community v3.2.0, last published 2021-05-21). It keeps the same config keys for drop-in compatibility, adds first-class TypeScript config types, four CLI commands the community plugin lacks, EventBridge + S3 auto-permissions, and strict statement validation. Supports Serverless Framework v3 and v4.
+
+```bash
+npm install @interlace/serverless-iam-roles-per-function
+```
+
+## Why switch?
+
+Headline differences. The full source-backed comparison lives in the [migration guide](./migration).
+
+<ComparisonMatrix slug="iam-roles-per-function" rows="headline" />
+
+## Quick start
+
+```yaml
+plugins:
+  - '@interlace/serverless-iam-roles-per-function'
+```
+
+See [installation](./installation) for the full setup, [configuration](./configuration) for every option, and [recipes](./recipes) for common patterns.
+
+## Where to next
+
+| Doc | What's there |
+| --- | --- |
+| [Installation](./installation) | Install, smoke-test, verify |
+| [Configuration](./configuration) | Every config key |
+| [CLI commands](./cli-commands) | Subcommand reference |
+| [Recipes](./recipes) | Common how-tos |
+| [Migration](./migration) | Switching from `serverless-iam-roles-per-function` |
+| [Benchmark](./benchmark) | Reproducible scorecard vs community |
+| [Changelog](./changelog) | Release history |
+| [FAQ](./faq) | Edge cases |

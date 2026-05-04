@@ -93,3 +93,94 @@ export function maintenanceScoreFromDaysSincePublish(days: number): number {
   if (days >= 365) return 0;
   return 1 - (days - 90) / (365 - 90);
 }
+
+/**
+ * Hook coverage score. Lifecycle + custom-command hooks counted together —
+ * both reflect how deeply the plugin participates in the framework's
+ * lifecycle.
+ *
+ * Ceiling = 8 (matches Interlace's full hook+command surface as of v1.0.0).
+ * Anything ≥ 8 scores 1.0; below scales linearly.
+ */
+export function hookCountScore(count: number): number {
+  return normalizeCount(count, 8);
+}
+
+/**
+ * CLI surface score. Counts custom subcommands the plugin registers
+ * (e.g. `sls caching flush` → 1 subcommand).
+ *
+ * Ceiling = 4 (matches Interlace's full CLI surface as of v1.0.0).
+ */
+export function cliSurfaceScore(count: number): number {
+  return normalizeCount(count, 4);
+}
+
+/**
+ * Documentation quality score. Combines:
+ *   - presence of an Installation section (0.2)
+ *   - presence of a Usage / Example section (0.2)
+ *   - mentions TypeScript (0.2)
+ *   - mentions lifecycle / cleanup / teardown (0.2)
+ *   - normalized README length (≥200 lines = 1.0; below scales) (0.2)
+ *
+ * Capped at 1.0. Section presence is checked against `## ...install`,
+ * `## ...usage`, etc. — see `readmeQuality()` in measure.ts.
+ */
+export interface ReadmeQualityInput {
+  lines: number;
+  hasInstallation: boolean;
+  hasUsage: boolean;
+  hasTypeScript: boolean;
+  hasLifecycle: boolean;
+}
+
+export function documentationQualityScore(q: ReadmeQualityInput): number {
+  const sections =
+    (q.hasInstallation ? 0.2 : 0) +
+    (q.hasUsage ? 0.2 : 0) +
+    (q.hasTypeScript ? 0.2 : 0) +
+    (q.hasLifecycle ? 0.2 : 0);
+  const length = Math.min(q.lines / 200, 1) * 0.2;
+  return Math.min(1, sections + length);
+}
+
+/**
+ * Lifecycle Correctness combines two signals:
+ *
+ *   1. **Live E2E pass** (50%) — does the plugin's `sls remove` cleanup
+ *      pass on real AWS? Sourced from the latest run under
+ *      `packages/serverless-api-gateway-caching/scripts/e2e{,-community}/runs/`.
+ *      Both plugins pass this today (CloudFormation handles cluster teardown
+ *      in the full-stack-removal scenario for both).
+ *
+ *   2. **Structural ghost-billing prevention** (50%) — does the plugin
+ *      register a `*:remove:*` hook and ship a safe-offboarding command?
+ *      Backs the harder ghost-billing scenario (uninstall while keeping
+ *      service) that CloudFormation can't help with — see
+ *      `docs/ghost-billing-reproduction.md`. Static check from local
+ *      source; does not require AWS.
+ *
+ * Promoting (2) from a structural proxy to a live measurement is tracked
+ * as the `cleanup-uninstall-path` suite in
+ * [evidence-plan.md](https://github.com/ofri-peretz/agents/blob/main/interlace/serverless/evidence-plan.md).
+ */
+export interface LifecycleCorrectnessInput {
+  /** Did the latest live E2E run pass on real AWS? `null` if no run on file. */
+  e2ePassed: boolean | null;
+  /** Does the plugin source declare a `*:remove:*` lifecycle hook? */
+  hasRemovePhaseHook: boolean;
+  /** Does the plugin source declare a safe-offboarding CLI command? */
+  hasSafeOffboardingCommand: boolean;
+}
+
+export function lifecycleCorrectnessScore(
+  input: LifecycleCorrectnessInput,
+): number | null {
+  if (input.e2ePassed === null) return null;
+  const e2eHalf = input.e2ePassed ? 0.5 : 0;
+  const structuralHalf =
+    (input.hasRemovePhaseHook ? 0.25 : 0) +
+    (input.hasSafeOffboardingCommand ? 0.25 : 0);
+  return Math.min(1, e2eHalf + structuralHalf);
+}

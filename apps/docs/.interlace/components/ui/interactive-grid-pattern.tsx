@@ -46,6 +46,7 @@ export function InteractiveGridPattern({
 
   return (
     <svg
+      aria-hidden="true"
       width={width * horizontal}
       height={height * vertical}
       className={cn(

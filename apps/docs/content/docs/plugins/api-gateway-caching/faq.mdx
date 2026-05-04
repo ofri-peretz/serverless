@@ -1,0 +1,28 @@
+---
+title: FAQ
+description: Edge cases and frequently-asked questions for @interlace/serverless-api-gateway-caching.
+---
+
+## Will my existing CloudFormation cache cluster recreate when I switch from the community plugin?
+
+No. The plugin uses the same CloudFormation logical structure for the cache cluster (it's part of the deployment-side patch ops, not a CFN resource we own). Your existing cache stays warm across the swap.
+
+## Why does `flushOnDeploy` exist? Doesn't CloudFormation handle that?
+
+CFN can update cache settings, but invalidating cached responses requires a `flushStageCache` API call — which CFN doesn't make. Without `flushOnDeploy: true`, callers can hit stale cached responses for up to TTL seconds after a deploy.
+
+## Does `sls caching disable` actually delete the cluster?
+
+No. It disables the cluster and zero-bills it (cluster size remains in your config; only the active flag changes). To delete the cluster fully, run `sls remove` or set `enabled: false` and re-deploy.
+
+## Can I use this plugin with HTTP API (v2) instead of REST API (v1)?
+
+No. API Gateway v2 (HTTP API) doesn't support response caching at all. This plugin is REST-API-only — same as the community plugin.
+
+## What about jittered backoff — can I tune the jitter window?
+
+Not currently. The retry-with-jitter is a fixed exponential `(2 ^ attempt) ± random(0, baseDelay)`. If you have a reason to tune it, [open an issue](https://github.com/ofri-peretz/serverless/issues) — we can expose it as config.
+
+## Couldn't find your question?
+
+[Open an issue on GitHub](https://github.com/ofri-peretz/serverless/issues).

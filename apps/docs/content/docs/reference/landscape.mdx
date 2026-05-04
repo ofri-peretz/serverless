@@ -9,36 +9,51 @@ For the methodology behind these numbers — what we measure, why these dimensio
 
 ## API Gateway Caching
 
-Last verified **2026-05-03**. Re-run from `serverless/packages/benchmarks/`:
+Last verified **2026-05-04**. Re-run from `serverless/benchmarks/`:
 
 ```bash
 npm run bench:caching
 ```
 
-Result file: [`packages/benchmarks/results/api-gateway-caching/latest.json`](https://github.com/ofri-peretz/serverless/blob/main/packages/benchmarks/results/api-gateway-caching/latest.json).
+Result file: [`benchmarks/benchmark-results/api-gateway-caching/latest.json`](https://github.com/ofri-peretz/serverless/blob/main/benchmarks/benchmark-results/api-gateway-caching/latest.json). Dated runs are committed under `benchmark-results/api-gateway-caching/<YYYY-MM-DD>_v<version>/result.json` for trend tracking.
 
-| Rank | Plugin | Version | Direct deps | Size (KB) | Days since publish | Releases (12mo) | Ships types | Composite |
-|---:|---|---|---:|---:|---:|---:|:---:|---:|
-| 1 | **`@interlace/serverless-api-gateway-caching`** | 0.0.0 (pre-publish, local source) | 0 | 77 | 0 | — | ✓ | **75.0%** |
-| 2 | `serverless-api-gateway-caching` (community) | 1.11.0 | 2 | 47 | 379 | 0 | ✗ | 25.0% |
+| Rank | Plugin                                          | Version                           | Direct deps | Size (KB) | Hooks | CLI cmds | Days since publish | Ships types | Composite |
+| ---: | ----------------------------------------------- | --------------------------------- | ----------: | --------: | ----: | -------: | -----------------: | :---------: | --------: |
+|    1 | **`@interlace/serverless-api-gateway-caching`** | 0.0.0 (pre-publish, local source) |           0 |        78 |     8 |        4 |                  0 |      ✓      | **88.0%** |
+|    2 | `serverless-api-gateway-caching` (community)    | 1.11.0                            |           2 |        47 |     3 |        0 |                379 |      ✗      |     30.2% |
+
+### Per-dimension scores
+
+All seven dimensions (100% of the rubric weight) are now continuously measured. Each score is in [0, 1]; the composite is a weighted average.
+
+| Dimension             | Weight | Interlace | Community | Source                                                                                 |
+| --------------------- | -----: | --------: | --------: | -------------------------------------------------------------------------------------- |
+| Lifecycle Correctness |    25% |      1.00 |      0.50 | Live E2E verdict (50%) + structural `*:remove:*` hook & safe-offboarding command (50%) |
+| TypeScript Coverage   |    15% |      1.00 |      0.00 | npm registry — `.d.ts` shipped?                                                        |
+| Maintenance Signal    |    15% |      1.00 |      0.00 | npm registry — days since latest publish                                               |
+| CLI Surface           |    15% |      1.00 |      0.00 | local source — `lifecycleEvents:` count                                                |
+| Hook Coverage         |    10% |      1.00 |      0.38 | local source — registered lifecycle + command hooks                                    |
+| Documentation Quality |    10% |      0.80 |      0.40 | README scan — sections + length                                                        |
+| Bundle Weight         |    10% |      0.00 |      1.00 | npm registry — `.d.ts` and extra commands cost ~31 KB                                  |
 
 ### Why the gap
 
-- **Maintenance Signal (15% weight):** community plugin's last publish is 379 days ago, with 0 releases in the last 12 months. Score: 0.0. Active maintenance is a hard requirement for production infrastructure plugins.
-- **TypeScript Coverage (15% weight):** community plugin ships no `.d.ts`. Misconfigurations are caught only at deploy time, not edit time. Score: 0.0 vs Interlace's 1.0.
-- **Bundle Weight (10% weight):** Interlace is heavier (77 KB vs 47 KB) — we ship `.d.ts` declarations and additional CLI commands. We **lose** this dimension by ~16%, but the composite still wins by 50 percentage points.
+- **Lifecycle Correctness:** Both plugins pass the live `sls remove` E2E (CloudFormation handles cluster teardown for the full-stack-removal scenario for both — see the [community E2E run](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-api-gateway-caching/scripts/e2e-community/runs/)). The structural half of the score then diverges: Interlace registers a `before:remove:remove` hook **and** ships `sls caching disable` for the harder "uninstall while keeping service" scenario; the community plugin has neither, so it scores 0.5 — passing the easy case, missing the hard one.
+- **TypeScript Coverage:** community plugin ships no `.d.ts`. Misconfigurations are caught only at deploy time, not edit time.
+- **Maintenance Signal:** community plugin's last publish is 379 days ago, 0 releases in the last 12 months.
+- **CLI Surface:** community plugin ships zero custom subcommands. Interlace ships `flush`, `status`, `disable`, and `preview` (dry-run).
+- **Hook Coverage:** Interlace registers 8 hooks (4 lifecycle + 4 command-lifecycle); community plugin registers 3.
+- **Documentation Quality:** both READMEs have install + usage; Interlace also documents TypeScript usage and lifecycle/cleanup behavior, lifting it above the community plugin's score.
 
-### What's not yet measured
+### Honest losses
 
-Three dimensions (totaling 50% of the rubric) require local source from the competitor checked out alongside ours:
+- **Bundle Weight:** Interlace is heavier (78 KB vs 47 KB). The gap is `.d.ts` declarations + additional CLI commands. We **lose** this dimension outright. Composite still wins by ~58 percentage points because the wins compound.
 
-- **Lifecycle Correctness (25%)** — does `sls remove` clean up cache clusters? Backs the "no ghost billing" claim.
-- **Hook Coverage (10%)** — number of Serverless Framework hooks listened to.
-- **CLI Surface (15%)** — number of `sls <plugin> <cmd>` subcommands.
+### How Lifecycle Correctness is scored
 
-These will be filled in by the [`cleanup-correctness` suite](https://github.com/ofri-peretz/agents/blob/main/interlace/serverless/evidence-plan.md), which deploys a real cache cluster, runs `sls remove`, and asserts no orphaned resources for 10 minutes.
+50% of the dimension comes from the live AWS E2E (the latest dated run in [`scripts/e2e/runs/`](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-api-gateway-caching/scripts/e2e/runs/) for Interlace, [`scripts/e2e-community/runs/`](https://github.com/ofri-peretz/serverless/blob/main/packages/serverless-api-gateway-caching/scripts/e2e-community/runs/) for the community plugin). The other 50% comes from a static check against the plugin source: 25% if it registers a `*:remove:*` hook (defense-in-depth), 25% if it ships a safe-offboarding command (`disable`, `cleanup`, `teardown`, etc.).
 
-Until then, those dimensions are reported as `null` in the result JSON and excluded from the composite (so the score is over the 4 measurable dimensions, not 7). The gap is expected to **widen** when the missing dimensions land — we have cleanup hooks, the community plugin doesn't.
+The structural half is a proxy for the harder ghost-billing scenario — uninstalling the plugin while keeping the service running. CloudFormation can't help there; only an explicit cleanup hook or operator-run command can. Promoting that proxy to a live measurement is tracked as the [`cleanup-uninstall-path` suite](https://github.com/ofri-peretz/agents/blob/main/interlace/serverless/evidence-plan.md) (v1.1).
 
 ## Live release verification (E2E)
 
@@ -82,4 +97,4 @@ Per the [Interlace Evidence Framework](https://github.com/ofri-peretz/agents/blo
 - **On every PR** that touches `@interlace/serverless-api-gateway-caching` source (catches regressions)
 - **Manually** before any major release
 
-Each re-run produces a dated JSON file in `packages/benchmarks/results/api-gateway-caching/`. Trends are visible via `git log` on that directory.
+Each re-run produces a dated, methodology-versioned directory in `benchmarks/benchmark-results/api-gateway-caching/<YYYY-MM-DD>_v<version>/`. Trends are visible via `git log` on that directory.

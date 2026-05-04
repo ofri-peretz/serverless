@@ -1,0 +1,39 @@
+---
+title: Installation
+description: Install @interlace/serverless-api-gateway-caching and verify it loads.
+---
+
+## Install
+
+```bash
+npm install --save-dev @interlace/serverless-api-gateway-caching
+```
+
+## Wire into the project
+
+```yaml title="serverless.yml"
+plugins:
+  - '@interlace/serverless-api-gateway-caching'
+
+custom:
+  interlaceCaching:
+    enabled: true
+    clusterSize: '0.5'
+    ttlInSeconds: 300
+```
+
+## Smoke test
+
+The dry-run command verifies the plugin registered and your config parses, without touching AWS:
+
+```bash
+sls caching preview
+```
+
+Expected output: a `Caching plan` block listing each `http`-event endpoint and the patch operations a deploy would apply.
+
+## Next
+
+- [Configuration](./configuration) — every option you can set under `custom.interlaceCaching`
+- [Migration](./migration) — switching from the community `serverless-api-gateway-caching`
+- [Recipes / cache keys](./recipes/cache-keys) — the most common gotcha

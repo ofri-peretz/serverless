@@ -97,7 +97,10 @@ export function NumberTicker({
     <span
       ref={ref}
       className={cn(
-        "inline-block tracking-wider text-black tabular-nums dark:text-white",
+        // Use the foreground token so the ticker tracks the theme. Hardcoding
+        // `text-black dark:text-white` would diverge if a consumer overrides
+        // `--color-fd-foreground`. The token is the single source of truth.
+        "inline-block tracking-wider text-fd-foreground tabular-nums",
         className
       )}
       {...props}

@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -10,6 +10,6 @@
     "resolveJsonModule": true,
     "verbatimModuleSyntax": false
   },
-  "include": ["benchmarks/**/*.ts", "lib/**/*.ts"],
-  "exclude": ["node_modules", "results"]
+  "include": ["suites/**/*.ts", "lib/**/*.ts"],
+  "exclude": ["node_modules", "benchmark-results"]
 }

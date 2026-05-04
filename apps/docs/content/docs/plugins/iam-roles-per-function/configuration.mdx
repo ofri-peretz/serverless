@@ -1,0 +1,66 @@
+---
+title: Configuration Reference
+description: Every config key for @interlace/serverless-iam-roles-per-function.
+---
+
+## Global
+
+Set under `custom.interlaceIamRolesPerFunction` in `serverless.yml` (or `serverless.ts`). The plugin also reads `custom.serverless-iam-roles-per-function` as a backwards-compat alias for the community plugin's key.
+
+```yaml title="serverless.yml"
+custom:
+  interlaceIamRolesPerFunction:
+    defaultInherit: false
+    suppressGlobalRole: true
+    requirePerFunctionRoles: true
+    statementTemplates:
+      data-read:
+        - Effect: Allow
+          Action: ['dynamodb:GetItem', 'dynamodb:Query']
+          Resource: '*'
+```
+
+### Properties
+
+| Key | Type | Default | Description |
+| --- | --- | --- | --- |
+| `defaultInherit` | `boolean` | `false` | If `true`, every function with `iamRoleStatements` also includes `provider.iam.role.statements`. Per-function override via `iamRoleStatementsInherit`. |
+| `iamGlobalPermissionsBoundary` | `string \| Fn::Sub \| Fn::ImportValue` | — | Permissions boundary applied to the global role _and_ any per-function role that doesn't set its own. |
+| `suppressGlobalRole` | `boolean` | `false` | Remove the broad `IamRoleLambdaExecution` role from the template. Only safe when **every** function has its own role — combine with `requirePerFunctionRoles: true`. |
+| `requirePerFunctionRoles` | `boolean` | `false` | Fail the deploy if any function lacks `iamRoleStatements`. Set `iamRoleStatements: []` on intentionally-empty functions. |
+| `statementTemplates` | `Record<string, IamStatement[]>` | `{}` | Named base policies referenced by `iamRoleStatementsTemplate`. |
+
+## Per-function
+
+Under `functions.<name>` in `serverless.yml`:
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `iamRoleStatements` | `IamStatement[]` | Per-function policy statements. Triggers per-function role creation. Mutually exclusive with `role`. |
+| `iamRoleStatementsInherit` | `boolean` | Override `defaultInherit` for this function. |
+| `iamRoleStatementsName` | `string` | Custom role name (max 64 chars; stripped of `Lambda` suffix if needed). |
+| `iamRoleStatementsTemplate` | `string` | Name of a template defined under `custom.…statementTemplates`. |
+| `iamPermissionsBoundary` | `string \| Fn::Sub \| Fn::ImportValue` | Permissions boundary for this function's role only. |
+| `iamManagedPolicies` | `string[]` | Managed-policy ARNs to attach. AWS-managed VPC policy is auto-attached for VPC-enabled functions. |
+
+## Auto-permissions
+
+When `iamRoleStatements` is set on a function, the plugin scans the function's `events:` block and adds the right permissions automatically:
+
+| Event | Actions granted |
+| --- | --- |
+| `events: [sqs: ...]` | `sqs:ReceiveMessage`, `sqs:DeleteMessage`, `sqs:GetQueueAttributes` |
+| `events: [stream: ...]` (DynamoDB) | `dynamodb:GetRecords`, `GetShardIterator`, `DescribeStream`, `ListStreams` |
+| `events: [stream: ...]` (Kinesis) | `kinesis:GetRecords`, `GetShardIterator`, `DescribeStream`, `ListStreams` |
+| `onError: arn:aws:sns:...` | `sns:Publish` |
+| `events: [eventBridge: {eventBus: ...}]` | `events:PutEvents` _(community plugin: not granted)_ |
+| `events: [s3: ...]` | `s3:GetObject` for `arn:aws:s3:::<bucket>/*` _(community plugin: not granted)_ |
+
+The function's own CloudWatch log group statement is always granted (scoped to the function's log group, not `*`).
+
+## See also
+
+- [Installation](./installation)
+- [CLI commands](./cli-commands)
+- [Recipes / statement templates](./recipes/statement-templates)
+- [Migration from the community plugin](./migration)

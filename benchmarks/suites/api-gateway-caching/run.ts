@@ -28,13 +28,24 @@ import {
   versionsInLastYear,
   unpackedSizeKB,
   readLocalPackument,
+  countHooksInLocalSource,
+  countCliCommands,
+  readmeQuality,
+  readLatestE2eVerdict,
+  hasRemovePhaseHook,
+  hasSafeOffboardingCommand,
   type Packument,
+  type ReadmeQuality,
 } from '../../lib/measure.ts';
 import {
   DIMENSIONS,
   compositeScore,
   normalizeInverse,
   maintenanceScoreFromDaysSincePublish,
+  hookCountScore,
+  cliSurfaceScore,
+  documentationQualityScore,
+  lifecycleCorrectnessScore,
   type DimensionScores,
 } from '../../lib/score.ts';
 
@@ -44,6 +55,9 @@ interface CompetitorConfig {
   githubRepo?: string;
   githubPath?: string;
   localSource?: string;
+  /** Path (relative to this run.ts) to the directory holding dated E2E run JSONs.
+   *  Used by `lifecycleCorrectness` to read the latest live AWS verdict. */
+  e2eRunsDir?: string;
   isOurs?: boolean;
 }
 
@@ -57,6 +71,20 @@ interface CompetitorMeasurements {
   versionsLastYear: number | null;
   unpackedKB: number | null;
   weeklyDownloads: number;
+  /** Number of lifecycle + custom-command hooks registered in src/. Null if no localSource. */
+  hookCount: number | null;
+  /** Number of custom CLI subcommands declared in src/. Null if no localSource. */
+  cliCommandCount: number | null;
+  /** README breadth metrics. Null if no README found at localSource. */
+  readme: ReadmeQuality | null;
+  /** Latest E2E run verdict from disk. Null if no run JSON on file. */
+  e2ePassed: boolean | null;
+  /** Source name of the E2E run that produced the verdict, for traceability. */
+  e2eRunFile: string | null;
+  /** Static check: plugin registers a `*:remove:*` lifecycle hook. */
+  hasRemovePhaseHook: boolean;
+  /** Static check: plugin ships a safe-offboarding CLI command (`disable`, `cleanup`, etc). */
+  hasSafeOffboardingCommand: boolean;
 }
 
 type CompetitorResult =
@@ -117,6 +145,37 @@ for (const competitor of competitors) {
 
   const weeklyDownloads =
     source === 'npm' ? await fetchWeeklyDownloads(competitor.package) : 0;
+
+  // Local-source dimensions (hooks, CLI commands, README) require a checked-out
+  // tree even when the package was fetched from npm — published tarballs ship
+  // dist/, not src/. Use the configured `localSource` regardless of where the
+  // packument came from.
+  let hookCount: number | null = null;
+  let cliCommandCount: number | null = null;
+  let readme: ReadmeQuality | null = null;
+  let removeHook = false;
+  let offboardingCommand = false;
+  if (competitor.localSource) {
+    const localDir = resolve(__dirname, competitor.localSource);
+    hookCount = countHooksInLocalSource(localDir);
+    cliCommandCount = countCliCommands(localDir);
+    readme = readmeQuality(join(localDir, 'README.md'));
+    removeHook = hasRemovePhaseHook(localDir);
+    offboardingCommand = hasSafeOffboardingCommand(localDir);
+  }
+
+  // Lifecycle correctness — read latest E2E verdict from disk.
+  let e2ePassed: boolean | null = null;
+  let e2eRunFile: string | null = null;
+  if (competitor.e2eRunsDir) {
+    const runsDir = resolve(__dirname, competitor.e2eRunsDir);
+    const verdict = readLatestE2eVerdict(runsDir);
+    if (verdict) {
+      e2ePassed = verdict.passed;
+      e2eRunFile = verdict.runFile;
+    }
+  }
+
   const measurements: CompetitorMeasurements = {
     source,
     version: latestVersion(packument),
@@ -127,6 +186,13 @@ for (const competitor of competitors) {
     versionsLastYear: source === 'npm' ? versionsInLastYear(packument) : null,
     unpackedKB: unpackedSizeKB(packument),
     weeklyDownloads,
+    hookCount,
+    cliCommandCount,
+    readme,
+    e2ePassed,
+    e2eRunFile,
+    hasRemovePhaseHook: removeHook,
+    hasSafeOffboardingCommand: offboardingCommand,
   };
 
   console.log(
@@ -134,7 +200,12 @@ for (const competitor of competitors) {
       `${measurements.weeklyDownloads.toLocaleString()} dl/wk | ` +
       `${measurements.versionsLastYear} releases (12mo) | ` +
       `${measurements.daysSincePublish}d since last publish | ` +
-      `types: ${measurements.shipsTypes ? '✓' : '✗'}\n`,
+      `types: ${measurements.shipsTypes ? '✓' : '✗'} | ` +
+      `${measurements.hookCount ?? '—'} hooks | ` +
+      `${measurements.cliCommandCount ?? '—'} cmds | ` +
+      `e2e: ${measurements.e2ePassed === null ? '—' : measurements.e2ePassed ? '✓' : '✗'} | ` +
+      `remove-hook: ${measurements.hasRemovePhaseHook ? '✓' : '✗'} | ` +
+      `offboard-cmd: ${measurements.hasSafeOffboardingCommand ? '✓' : '✗'}\n`,
   );
 
   results.push({ ...competitor, measurements });
@@ -166,6 +237,16 @@ for (const r of validResults) {
       worstSize,
     ),
     maintenanceSignal: maintenanceScoreFromDaysSincePublish(m.daysSincePublish),
+    hookCount: m.hookCount === null ? null : hookCountScore(m.hookCount),
+    cliSurface:
+      m.cliCommandCount === null ? null : cliSurfaceScore(m.cliCommandCount),
+    documentationQuality:
+      m.readme === null ? null : documentationQualityScore(m.readme),
+    lifecycleCorrectness: lifecycleCorrectnessScore({
+      e2ePassed: m.e2ePassed,
+      hasRemovePhaseHook: m.hasRemovePhaseHook,
+      hasSafeOffboardingCommand: m.hasSafeOffboardingCommand,
+    }),
   };
   r.composite = compositeScore(r.dimensionScores);
 }

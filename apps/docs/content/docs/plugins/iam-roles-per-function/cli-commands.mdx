@@ -1,0 +1,81 @@
+---
+title: CLI Commands
+description: Reference for @interlace/serverless-iam-roles-per-function subcommands.
+---
+
+The plugin ships four subcommands the community plugin lacks. All run synth-time only — none of them call AWS APIs.
+
+## `sls iam preview`
+
+```bash
+sls iam preview
+```
+
+Dry-run that shows the per-function roles a deploy WOULD create. Clones the compiled CloudFormation template, runs the role-builder, then restores the original — useful for PR review and CI gates.
+
+### Example
+
+```text
+[interlace-iam] Generated 3 per-function role(s); 1 function(s) use the global role.
+[interlace-iam]   listUsers     → ListUsersIamRoleLambdaExecution
+[interlace-iam]   getUser       → GetUserIamRoleLambdaExecution
+[interlace-iam]   updateUser    → UpdateUserIamRoleLambdaExecution
+[interlace-iam]   healthCheck   → (global role)
+```
+
+## `sls iam audit`
+
+```bash
+sls iam audit
+sls iam audit --strict
+```
+
+Lists functions falling back to the broad global role. Use `--strict` in CI to fail the build if any function lacks `iamRoleStatements`.
+
+### Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--strict` | `boolean` | `false` | Exit non-zero when any function has no `iamRoleStatements` block. |
+
+### Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `0` | Audit ran (with or without findings, unless `--strict` is set) |
+| `1` | `--strict` mode: at least one function has no `iamRoleStatements` |
+
+## `sls iam validate`
+
+```bash
+sls iam validate
+sls iam validate --strict-wildcard-action --strict-wildcard-resource
+sls iam validate --warnings-as-errors
+```
+
+Strict statement-grammar check across every `iamRoleStatements` block. Catches what the community plugin's presence-only check misses — wrong `Effect`, malformed `Action`, mutually-exclusive `Action`/`NotAction` pairings, malformed `Sid`.
+
+### Options
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--strict-wildcard-action` | `boolean` | `false` | Treat `Action: '*'` as an error (default: warning). |
+| `--strict-wildcard-resource` | `boolean` | `false` | Treat `Resource: '*'` as an error (default: warning). |
+| `--warnings-as-errors` | `boolean` | `false` | Exit non-zero when warnings are present. |
+
+### Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `0` | No errors (warnings allowed unless `--warnings-as-errors`) |
+| `1` | At least one error finding |
+
+## `sls iam status`
+
+```bash
+sls iam status
+```
+
+One-line summary: how many functions have a per-function role vs. fall back to the global role, plus the resolved values of the three behavior flags (`defaultInherit`, `suppressGlobalRole`, `requirePerFunctionRoles`).
+
+Useful as a smoke test after install — see [Installation](./installation).

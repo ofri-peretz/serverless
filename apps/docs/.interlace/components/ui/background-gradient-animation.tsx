@@ -41,8 +41,8 @@ export const BackgroundGradientAnimation = ({
 }) => {
   const interactiveRef = useRef<HTMLDivElement>(null);
 
-  const [curX, setCurX] = useState(0);
-  const [curY, setCurY] = useState(0);
+  const [_curX, setCurX] = useState(0);
+  const [_curY, setCurY] = useState(0);
   const [tgX, setTgX] = useState(0);
   const [tgY, setTgY] = useState(0);
   useEffect(() => {
@@ -106,7 +106,7 @@ export const BackgroundGradientAnimation = ({
         containerClassName
       )}
     >
-      <svg className="hidden">
+      <svg aria-hidden="true" className="hidden">
         <defs>
           <filter id="blurMe">
             <feGaussianBlur
@@ -126,6 +126,7 @@ export const BackgroundGradientAnimation = ({
       </svg>
       <div className={cn("", className)}>{children}</div>
       <div
+        aria-hidden="true"
         className={cn(
           "gradients-container h-full w-full blur-lg",
           isSafari ? "blur-2xl" : "[filter:url(#blurMe)_blur(40px)]"

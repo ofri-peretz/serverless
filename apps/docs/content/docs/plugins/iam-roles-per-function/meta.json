@@ -1,0 +1,15 @@
+{
+  "title": "IAM Roles Per Function",
+  "description": "Per-function IAM roles, strict + typed.",
+  "pages": [
+    "index",
+    "installation",
+    "configuration",
+    "cli-commands",
+    "recipes",
+    "migration",
+    "changelog",
+    "benchmark",
+    "faq"
+  ]
+}

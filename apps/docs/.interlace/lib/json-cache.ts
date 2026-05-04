@@ -84,6 +84,7 @@ function matchPattern(filePath: string, pattern: string): boolean {
     .replace(/\*\*\//g, '\x00')
     .replace(/\*/g, '[^/]*')
     .replace(/\?/g, '.')
+    // eslint-disable-next-line no-control-regex
     .replace(/\x00/g, '(?:.*/)?');
   return new RegExp(`^${regexPattern}$`).test(filePath);
 }

@@ -92,8 +92,8 @@ export default function HomePage() {
           <div className="grid gap-6 md:grid-cols-3">
             <FeatureCard
               icon={<Trash2 className="h-5 w-5" />}
-              title="Cleanup on removal"
-              description="Cache clusters are disabled before stack deletion. No more ghost billing from orphaned resources."
+              title="Safe offboarding"
+              description="`sls caching disable` stops the cluster before you remove the plugin. No silent ghost billing when uninstalling."
             />
             <FeatureCard
               icon={<Terminal className="h-5 w-5" />}
@@ -117,8 +117,8 @@ export default function HomePage() {
             />
             <FeatureCard
               icon={<RefreshCw className="h-5 w-5" />}
-              title="Safe offboarding"
-              description="sls caching disable tears down AWS resources before you remove the plugin. No manual cleanup."
+              title="Stricter config validation"
+              description="clusterSize enum-validated to AWS-allowed sizes. ttlInSeconds enforced to 0–3600. Catch typos at edit time, not deploy time."
             />
           </div>
         </div>

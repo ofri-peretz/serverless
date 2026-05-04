@@ -11,4 +11,9 @@ export {
   type FrontmatterValidatorOptions,
 } from './mdx-frontmatter';
 export { validateNavigationStructure } from './navigation-structure';
+export {
+  validatePluginTemplateConformance,
+  type PluginTemplateConformanceOptions,
+  type RequiredPage,
+} from './plugin-template-conformance';
 export { walkDirectory } from './walk';

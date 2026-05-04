@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-05-04T00:15:49.171Z",
+  "status": "passed",
+  "comparison": "community-plugin",
+  "stage": "e2e",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "observations": {
+    "deployDurationSec": 152,
+    "cacheClusterCreateSec": 214,
+    "cacheMissResponseTimeMs": 882,
+    "cacheHitResponseTimeMs": 102,
+    "cacheHitConfirmedSecPostMiss": 75,
+    "removeDurationSec": 31,
+    "removeExitCode": 0,
+    "removeTimedOut": false,
+    "cloudFormationStatusPostRemove": "NOT_FOUND",
+    "apiGatewayStageExistsPostRemove": false,
+    "cacheClusterStatusPostRemove": null,
+    "restApiExistsPostRemove": false
+  },
+  "steps": [],
+  "awsIdentity": "arn:aws:iam::346133547796:user/interlace-cli",
+  "region": "us-east-1",
+  "serviceName": "interlace-cache-e2e-community-qg8hlm",
+  "endpoint": "https://8szr4tqu2f.execute-api.us-east-1.amazonaws.com/e2e/hello",
+  "restApiId": "8szr4tqu2f",
+  "verdict": {
+    "cleanRemoval": true,
+    "ghostBillingDetected": false,
+    "summary": "Community plugin's sls remove was clean (31s, exit 0, all resources gone). Ghost-billing claim NOT corroborated for this configuration. The structural hook gap (no before:remove:remove) does not produce orphans here."
+  },
+  "endedAt": "2026-05-04T00:24:16.077Z"
+}

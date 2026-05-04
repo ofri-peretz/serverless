@@ -162,6 +162,7 @@ export const StarsBackground: React.FC<StarBackgroundProps> = ({
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       className={cn("h-full w-full absolute inset-0 will-change-transform", className)}
       suppressHydrationWarning
     />
@@ -294,7 +295,7 @@ export const ShootingStars: React.FC<ShootingStarProps> = ({
   }, [star, cosAngle, sinAngle]);
 
   return (
-    <svg ref={svgRef} className={cn("w-full h-full absolute inset-0 pointer-events-none", className)}>
+    <svg ref={svgRef} aria-hidden="true" className={cn("w-full h-full absolute inset-0 pointer-events-none", className)}>
       {star && (
         <rect
           x={star.x}
@@ -347,7 +348,7 @@ export const Meteors: React.FC<MeteorsProps> = ({
   minDuration = 12,
   maxDuration = 30,
   meteorColor = "#e9d5ff",
-  trailColor = "transparent",
+  trailColor: _trailColor = "transparent",
   className,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -419,6 +420,7 @@ export const Meteors: React.FC<MeteorsProps> = ({
   return (
     <div
       ref={containerRef}
+      aria-hidden="true"
       className={cn(
         "absolute inset-0 overflow-hidden pointer-events-none",
         className

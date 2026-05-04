@@ -69,11 +69,11 @@ Competitors are NOT removed from the comparison set unless they're abandoned (no
 ## Reproducibility
 
 ```bash
-cd serverless/packages/benchmarks
-npm run bench
+cd serverless/benchmarks
+npm run bench:caching
 ```
 
-The runner is **dependency-free** (Node 20+ built-ins only). No AWS credentials needed. Network calls are limited to the public npm registry. Results land at `results/api-gateway-caching/YYYY-MM-DD.json` and `results/api-gateway-caching/latest.json` (latest is what docs import).
+The runner is **dependency-free** (Node 20+ built-ins only). No AWS credentials needed. Network calls are limited to the public npm registry. Results land at `benchmark-results/api-gateway-caching/<YYYY-MM-DD>_v<version>/result.json` and `benchmark-results/api-gateway-caching/latest.json` (latest is what docs import).
 
 If a run produces different numbers on different days, the most likely causes (in order) are:
 

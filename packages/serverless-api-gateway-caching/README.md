@@ -6,34 +6,34 @@ A TypeScript-native replacement for [`serverless-api-gateway-caching`](https://g
 
 ## Why switch?
 
-Everything the community plugin does, plus the things it does badly or not at all.
+Everything the community plugin does, plus the things it does badly or not at all. **Source-backed:** every win in this table is verified against the community plugin's npm tarball or a live AWS measurement. Full comparison with line-numbered citations: [`docs/community-plugin-comparison.md`](../../docs/community-plugin-comparison.md).
 
-| Capability                                                 | Community plugin                                | `@interlace/serverless-api-gateway-caching`                            |
-| ---------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| Enable/disable cache cluster                               | ✅                                              | ✅                                                                     |
-| Cluster size (0.5–237 GB)                                  | ✅                                              | ✅ (+ enum-validated config)                                           |
-| Per-method TTL (0–3600s)                                   | ✅                                              | ✅                                                                     |
-| Data encryption at rest                                    | ✅                                              | ✅                                                                     |
-| Cache key from path / query / header                       | ✅                                              | ✅                                                                     |
-| Cache key from request body                                | ✅                                              | ✅ (`mappedFrom`)                                                      |
-| Per-key invalidation control                               | ✅                                              | ✅                                                                     |
-| Unauthorized invalidation handling                         | ✅                                              | ✅                                                                     |
-| CloudWatch settings inheritance                            | ✅ (stage-only)                                 | ✅ (stage + per-endpoint override)                                     |
-| **Auto-flush on deploy**                                   | ❌                                              | ✅ `flushOnDeploy: true`                                               |
-| **`sls caching flush` command**                            | ❌                                              | ✅                                                                     |
-| **`sls caching status` command**                           | ❌                                              | ✅                                                                     |
-| **`sls caching disable` command**                          | ❌                                              | ✅ (safe offboarding)                                                  |
-| **`sls caching preview` (dry-run)**                        | ❌                                              | ✅ Shows patch ops without calling AWS write APIs                      |
-| **`before:remove:remove` cleanup hook**                    | ❌ ghost billing                                | ✅                                                                     |
-| **`ANY` method → GET-only caching**                        | ❌ partial                                      | ✅ Enables GET, explicitly disables DELETE/HEAD/OPTIONS/PATCH/POST/PUT |
-| **Shared API Gateway support**                             | ⚠️ partial                                      | ✅ `sharedApiGateway` flag                                             |
-| **CF-defined additional endpoints**                        | ✅                                              | ✅ `additionalEndpoints`                                               |
-| **`CacheKeyParameters` + `CacheNamespace` on CF template** | ⚠️ partial                                      | ✅ Per-method namespace isolation                                      |
-| **Jittered exponential backoff (no thundering herd)**      | ❌                                              | ✅                                                                     |
-| **JSON-schema config validation (Serverless v3+)**         | ❌                                              | ✅ Full schema, TTL range enforcement                                  |
-| **TypeScript types & IntelliSense**                        | ❌                                              | ✅                                                                     |
-| **Zero runtime dependencies**                              | ❌ `lodash.isempty`                             | ✅                                                                     |
-| **No prototype pollution**                                 | 🔴 monkey-patches `String.prototype.replaceAll` | ✅                                                                     |
+| Capability                                             | Community plugin                                  | `@interlace/serverless-api-gateway-caching`                       |
+| ------------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------------------------- |
+| Enable/disable cache cluster                           | ✅                                                | ✅                                                                |
+| Cluster size (0.5–237 GB)                              | ✅                                                | ✅ (+ enum-validated config)                                      |
+| Per-method TTL (0–3600s)                               | ✅                                                | ✅                                                                |
+| Data encryption at rest                                | ✅                                                | ✅                                                                |
+| Cache key from path / query / header                   | ✅                                                | ✅                                                                |
+| Cache key from request body                            | ✅                                                | ✅ (`mappedFrom`)                                                 |
+| Per-key invalidation control                           | ✅                                                | ✅                                                                |
+| Unauthorized invalidation handling                     | ✅                                                | ✅                                                                |
+| CloudWatch settings inheritance                        | ✅ (stage-only)                                   | ✅ (stage + per-endpoint override)                                |
+| **Auto-flush on deploy**                               | ❌                                                | ✅ `flushOnDeploy: true`                                          |
+| **`sls caching flush` command**                        | ❌                                                | ✅                                                                |
+| **`sls caching status` command**                       | ❌                                                | ✅                                                                |
+| **`sls caching disable` command**                      | ❌                                                | ✅ (safe offboarding)                                             |
+| **`sls caching preview` (dry-run)**                    | ❌                                                | ✅ Shows patch ops without calling AWS write APIs                 |
+| **`before:remove:remove` defensive-cleanup hook**      | ❌ none                                           | ✅ defense-in-depth on `sls remove`                               |
+| `ANY` method → GET-only caching                        | ✅                                                | ✅ (equivalent — both disable DELETE/HEAD/OPTIONS/PATCH/POST/PUT) |
+| Shared API Gateway support                             | ✅                                                | ✅ (equivalent — `apiGatewayIsShared` / `sharedApiGateway`)       |
+| CF-defined additional endpoints                        | ✅                                                | ✅ `additionalEndpoints`                                          |
+| `CacheKeyParameters` + `CacheNamespace` on CF template | ✅                                                | ✅ (equivalent — both inject into `AWS::ApiGateway::Method`)      |
+| **Jittered exponential backoff (no thundering herd)**  | ❌ (plain `2 ^ attempt`)                          | ✅ jittered                                                       |
+| JSON-schema config validation (Serverless v3+)         | ✅                                                | ✅ + **stricter** (clusterSize enum, TTL range 0-3600)            |
+| **TypeScript types & IntelliSense**                    | ❌                                                | ✅                                                                |
+| **Zero runtime dependencies**                          | ❌ 2 lodash deps (`lodash.get`, `lodash.isempty`) | ✅                                                                |
+| **No prototype pollution**                             | 🔴 monkey-patches `String.prototype.replaceAll`   | ✅                                                                |
 
 ## Install
 
@@ -426,7 +426,7 @@ Cost: ~$0.05–$0.10 per run (cache cluster × 5–10 minutes). Always cleans up
 
 See [`scripts/e2e/README.md`](./scripts/e2e/README.md) for prereqs, troubleshooting, and the full step-by-step.
 
-The release-verified claims are tracked in [`CLAIMS.md`](../../CLAIMS.md) at the repo root, alongside the static-evidence claims (zero deps, types coverage) sourced from the [`api-gateway-caching` competitive benchmark](../benchmarks/benchmarks/api-gateway-caching/).
+The release-verified claims are tracked in [`CLAIMS.md`](../../CLAIMS.md) at the repo root, alongside the static-evidence claims (zero deps, types coverage) sourced from the [`api-gateway-caching` competitive benchmark](../../benchmarks/suites/api-gateway-caching/).
 
 ## REST API Only
 
