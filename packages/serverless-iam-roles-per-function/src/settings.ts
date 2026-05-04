@@ -34,12 +34,31 @@ export function resolveSettings(
  * (`provider.iam.role.statements`) or the deprecated v2 form
  * (`provider.iamRoleStatements`). The legacy form still appears in
  * many real-world v3 codebases that never migrated.
+ *
+ * If both forms are non-empty (e.g. one set by the user, the other injected
+ * by a sibling plugin), v3 wins and a one-time warning is emitted so users
+ * notice the silent v2 drop.
  */
+const WARNED_INSTANCES = new WeakSet<ServerlessInstance>();
+
 export function getProviderStatements(
   serverless: ServerlessInstance,
 ): IamStatement[] {
   const provider = serverless.service.provider;
-  const v3Form = provider.iam?.role?.statements;
-  if (v3Form && v3Form.length > 0) return v3Form;
-  return provider.iamRoleStatements ?? [];
+  const v3Form = provider.iam?.role?.statements ?? [];
+  const v2Form = provider.iamRoleStatements ?? [];
+  if (
+    v3Form.length > 0 &&
+    v2Form.length > 0 &&
+    !WARNED_INSTANCES.has(serverless)
+  ) {
+    WARNED_INSTANCES.add(serverless);
+    serverless.cli.log(
+      '[interlace-iam] Both provider.iam.role.statements (v3+) AND provider.iamRoleStatements ' +
+        '(v2 deprecated) are non-empty. Inheritance will use the v3 form only — the v2 ' +
+        `entries (${v2Form.length}) are being ignored. Merge them into provider.iam.role.statements.`,
+    );
+  }
+  if (v3Form.length > 0) return v3Form;
+  return v2Form;
 }

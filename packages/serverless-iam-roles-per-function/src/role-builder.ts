@@ -1,7 +1,6 @@
 import type {
   AwsProvider,
   CompiledCloudFormationTemplate,
-  IamPolicy,
   IamRoleProperties,
   IamStatement,
   ServerlessFunctionConfig,
@@ -64,7 +63,7 @@ export function applyPerFunctionRoles(ctx: BuildContext): BuildResult {
     buildAndInsertRoleForFunction(ctx, fnName, fn, functionToRoleMap);
   }
 
-  rewriteEventSourceMappings(serverless, functionToRoleMap);
+  rewriteEventSourceMappings(serverless, ctx.provider, functionToRoleMap);
   applyGlobalPermissionsBoundary(serverless, settings);
 
   const globalRoleSuppressed = maybeSuppressGlobalRole(
@@ -198,17 +197,18 @@ function setPolicyStatements(
   role: { Properties: IamRoleProperties },
   statements: IamStatement[],
 ): void {
-  if (!role.Properties.Policies || role.Properties.Policies.length === 0) {
-    role.Properties.Policies = [
-      {
-        PolicyName: 'iam-roles-per-function-inline',
-        PolicyDocument: { Version: '2012-10-17', Statement: statements },
-      },
-    ];
-    return;
-  }
-  const policy = role.Properties.Policies[0].PolicyDocument as IamPolicy;
-  policy.Statement = statements;
+  // Replace the entire Policies array with a single inline policy holding the
+  // function's own statements. Don't preserve any Policies entries cloned
+  // from the global role — a third-party plugin that appends a second inline
+  // policy to the global role (VPC flow loggers, observability agents, etc.)
+  // would otherwise leak that policy onto every per-function role and silently
+  // over-grant permissions.
+  role.Properties.Policies = [
+    {
+      PolicyName: 'iam-roles-per-function-inline',
+      PolicyDocument: { Version: '2012-10-17', Statement: statements },
+    },
+  ];
 }
 
 function applyManagedPolicies(
@@ -272,7 +272,15 @@ function rewriteFunctionRoleRef(
   const role = props.Role as { 'Fn::GetAtt'?: unknown[] } | undefined;
   if (!role || !Array.isArray(role['Fn::GetAtt'])) {
     throw new Error(
-      `Function "${fnName}" CFN resource doesn't have the expected Role.Fn::GetAtt structure.`,
+      `Function "${fnName}" CFN resource has a Role property that isn't ` +
+        `\`{ 'Fn::GetAtt': [...] }\`. The plugin only supports the framework's ` +
+        `default Role shape. ` +
+        `Common causes: ` +
+        `(1) \`provider.role\` set to a literal ARN — remove \`iamRoleStatements\` ` +
+        `from this function and set \`role: <arn>\` on the function instead. ` +
+        `(2) \`customRole: true\` — same workaround. ` +
+        `(3) An esbuild/webpack plugin that rewrites function resources before ours runs — ` +
+        `re-order \`plugins:\` so this plugin is listed AFTER the rewriter.`,
     );
   }
   role['Fn::GetAtt'][0] = newRoleLogicalId;
@@ -300,9 +308,23 @@ function rewriteFunctionRoleRef(
 
 function rewriteEventSourceMappings(
   serverless: ServerlessInstance,
+  provider: AwsProvider,
   functionToRoleMap: Map<string, string>,
 ): void {
   if (functionToRoleMap.size === 0) return;
+  // Build an exact function-logical-id → role-logical-id map by asking the
+  // framework's naming helper. No prefix heuristic — two functions whose
+  // normalized names share a prefix (e.g. `fn` and `fnExtra`) would otherwise
+  // both match the shorter prefix and a Map iteration race would assign the
+  // wrong role's `DependsOn` to the EventSourceMapping.
+  const logicalIdToRole = new Map<string, string>();
+  for (const [fnName, roleLogicalId] of functionToRoleMap.entries()) {
+    logicalIdToRole.set(
+      provider.naming.getLambdaLogicalId(fnName),
+      roleLogicalId,
+    );
+  }
+
   const template = serverless.service.provider.compiledCloudFormationTemplate;
   for (const resource of Object.values(template.Resources)) {
     if (resource.Type !== 'AWS::Lambda::EventSourceMapping') continue;
@@ -312,34 +334,9 @@ function rewriteEventSourceMappings(
     const fnGetAtt = props?.FunctionName?.['Fn::GetAtt'];
     if (!Array.isArray(fnGetAtt) || typeof fnGetAtt[0] !== 'string') continue;
     const fnLogicalId = fnGetAtt[0];
-    const roleLogicalId = lookupByLogicalId(functionToRoleMap, fnLogicalId);
+    const roleLogicalId = logicalIdToRole.get(fnLogicalId);
     if (roleLogicalId) resource.DependsOn = roleLogicalId;
   }
-}
-
-/**
- * `functionToRoleMap` keys are function NAMES, but EventSourceMapping resources
- * reference function LOGICAL IDs (`MyFunctionLambdaFunction`). We need to
- * normalize: the function name in the map → the logical ID via the framework's
- * naming helper. To avoid a second pass, we use the inverse lookup here.
- */
-function lookupByLogicalId(
-  functionToRoleMap: Map<string, string>,
-  fnLogicalId: string,
-): string | undefined {
-  // We stored function NAMES, not logical IDs. The logical ID is `<NormalizedFunctionName>LambdaFunction`.
-  // Reverse-engineer by searching for a function whose normalized name + 'LambdaFunction' matches.
-  for (const [_fnName, roleLogicalId] of functionToRoleMap.entries()) {
-    if (
-      // Heuristic: roleLogicalId starts with normalized function name; if `fnLogicalId`
-      // also starts with the same prefix and ends with 'LambdaFunction', it's the same fn.
-      fnLogicalId.endsWith('LambdaFunction') &&
-      roleLogicalId.startsWith(fnLogicalId.replace(/LambdaFunction$/, ''))
-    ) {
-      return roleLogicalId;
-    }
-  }
-  return undefined;
 }
 
 function applyGlobalPermissionsBoundary(
