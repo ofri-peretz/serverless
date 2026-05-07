@@ -39,7 +39,7 @@
     "changeset:version": "changeset version",
     "changeset:publish": "turbo run build && changeset publish",
     "changeset:status": "changeset status --verbose",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install || true"
   },
   "keywords": [
     "serverless",
