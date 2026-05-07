@@ -1,4 +1,5 @@
 {
   "title": "Plugins",
-  "pages": ["...caching"]
+  "description": "Per-plugin documentation. Each plugin ships the same canonical page set: index, installation, configuration, CLI, recipes, migration, changelog, benchmark, FAQ.",
+  "pages": ["api-gateway-caching", "iam-roles-per-function"]
 }

@@ -1,23 +1,86 @@
+# Dependabot configuration for automatic dependency updates
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  # ─────────────────────────────────────────────────────────────────────────
+  # NPM dependencies — grouped per ecosystem area to avoid PR noise.
+  # ─────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 1
     labels:
-      - "dependencies"
+      - 'dependencies'
+      - 'npm'
+    commit-message:
+      prefix: 'chore(deps)'
+      include: 'scope'
     groups:
-      dev-dependencies:
+      # All dev/runtime deps in a single weekly PR — keeps merges atomic.
+      all-packages:
         patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
+          - '*'
+      # Group Turborepo packages together
+      turbo:
+        patterns:
+          - 'turbo'
+          - 'eslint-config-turbo'
+      # Group changesets together
+      changesets:
+        patterns:
+          - '@changesets/*'
+      # Group TypeScript ESLint together
+      typescript-eslint:
+        patterns:
+          - '@typescript-eslint/*'
+          - 'typescript-eslint'
+      # Group the Vitest universe
+      testing:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+          - '@testing-library/*'
+      # Group Vite + dts plugin
+      build-tools:
+        patterns:
+          - 'vite'
+          - 'vite-plugin-*'
+          - '@vitejs/*'
+          - 'tslib'
+      # Group Fumadocs + Next together (docs site)
+      docs:
+        patterns:
+          - 'fumadocs-*'
+          - '@fumadocs/*'
+          - 'next'
+          - '@next/*'
+          - 'react'
+          - 'react-dom'
+          - '@types/react*'
+          - 'tailwindcss'
+          - '@tailwindcss/*'
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  # ─────────────────────────────────────────────────────────────────────────
+  # GitHub Actions — single weekly grouped PR for action versions.
+  # ─────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+    open-pull-requests-limit: 1
     labels:
-      - "ci"
+      - 'dependencies'
+      - 'github-actions'
+    commit-message:
+      prefix: 'chore(ci)'
+      include: 'scope'
+    groups:
+      all-actions:
+        patterns:
+          - '*'

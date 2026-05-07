@@ -18,6 +18,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
+      "#interlace/*": ["./.interlace/*"],
       "fumadocs-mdx:collections/*": [".source/*"]
     }
   },
@@ -26,7 +27,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".source/**/*.ts"
+    ".source/**/*.ts",
+    ".interlace/**/*.ts",
+    ".interlace/**/*.tsx"
   ],
   "exclude": ["node_modules"]
 }

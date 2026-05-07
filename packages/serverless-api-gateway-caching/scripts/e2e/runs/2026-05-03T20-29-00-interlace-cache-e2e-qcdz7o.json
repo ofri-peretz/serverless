@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "_backfilled": "Reconstructed from console output. Future runs persist automatically via persistRunLog().",
+  "startedAt": "2026-05-03T20:29:00Z",
+  "endedAt": "2026-05-03T20:34:30Z",
+  "status": "failed-with-emergency-cleanup",
+  "failedAtStep": 4,
+  "serviceName": "interlace-cache-e2e-qcdz7o",
+  "region": "us-east-1",
+  "awsIdentity": "arn:aws:iam::346133547796:user/interlace-cli",
+  "endpoint": "https://3cvxjmy38e.execute-api.us-east-1.amazonaws.com/e2e/hello",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "pluginVersion": "0.0.0",
+  "steps": [
+    { "id": 1, "label": "Pre-flight", "status": "pass" },
+    { "id": 2, "label": "Stage fixture + npm pack", "status": "pass" },
+    {
+      "id": 3,
+      "label": "sls deploy",
+      "status": "pass",
+      "observations": { "deployDurationSec": 121 }
+    },
+    {
+      "id": 4,
+      "label": "Cache MISS test",
+      "status": "fail",
+      "error": "Expected 200, got 502 — Lambda runtime errored. Cause: handler.ts deployed as-is to nodejs20.x runtime; no TypeScript compilation in the deploy package."
+    }
+  ],
+  "awsObservations": {
+    "deployDurationSec": 121,
+    "removeDurationSec": 29
+  },
+  "totalAwsCostUsdEstimate": 0.01,
+  "fixApplied": "Renamed scripts/e2e/fixture/handler.ts → handler.js (CommonJS). Runtime entry points are an explicit exception to the 'TypeScript everywhere' rule because Lambda's node runtime executes JS directly with no transpiler. Documented in handler.js JSDoc and scripts/e2e/LEARNINGS.md."
+}

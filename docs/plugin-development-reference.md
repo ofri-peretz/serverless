@@ -68,41 +68,41 @@ module.exports = MyPlugin;
 
 Triggered by `serverless package` (and as part of `deploy`):
 
-| Event | Hook Format | Description |
-|---|---|---|
-| `package:cleanup` | `before:package:cleanup` | Clean previous artifacts |
-| `package:initialize` | `before:package:initialize` | Initialize packaging |
-| `package:setupProviderConfiguration` | `before:package:setupProviderConfiguration` | Provider-specific setup |
-| `package:createDeploymentArtifacts` | `before:package:createDeploymentArtifacts` | Create zip artifacts |
-| `package:compileFunctions` | `after:package:compileFunctions` | Compile function definitions to CloudFormation |
-| `package:compileEvents` | `after:package:compileEvents` | Compile event sources to CloudFormation |
-| `package:finalize` | `after:package:finalize` | Finalize packaging |
+| Event                                | Hook Format                                 | Description                                    |
+| ------------------------------------ | ------------------------------------------- | ---------------------------------------------- |
+| `package:cleanup`                    | `before:package:cleanup`                    | Clean previous artifacts                       |
+| `package:initialize`                 | `before:package:initialize`                 | Initialize packaging                           |
+| `package:setupProviderConfiguration` | `before:package:setupProviderConfiguration` | Provider-specific setup                        |
+| `package:createDeploymentArtifacts`  | `before:package:createDeploymentArtifacts`  | Create zip artifacts                           |
+| `package:compileFunctions`           | `after:package:compileFunctions`            | Compile function definitions to CloudFormation |
+| `package:compileEvents`              | `after:package:compileEvents`               | Compile event sources to CloudFormation        |
+| `package:finalize`                   | `after:package:finalize`                    | Finalize packaging                             |
 
 ### Deploy Lifecycle
 
 Triggered by `serverless deploy`:
 
-| Event | Hook Format | Description |
-|---|---|---|
-| `deploy:deploy` | `before:deploy:deploy` | Main deployment execution |
-| `deploy:finalize` | `after:deploy:finalize` | Post-deployment cleanup |
+| Event             | Hook Format             | Description               |
+| ----------------- | ----------------------- | ------------------------- |
+| `deploy:deploy`   | `before:deploy:deploy`  | Main deployment execution |
+| `deploy:finalize` | `after:deploy:finalize` | Post-deployment cleanup   |
 
 ### AWS-Specific Events
 
-| Event | Description |
-|---|---|
-| `aws:deploy:deploy:createStack` | Create CloudFormation stack |
-| `aws:deploy:deploy:uploadArtifacts` | Upload to S3 |
-| `aws:deploy:deploy:updateStack` | Update CloudFormation |
+| Event                               | Description                 |
+| ----------------------------------- | --------------------------- |
+| `aws:deploy:deploy:createStack`     | Create CloudFormation stack |
+| `aws:deploy:deploy:uploadArtifacts` | Upload to S3                |
+| `aws:deploy:deploy:updateStack`     | Update CloudFormation       |
 
 ### Other Commands
 
-| Command | Key Events |
-|---|---|
+| Command  | Key Events      |
+| -------- | --------------- |
 | `invoke` | `invoke:invoke` |
 | `remove` | `remove:remove` |
-| `info` | `info:info` |
-| `logs` | `logs:logs` |
+| `info`   | `info:info`     |
+| `logs`   | `logs:logs`     |
 
 ---
 
@@ -221,11 +221,22 @@ declare class Serverless {
   pluginManager: PluginManager;
   configSchemaHandler: {
     defineCustomProperties(schema: unknown): void;
-    defineFunctionEvent(provider: string, event: string, schema: Record<string, unknown>): void;
-    defineFunctionEventProperties(provider: string, existingEvent: string, schema: unknown): void;
+    defineFunctionEvent(
+      provider: string,
+      event: string,
+      schema: Record<string, unknown>,
+    ): void;
+    defineFunctionEventProperties(
+      provider: string,
+      existingEvent: string,
+      schema: unknown,
+    ): void;
     defineFunctionProperties(provider: string, schema: unknown): void;
     defineProvider(provider: string, options?: Record<string, unknown>): void;
-    defineTopLevelProperty(provider: string, schema: Record<string, unknown>): void;
+    defineTopLevelProperty(
+      provider: string,
+      schema: Record<string, unknown>,
+    ): void;
   };
 }
 
@@ -279,9 +290,11 @@ class PluginManager {
 ## 7. v4-Specific Considerations
 
 ### License Requirement
+
 Serverless Framework v4 requires authentication for certain operations. Ensure your CI and development environments are configured.
 
 ### Native Build (`build` property)
+
 v4 includes native esbuild support. If your plugin modifies the build pipeline, check for conflicts with the native `build` configuration:
 
 ```yaml
@@ -295,6 +308,7 @@ build:
 Set `build: false` in `serverless.yml` if using legacy bundler plugins to avoid conflicts.
 
 ### Stages and Parameters
+
 v4 formalizes stage-specific configuration:
 
 ```yaml
@@ -325,7 +339,7 @@ describe('MyPlugin', () => {
     serverless = {
       service: {
         service: 'test-service',
-        provider: { stage: 'dev' },
+        provider: { stage: 'development' },
         functions: {},
         custom: {},
       },
@@ -337,7 +351,7 @@ describe('MyPlugin', () => {
       },
       getProvider: vi.fn(),
     };
-    options = { stage: 'dev' };
+    options = { stage: 'development' };
   });
 
   it('should register hooks', () => {
@@ -362,7 +376,7 @@ Use the `example/` pattern — a minimal Serverless service that uses your local
 # example/serverless.yml
 service: my-plugin-test
 plugins:
-  - '../'  # Reference parent plugin
+  - '../' # Reference parent plugin
 provider:
   name: aws
   runtime: nodejs20.x
@@ -388,13 +402,13 @@ functions:
 
 ## 10. Official Resources
 
-| Resource | URL |
-|---|---|
-| Plugin authoring guide | https://www.serverless.com/framework/docs/guides/plugins/creating-plugins |
-| Plugin installation | https://www.serverless.com/framework/docs/guides/plugins |
-| CLI output guide (v3+) | https://www.serverless.com/framework/docs/guides/plugins/cli-output |
-| Custom configuration | https://www.serverless.com/framework/docs/guides/plugins/custom-configuration |
-| Plugin directory (360+) | https://www.serverless.com/plugins |
-| `@types/serverless` | https://www.npmjs.com/package/@types/serverless |
-| Framework source | https://github.com/serverless/serverless |
-| Community Slack | https://www.serverless.com/slack |
+| Resource                | URL                                                                           |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| Plugin authoring guide  | https://www.serverless.com/framework/docs/guides/plugins/creating-plugins     |
+| Plugin installation     | https://www.serverless.com/framework/docs/guides/plugins                      |
+| CLI output guide (v3+)  | https://www.serverless.com/framework/docs/guides/plugins/cli-output           |
+| Custom configuration    | https://www.serverless.com/framework/docs/guides/plugins/custom-configuration |
+| Plugin directory (360+) | https://www.serverless.com/plugins                                            |
+| `@types/serverless`     | https://www.npmjs.com/package/@types/serverless                               |
+| Framework source        | https://github.com/serverless/serverless                                      |
+| Community Slack         | https://www.serverless.com/slack                                              |

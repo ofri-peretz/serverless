@@ -1,0 +1,96 @@
+---
+title: Removing the Plugin
+description: How to safely remove the caching plugin without ghost billing.
+---
+
+<Callout type="error">
+**If you remove the plugin from `serverless.yml` without disabling the cache first, the cache cluster continues running on AWS and you will be billed for it indefinitely.**
+</Callout>
+
+## Why is this necessary?
+
+API Gateway cache clusters are provisioned resources that cost real money — see the [official AWS API Gateway pricing page](https://aws.amazon.com/api-gateway/pricing/) under "API caching" for the per-region rate. They are **not** part of your CloudFormation stack — they're managed via the `UpdateStage` API at deploy time.
+
+When you remove a caching plugin and redeploy:
+1. CloudFormation doesn't know about the cache cluster → it stays running
+2. No plugin hooks fire → nothing disables it
+3. You get ghost billing until you manually disable it in the AWS console
+
+The `sls caching disable` command solves this.
+
+## Safe Removal Procedure
+
+### Step 1: Disable the cache on AWS
+
+```bash
+sls caching disable --stage development
+sls caching disable --stage production
+# Repeat for each stage that has caching enabled
+```
+
+### Step 2: Edit serverless.yml
+
+Remove the plugin, the config, and all endpoint caching:
+
+```diff
+plugins:
+-  - '@interlace/serverless-api-gateway-caching'
+
+custom:
+-  interlaceCaching:
+-    enabled: true
+-    clusterSize: '0.5'
+-    ttlInSeconds: 300
+
+functions:
+  getUser:
+    handler: src/handler.get
+    events:
+      - http:
+          path: /users/{id}
+          method: get
+-          caching:
+-            enabled: true
+-            cacheKeyParameters:
+-              - name: request.path.id
+```
+
+### Step 3: Deploy clean
+
+```bash
+sls deploy --stage development
+sls deploy --stage production
+```
+
+### Step 4: Uninstall the package
+
+<InstallSnippet pkg="@interlace/serverless-api-gateway-caching" command="uninstall" />
+
+## What about `sls remove`?
+
+If you're **deleting the entire stack** (not just removing the plugin), the cleanup happens automatically. Our `before:remove:remove` hook disables the cache cluster before CloudFormation deletes the API Gateway.
+
+```bash
+sls remove --stage development  # cache is automatically disabled first
+```
+
+The manual disable step is only needed when removing the **plugin** while keeping the service running.
+
+## Already have ghost billing?
+
+If you've already removed a caching plugin (ours or the community one) without disabling the cache:
+
+1. Go to **AWS Console → API Gateway → your API → Stages → your stage**
+2. Under **Settings**, find **Cache Settings**
+3. Set **Enable API cache** to `false`
+4. Click **Save Changes**
+
+Or use the AWS CLI:
+
+```bash
+aws apigateway update-stage \
+  --rest-api-id YOUR_API_ID \
+  --stage-name production \
+  --patch-operations op=replace,path=/cacheClusterEnabled,value=false \
+  --profile interlace
+```

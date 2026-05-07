@@ -1,0 +1,15 @@
+{
+  "title": "API Gateway Caching",
+  "description": "API Gateway caching for Serverless Framework — done right.",
+  "pages": [
+    "index",
+    "installation",
+    "configuration",
+    "cli-commands",
+    "recipes",
+    "migration",
+    "changelog",
+    "benchmark",
+    "faq"
+  ]
+}

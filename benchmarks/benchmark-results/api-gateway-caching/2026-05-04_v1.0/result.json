@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "timestamp": "2026-05-04T04:19:35.162Z",
+  "benchmark": "api-gateway-caching",
+  "benchmarkType": "composite",
+  "scoringMode": "composite",
+  "category": "API Gateway Caching",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "installedVersions": {
+    "@interlace/serverless-api-gateway-caching": "0.0.0",
+    "serverless-api-gateway-caching": "1.11.0"
+  },
+  "methodology": {
+    "approach": "Static metrics from npm registry",
+    "description": "Each competitor is measured across 7 weighted dimensions sourced from its npm registry packument and (when available) local source. Dimensions requiring AWS deployment (lifecycleCorrectness, hookCount, cliSurface) are reported as null when not measurable here — they will be filled in by the cleanup-correctness suite once it lands.",
+    "dimensions": {
+      "lifecycleCorrectness": {
+        "weight": 0.25,
+        "label": "Lifecycle Correctness",
+        "source": "local source / live deploy"
+      },
+      "cliSurface": {
+        "weight": 0.15,
+        "label": "CLI Surface",
+        "source": "local source"
+      },
+      "typescriptCoverage": {
+        "weight": 0.15,
+        "label": "TypeScript Coverage",
+        "source": "npm registry"
+      },
+      "bundleWeight": {
+        "weight": 0.1,
+        "label": "Bundle Weight",
+        "source": "npm registry"
+      },
+      "hookCount": {
+        "weight": 0.1,
+        "label": "Hook Coverage",
+        "source": "local source"
+      },
+      "maintenanceSignal": {
+        "weight": 0.15,
+        "label": "Maintenance Signal",
+        "source": "npm registry"
+      },
+      "documentationQuality": {
+        "weight": 0.1,
+        "label": "Documentation Quality",
+        "source": "README scan"
+      }
+    }
+  },
+  "plugins": {
+    "interlace": {
+      "displayName": "Interlace",
+      "version": "0.0.0",
+      "isOurs": true,
+      "package": "@interlace/serverless-api-gateway-caching",
+      "measurements": {
+        "source": "local",
+        "version": "0.0.0",
+        "daysSincePublish": 0,
+        "directDeps": 0,
+        "shipsTypes": true,
+        "totalVersions": null,
+        "versionsLastYear": null,
+        "unpackedKB": 78,
+        "weeklyDownloads": 0,
+        "hookCount": 8,
+        "cliCommandCount": 4,
+        "readme": {
+          "lines": 438,
+          "hasInstallation": true,
+          "hasUsage": false,
+          "hasTypeScript": true,
+          "hasLifecycle": true
+        },
+        "e2ePassed": true,
+        "e2eRunFile": "2026-05-03T23-32-06-interlace-cache-e2e-qeo2ui.json",
+        "hasRemovePhaseHook": true,
+        "hasSafeOffboardingCommand": true
+      },
+      "dimensionScores": {
+        "typescriptCoverage": 1,
+        "bundleWeight": 0,
+        "maintenanceSignal": 1,
+        "hookCount": 1,
+        "cliSurface": 1,
+        "documentationQuality": 0.8,
+        "lifecycleCorrectness": 1
+      },
+      "composite": 0.8800000000000001
+    },
+    "serverless-api-gateway-caching": {
+      "displayName": "Community",
+      "version": "1.11.0",
+      "isOurs": false,
+      "package": "serverless-api-gateway-caching",
+      "measurements": {
+        "source": "npm",
+        "version": "1.11.0",
+        "daysSincePublish": 379,
+        "directDeps": 2,
+        "shipsTypes": false,
+        "totalVersions": 82,
+        "versionsLastYear": 0,
+        "unpackedKB": 47,
+        "weeklyDownloads": 38462,
+        "hookCount": 3,
+        "cliCommandCount": 0,
+        "readme": {
+          "lines": 505,
+          "hasInstallation": false,
+          "hasUsage": true,
+          "hasTypeScript": false,
+          "hasLifecycle": false
+        },
+        "e2ePassed": true,
+        "e2eRunFile": "2026-05-04T00-15-49-community-interlace-cache-e2e-community-qg8hlm.json",
+        "hasRemovePhaseHook": false,
+        "hasSafeOffboardingCommand": false
+      },
+      "dimensionScores": {
+        "typescriptCoverage": 0,
+        "bundleWeight": 1,
+        "maintenanceSignal": 0,
+        "hookCount": 0.375,
+        "cliSurface": 0,
+        "documentationQuality": 0.4,
+        "lifecycleCorrectness": 0.5
+      },
+      "composite": 0.3025
+    }
+  },
+  "summary": {
+    "winner": "interlace",
+    "rankBy": "composite",
+    "ranked": ["interlace", "serverless-api-gateway-caching"]
+  },
+  "skipped": []
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Recipes",
+  "description": "Common how-to recipes for IAM Roles Per Function.",
+  "pages": [
+    "index",
+    "statement-templates",
+    "least-privilege",
+    "boundary-policies"
+  ]
+}

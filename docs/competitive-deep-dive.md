@@ -1,6 +1,7 @@
 # Community Plugin Deep Dive — Source-Level Analysis
 
 > For each plugin we intend to replace, this document provides:
+>
 > - Exact behavior (from reading source code, not just README)
 > - What they DON'T do (missing capabilities)
 > - Resource cleanup gaps
@@ -12,14 +13,14 @@
 
 ## 🏆 Quick Win Tier List
 
-| Tier | Plugin | Effort | Impact | Why |
-|---|---|---|---|---|
-| **S — Ship First** | `serverless-api-gateway-caching` | ~2 weeks | High | 300 LOC, zero cleanup, missing half of AWS API surface |
-| **S — Ship First** | `serverless-associate-waf` | ~1 week | Medium | 190 LOC, trivial to subsume, zero disassociate-on-remove |
-| **A — Fast Follow** | `serverless-plugin-common-excludes` | ~3 days | Medium | Static list, we already have better |
-| **A — Fast Follow** | `serverless-plugin-include-dependencies` | ~1 week | Medium | Our workspace isolation is superior |
-| **B — Strategic** | `serverless-domain-manager` | Skip | Low | Well-maintained, not worth competing |
-| **B — Strategic** | `serverless-iam-roles-per-function` | Skip | Low | Native v4 replaces this |
+| Tier                | Plugin                                   | Effort   | Impact | Why                                                      |
+| ------------------- | ---------------------------------------- | -------- | ------ | -------------------------------------------------------- |
+| **S — Ship First**  | `serverless-api-gateway-caching`         | ~2 weeks | High   | 300 LOC, zero cleanup, missing half of AWS API surface   |
+| **S — Ship First**  | `serverless-associate-waf`               | ~1 week  | Medium | 190 LOC, trivial to subsume, zero disassociate-on-remove |
+| **A — Fast Follow** | `serverless-plugin-common-excludes`      | ~3 days  | Medium | Static list, we already have better                      |
+| **A — Fast Follow** | `serverless-plugin-include-dependencies` | ~1 week  | Medium | Our workspace isolation is superior                      |
+| **B — Strategic**   | `serverless-domain-manager`              | Skip     | Low    | Well-maintained, not worth competing                     |
+| **B — Strategic**   | `serverless-iam-roles-per-function`      | Skip     | Low    | Native v4 replaces this                                  |
 
 ---
 
@@ -57,12 +58,14 @@ apiGatewayCachingPlugin.js (entry)
 #### Critical Source Code Findings
 
 **🔴 `String.prototype.replaceAll` monkey-patch** (stageCache.js line 10-16):
+
 ```javascript
 String.prototype.replaceAll = function (search, replacement) {
   let target = this;
   return target.split(search).join(replacement);
 };
 ```
+
 This is a **global prototype pollution** — modifying `String.prototype` for ALL code in the process. In modern Node.js (18+), `replaceAll` is native and this override silently breaks it.
 
 **🔴 No `remove` hook** — The plugin has NO lifecycle hook for `before:remove:remove` or `after:remove:remove`. When you `sls remove` your stack, the cache cluster is deleted (because the stage is deleted), but if you disable caching in config and redeploy, the cache cluster **stays running and billing you**.
@@ -70,6 +73,7 @@ This is a **global prototype pollution** — modifying `String.prototype` for AL
 **🔴 No `sls offline` integration** — No awareness of local development at all.
 
 **🔴 Retry logic has exponential backoff but no jitter** (stageCache.js line 211-243):
+
 ```javascript
 const delay = baseDelay * 2 ** attempt; // No jitter = thundering herd
 ```
@@ -80,31 +84,31 @@ const delay = baseDelay * 2 ** attempt; // No jitter = thundering herd
 
 #### What It Doesn't Support (AWS API Gaps)
 
-| AWS Capability | Supported | Notes |
-|---|---|---|
-| Enable/disable cache cluster | ✅ | |
-| Cluster size selection | ✅ | 0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237 GB |
-| TTL per method | ✅ | 0-3600 seconds |
-| Data encryption at rest | ✅ | |
-| Cache key from path params | ✅ | |
-| Cache key from query strings | ✅ | |
-| Cache key from headers | ✅ | |
-| Cache key from request body | ✅ | Via integration mapping |
-| Per-key invalidation control | ✅ | |
-| Unauthorized invalidation handling | ✅ | Ignore/IgnoreWithWarning/Fail |
-| **Multi-value query strings** | ❌ | Explicitly noted as unsupported |
-| **Multi-value headers** | ❌ | Explicitly noted as unsupported |
-| **Cache flush on deploy** | ❌ | No option to auto-flush after deploy |
-| **Cache flush command** | ❌ | No `sls flush-cache` command |
-| **CloudWatch metrics config** | ⚠️ | Only inherits from stage, can't set independently |
-| **Throttling settings** | ❌ | Can't configure method throttling alongside caching |
-| **Stage variables as cache keys** | ❌ | Not supported |
-| **Content handling** | ❌ | CONVERT_TO_BINARY/CONVERT_TO_TEXT not configurable |
-| **Custom integration timeout** | ❌ | Can't set alongside cache config |
-| **Canary settings** | ❌ | No canary deployment cache config |
-| **Resource cleanup on disable** | ❌ | Disabling cache in config doesn't clean up cluster |
-| **HTTP API support** | ❌ | Only REST API (AWS limitation, but should document) |
-| **Dry-run mode** | ❌ | No way to preview patch operations |
+| AWS Capability                     | Supported | Notes                                               |
+| ---------------------------------- | --------- | --------------------------------------------------- |
+| Enable/disable cache cluster       | ✅        |                                                     |
+| Cluster size selection             | ✅        | 0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237 GB        |
+| TTL per method                     | ✅        | 0-3600 seconds                                      |
+| Data encryption at rest            | ✅        |                                                     |
+| Cache key from path params         | ✅        |                                                     |
+| Cache key from query strings       | ✅        |                                                     |
+| Cache key from headers             | ✅        |                                                     |
+| Cache key from request body        | ✅        | Via integration mapping                             |
+| Per-key invalidation control       | ✅        |                                                     |
+| Unauthorized invalidation handling | ✅        | Ignore/IgnoreWithWarning/Fail                       |
+| **Multi-value query strings**      | ❌        | Explicitly noted as unsupported                     |
+| **Multi-value headers**            | ❌        | Explicitly noted as unsupported                     |
+| **Cache flush on deploy**          | ❌        | No option to auto-flush after deploy                |
+| **Cache flush command**            | ❌        | No `sls flush-cache` command                        |
+| **CloudWatch metrics config**      | ⚠️        | Only inherits from stage, can't set independently   |
+| **Throttling settings**            | ❌        | Can't configure method throttling alongside caching |
+| **Stage variables as cache keys**  | ❌        | Not supported                                       |
+| **Content handling**               | ❌        | CONVERT_TO_BINARY/CONVERT_TO_TEXT not configurable  |
+| **Custom integration timeout**     | ❌        | Can't set alongside cache config                    |
+| **Canary settings**                | ❌        | No canary deployment cache config                   |
+| **Resource cleanup on disable**    | ❌        | Disabling cache in config doesn't clean up cluster  |
+| **HTTP API support**               | ❌        | Only REST API (AWS limitation, but should document) |
+| **Dry-run mode**                   | ❌        | No way to preview patch operations                  |
 
 #### Pain Points from GitHub Issues
 
@@ -133,7 +137,7 @@ custom:
     clusterSize: '0.5'
     ttlInSeconds: 300
     dataEncrypted: true
-    flushOnDeploy: true              # ← NEW: auto-flush after deploy
+    flushOnDeploy: true # ← NEW: auto-flush after deploy
     perKeyInvalidation:
       requireAuthorization: true
       handleUnauthorizedRequests: Ignore
@@ -158,6 +162,7 @@ functions:
 ```
 
 **Commands we add**:
+
 ```bash
 sls caching flush          # Flush entire stage cache
 sls caching flush --path /users  # Flush specific path (if possible via API)
@@ -165,6 +170,7 @@ sls caching status         # Show cache cluster status, hit/miss rates
 ```
 
 **Cleanup we fix**:
+
 - `before:remove:remove` → disable cache cluster
 - `after:deploy:deploy` → if `enabled: false`, actively disable cluster
 - Dry-run mode: `sls caching preview` → shows patch operations without applying
@@ -211,25 +217,25 @@ AssociateWafPlugin
 
 #### What It Doesn't Support
 
-| Capability | Supported | Notes |
-|---|---|---|
-| Associate WAF by name | ✅ | |
-| Disassociate WAF | ✅ | When name is empty |
-| WAFv2 support | ✅ | Via `version: V2` config |
-| WAFRegional support | ✅ | Default |
-| Split-stack compatibility | ✅ | Via CF Output |
-| **Associate by ARN** | ❌ | Must use name lookup |
-| **Pagination** | ❌ | Max 100 ACLs |
-| **Remove hook cleanup** | ❌ | Orphaned associations |
-| **Fail on error** | ❌ | Swallows all errors silently |
-| **WAF creation** | ❌ | Must pre-create WAF |
-| **IP set management** | ❌ | |
-| **Rate limiting rules** | ❌ | |
-| **Geo-blocking** | ❌ | |
-| **Security headers** | ❌ | |
-| **Multiple WAF association** | ❌ | One WAF per stack |
-| **HTTP API support** | ❌ | REST API only |
-| **CloudFront scope** | ❌ | Hard-coded REGIONAL |
+| Capability                   | Supported | Notes                        |
+| ---------------------------- | --------- | ---------------------------- |
+| Associate WAF by name        | ✅        |                              |
+| Disassociate WAF             | ✅        | When name is empty           |
+| WAFv2 support                | ✅        | Via `version: V2` config     |
+| WAFRegional support          | ✅        | Default                      |
+| Split-stack compatibility    | ✅        | Via CF Output                |
+| **Associate by ARN**         | ❌        | Must use name lookup         |
+| **Pagination**               | ❌        | Max 100 ACLs                 |
+| **Remove hook cleanup**      | ❌        | Orphaned associations        |
+| **Fail on error**            | ❌        | Swallows all errors silently |
+| **WAF creation**             | ❌        | Must pre-create WAF          |
+| **IP set management**        | ❌        |                              |
+| **Rate limiting rules**      | ❌        |                              |
+| **Geo-blocking**             | ❌        |                              |
+| **Security headers**         | ❌        |                              |
+| **Multiple WAF association** | ❌        | One WAF per stack            |
+| **HTTP API support**         | ❌        | REST API only                |
+| **CloudFront scope**         | ❌        | Hard-coded REGIONAL          |
 
 #### @interlace/serverless-plugin-security — WAF Spec
 
@@ -238,11 +244,11 @@ custom:
   interlaceSecurity:
     waf:
       # Support BOTH name and ARN
-      name: 'my-web-acl'           # OR
-      arn: 'arn:aws:wafv2:...'     # direct ARN — no lookup needed
-      version: 'V2'                # default: V2
-      scope: 'REGIONAL'            # or 'CLOUDFRONT'
-      failOnError: true            # ← NEW: deploy fails if WAF can't associate
+      name: 'my-web-acl' # OR
+      arn: 'arn:aws:wafv2:...' # direct ARN — no lookup needed
+      version: 'V2' # default: V2
+      scope: 'REGIONAL' # or 'CLOUDFRONT'
+      failOnError: true # ← NEW: deploy fails if WAF can't associate
     # Additional security features in same plugin:
     tracing:
       xray: true
@@ -253,6 +259,7 @@ custom:
 ```
 
 **Cleanup we fix**:
+
 - `before:remove:remove` → Disassociate WAF before stack deletion
 - Paginated `listWebACLs` (handle 100+ ACLs)
 - Error handling: configurable fail/warn behavior
@@ -275,13 +282,20 @@ class CommonExcludesPlugin {
       'before:package:initialize': () => {
         serverless.service.package.exclude = [
           ...serverless.service.package.exclude,
-          '.git/**', '.serverless/**', 'test/**', '__tests__/**',
-          'coverage/**', '.idea/**', '.vscode/**', '*.md',
+          '.git/**',
+          '.serverless/**',
+          'test/**',
+          '__tests__/**',
+          'coverage/**',
+          '.idea/**',
+          '.vscode/**',
+          '*.md',
           '*.ts', // ← DANGEROUS: excludes TypeScript source files
-          '.env', '.env.*',
+          '.env',
+          '.env.*',
           // ... ~30 more patterns
         ];
-      }
+      },
     };
   }
 }
@@ -314,6 +328,7 @@ Our `plugin-package` already does smart excludes AND workspace isolation AND mul
 #### Critical Findings
 
 **🔴 Static analysis only** — Uses regex/AST to find `require()` calls. Misses:
+
 - `import()` dynamic imports
 - `require(variable)` computed requires
 - Framework-specific module loading (NestJS DI, Middy plugins)
@@ -537,6 +552,7 @@ import { pruneConfig } from '@interlace/serverless-devkit/compat';
 #### @interlace Strategy: Subsume into observability plugin later
 
 Not a quick win. Warmup is less relevant with:
+
 - SnapStart (Java)
 - Provisioned Concurrency
 - v4's improved cold start handling
@@ -571,31 +587,31 @@ Creates CodeDeploy applications for traffic shifting. Well-built, specific purpo
 
 ## Updated Quick Win Tier List
 
-| Tier | Plugin We Replace | Effort | Weekly DL | @interlace Plugin |
-|---|---|---|---|---|
-| **S** | `serverless-api-gateway-caching` | 2 wks | 20K | `plugin-caching` |
-| **S** | `serverless-associate-waf` | 1 wk | 7K | `plugin-security` |
-| **A** | `serverless-plugin-common-excludes` | 3 days | ~50K | `plugin-package` |
-| **A** | `serverless-plugin-include-dependencies` | 1 wk | ~40K | `plugin-package` |
-| **A** | `serverless-domain-manager` | 4 wks | 200K | `plugin-domains` |
-| **A** | `serverless-prune-plugin` | 2 wks | ~30K | `plugin-prune` |
-| **A** | `serverless-step-functions` | 6 wks | ~80K | `plugin-workflows` |
-| **B** | `serverless-esbuild` (migration guide) | docs | 500K | `devkit doctor` |
-| **B** | `serverless-webpack` (migration guide) | docs | 200K | `devkit doctor` |
-| **B** | `serverless-plugin-typescript` (migration guide) | docs | 150K | `devkit doctor` |
-| **B** | `serverless-iam-roles-per-function` (migration guide) | docs | 200K | `devkit doctor` |
-| **Skip** | `serverless-offline` | — | 700K | Phase 4 |
-| **Skip** | `serverless-plugin-warmup` | — | ~20K | Later |
-| **Skip** | `serverless-plugin-split-stacks` | — | ~30K | Infra scope |
-| **Skip** | `serverless-plugin-canary-deployments` | — | ~10K | Deployment scope |
+| Tier     | Plugin We Replace                                     | Effort | Weekly DL | @interlace Plugin  |
+| -------- | ----------------------------------------------------- | ------ | --------- | ------------------ |
+| **S**    | `serverless-api-gateway-caching`                      | 2 wks  | 20K       | `plugin-caching`   |
+| **S**    | `serverless-associate-waf`                            | 1 wk   | 7K        | `plugin-security`  |
+| **A**    | `serverless-plugin-common-excludes`                   | 3 days | ~50K      | `plugin-package`   |
+| **A**    | `serverless-plugin-include-dependencies`              | 1 wk   | ~40K      | `plugin-package`   |
+| **A**    | `serverless-domain-manager`                           | 4 wks  | 200K      | `plugin-domains`   |
+| **A**    | `serverless-prune-plugin`                             | 2 wks  | ~30K      | `plugin-prune`     |
+| **A**    | `serverless-step-functions`                           | 6 wks  | ~80K      | `plugin-workflows` |
+| **B**    | `serverless-esbuild` (migration guide)                | docs   | 500K      | `devkit doctor`    |
+| **B**    | `serverless-webpack` (migration guide)                | docs   | 200K      | `devkit doctor`    |
+| **B**    | `serverless-plugin-typescript` (migration guide)      | docs   | 150K      | `devkit doctor`    |
+| **B**    | `serverless-iam-roles-per-function` (migration guide) | docs   | 200K      | `devkit doctor`    |
+| **Skip** | `serverless-offline`                                  | —      | 700K      | Phase 4            |
+| **Skip** | `serverless-plugin-warmup`                            | —      | ~20K      | Later              |
+| **Skip** | `serverless-plugin-split-stacks`                      | —      | ~30K      | Infra scope        |
+| **Skip** | `serverless-plugin-canary-deployments`                | —      | ~10K      | Deployment scope   |
 
 ### Total Addressable Market
 
-| Strategy | Plugins | Combined Weekly DL |
-|---|---|---|
-| **Replace** (build better) | 7 plugins | ~427K |
-| **Migration Guide** (help migrate to v4) | 4 plugins | ~1.05M |
-| **Total ecosystem touch** | **11 plugins** | **~1.48M weekly DL** |
+| Strategy                                 | Plugins        | Combined Weekly DL   |
+| ---------------------------------------- | -------------- | -------------------- |
+| **Replace** (build better)               | 7 plugins      | ~427K                |
+| **Migration Guide** (help migrate to v4) | 4 plugins      | ~1.05M               |
+| **Total ecosystem touch**                | **11 plugins** | **~1.48M weekly DL** |
 
 ---
 
@@ -605,18 +621,18 @@ Replaces `serverless-domain-manager` (200K weekly DL, 2K LOC).
 
 **Gaps in the original we exploit:**
 
-| Gap | domain-manager | @interlace/plugin-domains |
-|---|---|---|
-| SDK v2 legacy shim | 🔴 Still has fallback | ✅ SDK v3 only |
-| Global singleton state | 🔴 `Globals.*` mutable | ✅ Instance-scoped, no globals |
-| Dry-run / preview | ❌ None | ✅ `sls domains preview` — shows DNS changes without applying |
-| Error UX | 🟡 Multi-line template strings | ✅ Structured errors with fix suggestions |
-| DNS propagation check | ❌ Fire and forget | ✅ `sls domains status` — verify DNS resolution |
-| Certificate auto-request | ❌ Must pre-create ACM cert | ✅ Auto-request + DNS validation |
-| Health check integration | ❌ None | ✅ Route53 health checks for failover |
-| Multi-account | ⚠️ `route53Profile` only | ✅ Full cross-account IAM role assumption |
-| TypeScript types | ❌ None (JS config only) | ✅ `domainsConfig()` with full IntelliSense |
-| Cleanup on remove | ✅ Removes mappings | ✅ Removes mappings + shows orphan check |
+| Gap                      | domain-manager                 | @interlace/plugin-domains                                     |
+| ------------------------ | ------------------------------ | ------------------------------------------------------------- |
+| SDK v2 legacy shim       | 🔴 Still has fallback          | ✅ SDK v3 only                                                |
+| Global singleton state   | 🔴 `Globals.*` mutable         | ✅ Instance-scoped, no globals                                |
+| Dry-run / preview        | ❌ None                        | ✅ `sls domains preview` — shows DNS changes without applying |
+| Error UX                 | 🟡 Multi-line template strings | ✅ Structured errors with fix suggestions                     |
+| DNS propagation check    | ❌ Fire and forget             | ✅ `sls domains status` — verify DNS resolution               |
+| Certificate auto-request | ❌ Must pre-create ACM cert    | ✅ Auto-request + DNS validation                              |
+| Health check integration | ❌ None                        | ✅ Route53 health checks for failover                         |
+| Multi-account            | ⚠️ `route53Profile` only       | ✅ Full cross-account IAM role assumption                     |
+| TypeScript types         | ❌ None (JS config only)       | ✅ `domainsConfig()` with full IntelliSense                   |
+| Cleanup on remove        | ✅ Removes mappings            | ✅ Removes mappings + shows orphan check                      |
 
 ```yaml
 # serverless.yml — raw YAML works
@@ -627,10 +643,10 @@ custom:
   interlaceDomains:
     - domainName: api.example.com
       basePath: v1
-      certificateName: '*.example.com'      # auto-lookup or auto-request
+      certificateName: '*.example.com' # auto-lookup or auto-request
       endpointType: REGIONAL
       createRoute53Record: true
-      healthCheck:                            # ← NEW
+      healthCheck: # ← NEW
         enabled: true
         path: /health
         failureThreshold: 3
@@ -654,17 +670,17 @@ Replaces `serverless-prune-plugin` (~30K weekly DL, 390 LOC).
 
 **Gaps in the original we exploit:**
 
-| Gap | prune-plugin | @interlace/plugin-prune |
-|---|---|---|
-| Bluebird dependency | 🟡 Uses `bluebird` | ✅ Native async/await |
-| Cost visibility | ❌ None | ✅ Shows estimated cost savings per prune |
-| Storage metrics | ❌ None | ✅ `sls prune status` — total Lambda storage used |
-| Orphan layer detection | ❌ Only prunes by version count | ✅ Detects layers not referenced by any function |
-| Retention policies | 🟡 Count-based only | ✅ Count + age-based + tag-based retention |
-| CloudFormation stack awareness | ❌ None | ✅ Never prune versions referenced by active stacks |
-| Scheduled pruning | ❌ Manual or post-deploy only | ✅ EventBridge rule for automated background pruning |
-| Progress reporting | ⚠️ Basic | ✅ Rich progress with version counts and space freed |
-| TypeScript types | ❌ None | ✅ `pruneConfig()` with full IntelliSense |
+| Gap                            | prune-plugin                    | @interlace/plugin-prune                              |
+| ------------------------------ | ------------------------------- | ---------------------------------------------------- |
+| Bluebird dependency            | 🟡 Uses `bluebird`              | ✅ Native async/await                                |
+| Cost visibility                | ❌ None                         | ✅ Shows estimated cost savings per prune            |
+| Storage metrics                | ❌ None                         | ✅ `sls prune status` — total Lambda storage used    |
+| Orphan layer detection         | ❌ Only prunes by version count | ✅ Detects layers not referenced by any function     |
+| Retention policies             | 🟡 Count-based only             | ✅ Count + age-based + tag-based retention           |
+| CloudFormation stack awareness | ❌ None                         | ✅ Never prune versions referenced by active stacks  |
+| Scheduled pruning              | ❌ Manual or post-deploy only   | ✅ EventBridge rule for automated background pruning |
+| Progress reporting             | ⚠️ Basic                        | ✅ Rich progress with version counts and space freed |
+| TypeScript types               | ❌ None                         | ✅ `pruneConfig()` with full IntelliSense            |
 
 ```yaml
 # serverless.yml
@@ -674,13 +690,13 @@ plugins:
 custom:
   interlacePrune:
     automatic: true
-    keep: 3                          # keep last 3 versions
-    keepLayers: 2                    # separate layer retention
-    maxAge: 30d                      # ← NEW: also prune versions older than 30 days
+    keep: 3 # keep last 3 versions
+    keepLayers: 2 # separate layer retention
+    maxAge: 30d # ← NEW: also prune versions older than 30 days
     includeLayers: true
-    protectAliased: true             # default: true
-    protectStackReferenced: true     # ← NEW: never prune versions used by CF stacks
-    scheduledPrune:                  # ← NEW
+    protectAliased: true # default: true
+    protectStackReferenced: true # ← NEW: never prune versions used by CF stacks
+    scheduledPrune: # ← NEW
       enabled: true
       rate: 'rate(7 days)'
 ```
@@ -704,46 +720,55 @@ in YAML, with zero type safety.
 
 **Gaps in the original we exploit:**
 
-| Gap | step-functions | @interlace/plugin-workflows |
-|---|---|---|
-| ASL definition format | 🔴 Raw JSON-in-YAML | ✅ TypeScript builder API with IntelliSense |
-| Type safety | ❌ None — typos fail at deploy | ✅ Compile-time validation of state machines |
-| Local testing | ❌ None | ✅ `sls workflows test` with Step Functions Local |
-| Visualization | ❌ None | ✅ `sls workflows diagram` — generates Mermaid/SVG |
-| Intrinsic functions | 🟡 String-based | ✅ Typed helper functions (`States.format()`, `States.jsonToString()`) |
-| Error handling | 🟡 Verbose retry/catch blocks | ✅ `withRetry()`, `withCatch()` composable helpers |
-| Parallel composition | 🟡 Deeply nested YAML | ✅ `.parallel([branch1, branch2])` |
-| Map state iteration | 🟡 Hard to get right | ✅ `.map(items, processor)` with typed I/O |
-| Express vs Standard | ⚠️ Config flag | ✅ `defineExpressWorkflow()` vs `defineStandardWorkflow()` |
-| CloudFormation cleanup | ✅ Good | ✅ Same + orphan detection |
+| Gap                    | step-functions                 | @interlace/plugin-workflows                                            |
+| ---------------------- | ------------------------------ | ---------------------------------------------------------------------- |
+| ASL definition format  | 🔴 Raw JSON-in-YAML            | ✅ TypeScript builder API with IntelliSense                            |
+| Type safety            | ❌ None — typos fail at deploy | ✅ Compile-time validation of state machines                           |
+| Local testing          | ❌ None                        | ✅ `sls workflows test` with Step Functions Local                      |
+| Visualization          | ❌ None                        | ✅ `sls workflows diagram` — generates Mermaid/SVG                     |
+| Intrinsic functions    | 🟡 String-based                | ✅ Typed helper functions (`States.format()`, `States.jsonToString()`) |
+| Error handling         | 🟡 Verbose retry/catch blocks  | ✅ `withRetry()`, `withCatch()` composable helpers                     |
+| Parallel composition   | 🟡 Deeply nested YAML          | ✅ `.parallel([branch1, branch2])`                                     |
+| Map state iteration    | 🟡 Hard to get right           | ✅ `.map(items, processor)` with typed I/O                             |
+| Express vs Standard    | ⚠️ Config flag                 | ✅ `defineExpressWorkflow()` vs `defineStandardWorkflow()`             |
+| CloudFormation cleanup | ✅ Good                        | ✅ Same + orphan detection                                             |
 
 ```typescript
 // serverless.ts — TypeScript-native state machine definition
 import { defineConfig } from '@interlace/serverless-devkit';
-import { workflowsConfig, defineWorkflow, task, choice, parallel, wait, succeed, fail }
-  from '@interlace/serverless-plugin-workflows';
+import {
+  workflowsConfig,
+  defineWorkflow,
+  task,
+  choice,
+  parallel,
+  wait,
+  succeed,
+  fail,
+} from '@interlace/serverless-plugin-workflows';
 
 const orderWorkflow = defineWorkflow('ProcessOrder', {
   type: 'EXPRESS',
-  definition: task('ValidateOrder', { resource: '${ValidateOrderArn}' })
-    .next(
-      choice('CheckInventory')
-        .when('$.inventory > 0',
-          task('ProcessPayment', { resource: '${ProcessPaymentArn}' })
-            .withRetry({ maxAttempts: 3, interval: 2, backoffRate: 2 })
-            .next(
-              parallel('FulfillOrder', [
-                task('ShipItem', { resource: '${ShipItemArn}' }),
-                task('SendConfirmation', { resource: '${SendConfirmationArn}' }),
-              ])
-            )
-            .next(succeed('OrderComplete'))
-        )
-        .otherwise(
-          task('NotifyOutOfStock', { resource: '${NotifyArn}' })
-            .next(fail('OutOfStock', { cause: 'Item not available' }))
-        )
-    ),
+  definition: task('ValidateOrder', { resource: '${ValidateOrderArn}' }).next(
+    choice('CheckInventory')
+      .when(
+        '$.inventory > 0',
+        task('ProcessPayment', { resource: '${ProcessPaymentArn}' })
+          .withRetry({ maxAttempts: 3, interval: 2, backoffRate: 2 })
+          .next(
+            parallel('FulfillOrder', [
+              task('ShipItem', { resource: '${ShipItemArn}' }),
+              task('SendConfirmation', { resource: '${SendConfirmationArn}' }),
+            ]),
+          )
+          .next(succeed('OrderComplete')),
+      )
+      .otherwise(
+        task('NotifyOutOfStock', { resource: '${NotifyArn}' }).next(
+          fail('OutOfStock', { cause: 'Item not available' }),
+        ),
+      ),
+  ),
 });
 
 export default defineConfig({
@@ -869,13 +894,13 @@ sls workflows describe         # Show execution history
 
 ### Implementation Priority
 
-| Week | Ship | Captures |
-|---|---|---|
-| 1-2 | `@interlace/serverless-api-gateway-caching` | 20K weekly DL |
-| 2-3 | `@interlace/serverless-plugin-security` | 7K weekly DL |
-| 3-4 | Migration guide articles (Dev.to) | Awareness |
-| 4-6 | `@interlace/serverless-plugin-package` (port from platform-dx) | 210K weekly DL |
-| 6-8 | `@interlace/serverless-plugin-openapi` (port from platform-dx) | Flagship |
+| Week | Ship                                                           | Captures       |
+| ---- | -------------------------------------------------------------- | -------------- |
+| 1-2  | `@interlace/serverless-api-gateway-caching`                    | 20K weekly DL  |
+| 2-3  | `@interlace/serverless-plugin-security`                        | 7K weekly DL   |
+| 3-4  | Migration guide articles (Dev.to)                              | Awareness      |
+| 4-6  | `@interlace/serverless-plugin-package` (port from platform-dx) | 210K weekly DL |
+| 6-8  | `@interlace/serverless-plugin-openapi` (port from platform-dx) | Flagship       |
 
 ---
 
@@ -883,13 +908,13 @@ sls workflows describe         # Show execution history
 
 ### The Opportunity: 850K Weekly Downloads in Transition
 
-| Plugin | Weekly DL | Status | v4 Native Replacement |
-|---|---|---|---|
-| `serverless-offline` | ~700K | ✅ Active | N/A (still needed) |
-| `serverless-esbuild` | ~500K | ✅ Active | `build.esbuild: { ... }` |
-| `serverless-webpack` | ~200K | ⚠️ Slow | `build.esbuild: { ... }` |
-| `serverless-plugin-typescript` | ~150K | ❌ Archived | Point handler to `.ts` file |
-| **Total migrating** | **~850K** | | |
+| Plugin                         | Weekly DL | Status      | v4 Native Replacement       |
+| ------------------------------ | --------- | ----------- | --------------------------- |
+| `serverless-offline`           | ~700K     | ✅ Active   | N/A (still needed)          |
+| `serverless-esbuild`           | ~500K     | ✅ Active   | `build.esbuild: { ... }`    |
+| `serverless-webpack`           | ~200K     | ⚠️ Slow     | `build.esbuild: { ... }`    |
+| `serverless-plugin-typescript` | ~150K     | ❌ Archived | Point handler to `.ts` file |
+| **Total migrating**            | **~850K** |             |                             |
 
 These 850K weekly downloads represent teams that MUST migrate when they
 upgrade to Serverless Framework v4. The plugins **conflict** with v4's native
@@ -912,18 +937,19 @@ From GitHub issues and community forums:
 build:
   esbuild:
     # Core options
-    bundle: true              # Default: true — bundle deps into single file
-    minify: false             # Default: false — minify output
-    sourcemap: true           # Generate source maps
-    target: 'node20'          # esbuild target (auto-detected from runtime)
+    bundle: true # Default: true — bundle deps into single file
+    minify: false # Default: false — minify output
+    sourcemap: true # Generate source maps
+    target: 'node20' # esbuild target (auto-detected from runtime)
 
     # Dependency management
-    external:                 # Packages to keep in node_modules (not bundle)
-      - '@aws-sdk/*'          # Auto-excluded for nodejs18.x+
-      - 'sharp'               # Native modules must be external
-    exclude:                  # Packages to remove entirely from artifact
-      - 'aws-sdk'             # For nodejs16.x and below
-    packages: 'external'      # Treat ALL deps as external (no bundling)
+    external: # Packages to keep in node_modules (not bundle)
+      - '@aws-sdk/*' # Auto-excluded for nodejs18.x+
+      - 'sharp' # Native modules must be external
+    exclude: # Packages to remove entirely from artifact
+      - 'aws-sdk' # For nodejs16.x and below
+    packages: 'external' # Treat ALL deps as external (no bundling)
+
 
     # Advanced
     # buildArgs: ...          # Custom esbuild options (limited surface)
@@ -931,17 +957,17 @@ build:
 
 ### What v4 Native Build Does NOT Support
 
-| Feature | serverless-esbuild | v4 Native | Gap |
-|---|---|---|---|
-| Custom esbuild plugins | ✅ `plugins: [...]` | ❌ | Can't use `.graphql` loaders, etc. |
-| Custom `tsconfig` path | ✅ `tsConfig: './custom.json'` | ❌ Auto-detect | May pick wrong tsconfig in monorepo |
-| Watch mode for offline | ✅ Built-in | ⚠️ Relies on offline | Different behavior |
-| `define` (env vars) | ✅ `define: { 'process.env.X': ... }` | ❌ | No compile-time constants |
-| `alias` (import remaps) | ✅ `alias: { '@app': './src' }` | ❌ | Must use tsconfig paths |
-| `loader` (.graphql, .sql) | ✅ `loader: { '.graphql': 'text' }` | ❌ | No custom file loaders |
-| `banner`/`footer` | ✅ Inject code | ❌ | No shims/polyfills |
-| `metafile` (bundle analysis) | ✅ Generate stats | ❌ | No way to analyze output |
-| Individual function override | ✅ Per-function config | ❌ | One config for all functions |
+| Feature                      | serverless-esbuild                    | v4 Native            | Gap                                 |
+| ---------------------------- | ------------------------------------- | -------------------- | ----------------------------------- |
+| Custom esbuild plugins       | ✅ `plugins: [...]`                   | ❌                   | Can't use `.graphql` loaders, etc.  |
+| Custom `tsconfig` path       | ✅ `tsConfig: './custom.json'`        | ❌ Auto-detect       | May pick wrong tsconfig in monorepo |
+| Watch mode for offline       | ✅ Built-in                           | ⚠️ Relies on offline | Different behavior                  |
+| `define` (env vars)          | ✅ `define: { 'process.env.X': ... }` | ❌                   | No compile-time constants           |
+| `alias` (import remaps)      | ✅ `alias: { '@app': './src' }`       | ❌                   | Must use tsconfig paths             |
+| `loader` (.graphql, .sql)    | ✅ `loader: { '.graphql': 'text' }`   | ❌                   | No custom file loaders              |
+| `banner`/`footer`            | ✅ Inject code                        | ❌                   | No shims/polyfills                  |
+| `metafile` (bundle analysis) | ✅ Generate stats                     | ❌                   | No way to analyze output            |
+| Individual function override | ✅ Per-function config                | ❌                   | One config for all functions        |
 
 ### `sls interlace doctor` — Migration Assist CLI
 
@@ -1035,21 +1061,21 @@ Summary:
 
 ### Doctor Checks — Full List
 
-| # | Check | Severity | Detects |
-|---|---|---|---|
-| 1 | Legacy build plugin | 🔴 Critical | `serverless-esbuild`, `serverless-webpack`, `serverless-plugin-typescript` |
-| 2 | Native esbuild config completeness | 🟡 Warning | Missing `external` for native modules, wrong `target` |
-| 3 | Redundant packaging plugins | 🟡 Warning | `common-excludes` + `include-dependencies` with bundler |
-| 4 | Cache cleanup risk | 🟡 Warning | `api-gateway-caching` without remove hooks |
-| 5 | WAF silent failure risk | 🟡 Warning | `associate-waf` with error swallowing |
-| 6 | IAM roles migration | 💡 Suggest | `iam-roles-per-function` → native v4 |
-| 7 | Package size analysis | 💡 Suggest | Artifact size estimate, tree-shaking opportunities |
-| 8 | TypeScript config upgrade | 💡 Suggest | YAML → `serverless.ts` with types |
-| 9 | Monorepo workspace detection | 🟡 Warning | `workspaces` in root package.json without isolation |
-| 10 | AWS SDK version mismatch | 🟡 Warning | `aws-sdk` v2 bundled in nodejs18.x+ runtime |
-| 11 | Node.js runtime freshness | 💡 Suggest | Using deprecated runtimes (16.x, 14.x) |
-| 12 | Security headers missing | 💡 Suggest | No HSTS, CSP, X-Frame-Options |
-| 13 | Missing source maps | 💡 Suggest | `sourcemap: false` in production |
+| #   | Check                              | Severity    | Detects                                                                    |
+| --- | ---------------------------------- | ----------- | -------------------------------------------------------------------------- |
+| 1   | Legacy build plugin                | 🔴 Critical | `serverless-esbuild`, `serverless-webpack`, `serverless-plugin-typescript` |
+| 2   | Native esbuild config completeness | 🟡 Warning  | Missing `external` for native modules, wrong `target`                      |
+| 3   | Redundant packaging plugins        | 🟡 Warning  | `common-excludes` + `include-dependencies` with bundler                    |
+| 4   | Cache cleanup risk                 | 🟡 Warning  | `api-gateway-caching` without remove hooks                                 |
+| 5   | WAF silent failure risk            | 🟡 Warning  | `associate-waf` with error swallowing                                      |
+| 6   | IAM roles migration                | 💡 Suggest  | `iam-roles-per-function` → native v4                                       |
+| 7   | Package size analysis              | 💡 Suggest  | Artifact size estimate, tree-shaking opportunities                         |
+| 8   | TypeScript config upgrade          | 💡 Suggest  | YAML → `serverless.ts` with types                                          |
+| 9   | Monorepo workspace detection       | 🟡 Warning  | `workspaces` in root package.json without isolation                        |
+| 10  | AWS SDK version mismatch           | 🟡 Warning  | `aws-sdk` v2 bundled in nodejs18.x+ runtime                                |
+| 11  | Node.js runtime freshness          | 💡 Suggest  | Using deprecated runtimes (16.x, 14.x)                                     |
+| 12  | Security headers missing           | 💡 Suggest  | No HSTS, CSP, X-Frame-Options                                              |
+| 13  | Missing source maps                | 💡 Suggest  | `sourcemap: false` in production                                           |
 
 ### `init-ts` — YAML-to-TypeScript Converter
 
@@ -1072,21 +1098,21 @@ Your config now has full IntelliSense. Try it — open serverless.ts in VS Code.
 
 The doctor auto-generates the correct v4 config from legacy plugin config:
 
-| Legacy Plugin Config | v4 Native Equivalent |
-|---|---|
-| `custom.esbuild.bundle: true` | `build.esbuild.bundle: true` |
-| `custom.esbuild.minify: true` | `build.esbuild.minify: true` |
-| `custom.esbuild.sourcemap: true` | `build.esbuild.sourcemap: true` |
-| `custom.esbuild.external: [...]` | `build.esbuild.external: [...]` |
-| `custom.esbuild.exclude: [...]` | `build.esbuild.exclude: [...]` |
-| `custom.esbuild.target: 'node20'` | `build.esbuild.target: 'node20'` (auto-detected) |
-| `custom.esbuild.concurrency: 10` | N/A (v4 handles internally) |
-| `custom.esbuild.packager: 'npm'` | N/A (v4 uses npm by default) |
-| `custom.esbuild.plugins: [...]` | ❌ NOT SUPPORTED — doctor warns |
-| `custom.esbuild.define: {...}` | ❌ NOT SUPPORTED — doctor warns |
-| `custom.esbuild.loader: {...}` | ❌ NOT SUPPORTED — doctor warns |
-| `custom.webpack.*` | `build.esbuild.*` (full rewrite needed) |
-| `custom.serverlessPluginTypescript.*` | DELETE — v4 auto-detects `.ts` files |
+| Legacy Plugin Config                  | v4 Native Equivalent                             |
+| ------------------------------------- | ------------------------------------------------ |
+| `custom.esbuild.bundle: true`         | `build.esbuild.bundle: true`                     |
+| `custom.esbuild.minify: true`         | `build.esbuild.minify: true`                     |
+| `custom.esbuild.sourcemap: true`      | `build.esbuild.sourcemap: true`                  |
+| `custom.esbuild.external: [...]`      | `build.esbuild.external: [...]`                  |
+| `custom.esbuild.exclude: [...]`       | `build.esbuild.exclude: [...]`                   |
+| `custom.esbuild.target: 'node20'`     | `build.esbuild.target: 'node20'` (auto-detected) |
+| `custom.esbuild.concurrency: 10`      | N/A (v4 handles internally)                      |
+| `custom.esbuild.packager: 'npm'`      | N/A (v4 uses npm by default)                     |
+| `custom.esbuild.plugins: [...]`       | ❌ NOT SUPPORTED — doctor warns                  |
+| `custom.esbuild.define: {...}`        | ❌ NOT SUPPORTED — doctor warns                  |
+| `custom.esbuild.loader: {...}`        | ❌ NOT SUPPORTED — doctor warns                  |
+| `custom.webpack.*`                    | `build.esbuild.*` (full rewrite needed)          |
+| `custom.serverlessPluginTypescript.*` | DELETE — v4 auto-detects `.ts` files             |
 
 ### Why This Is the Gateway Drug
 
@@ -1104,4 +1130,3 @@ The doctor auto-generates the correct v4 config from legacy plugin config:
 4. **"Migrating from serverless-esbuild to v4 Native — The Complete Guide"** — Config translation, gotchas, unsupported features
 5. **"serverless.ts > serverless.yml — Here's the Proof"** — IntelliSense, composability, `defineConfig()`
 6. **"Run `sls doctor` on Your Project — You'll Be Surprised"** — Intro to the doctor command with real-world findings
-

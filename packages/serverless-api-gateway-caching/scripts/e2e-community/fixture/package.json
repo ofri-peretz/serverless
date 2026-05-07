@@ -1,0 +1,10 @@
+{
+  "name": "interlace-cache-e2e-community-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fixture deployed by the comparative community-plugin E2E. Not for distribution.",
+  "dependencies": {
+    "serverless": "^3.40.0",
+    "serverless-api-gateway-caching": "^1.11.0"
+  }
+}

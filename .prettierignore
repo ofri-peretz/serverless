@@ -2,5 +2,8 @@ node_modules
 dist
 coverage
 .turbo
+.next
+.source
+next-env.d.ts
 package-lock.json
 CHANGELOG.md

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "_backfilled": "Reconstructed from console output. Future runs persist automatically via persistRunLog().",
+  "startedAt": "2026-05-03T21:10:00Z",
+  "endedAt": "2026-05-03T21:21:00Z",
+  "status": "failed-with-emergency-cleanup",
+  "failedAtStep": 5,
+  "serviceName": "interlace-cache-e2e-qcz5hr",
+  "region": "us-east-1",
+  "awsIdentity": "arn:aws:iam::346133547796:user/interlace-cli",
+  "endpoint": "https://hywv3fkwa9.execute-api.us-east-1.amazonaws.com/e2e/hello",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "pluginVersion": "0.0.0",
+  "steps": [
+    { "id": 1, "label": "Pre-flight", "status": "pass" },
+    { "id": 2, "label": "Stage fixture + npm pack", "status": "pass" },
+    {
+      "id": 3,
+      "label": "sls deploy",
+      "status": "pass",
+      "observations": { "deployDurationSec": 165 }
+    },
+    {
+      "id": "wait-cluster-ready",
+      "label": "Wait for cache cluster AVAILABLE",
+      "status": "pass",
+      "observations": {
+        "elapsedSec": 238,
+        "statusHistory": [
+          "CREATE_IN_PROGRESS at 2s",
+          "CREATE_IN_PROGRESS at 18s",
+          "CREATE_IN_PROGRESS at 34s",
+          "CREATE_IN_PROGRESS at 51s",
+          "CREATE_IN_PROGRESS at 67s",
+          "CREATE_IN_PROGRESS at 91s",
+          "CREATE_IN_PROGRESS at 107s",
+          "CREATE_IN_PROGRESS at 123s",
+          "CREATE_IN_PROGRESS at 140s",
+          "CREATE_IN_PROGRESS at 156s",
+          "CREATE_IN_PROGRESS at 173s",
+          "CREATE_IN_PROGRESS at 189s",
+          "CREATE_IN_PROGRESS at 205s",
+          "CREATE_IN_PROGRESS at 222s",
+          "AVAILABLE at 238s"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "label": "Cache MISS test",
+      "status": "pass",
+      "observations": {
+        "statusCode": 200,
+        "responseTimeMs": 858,
+        "generatedAt": 1777848725569
+      }
+    },
+    {
+      "id": 5,
+      "label": "Cache HIT test",
+      "status": "fail",
+      "error": "Cache miss when hit was expected. First generatedAt=1777848725569, second generatedAt=1777848728283 (2.7s diff).",
+      "observations": {
+        "rootCause": "Cluster reached AVAILABLE but APIGW takes additional time (~30-90s) AFTER that to fully propagate per-method cache configuration. The static 2.5s wait between MISS and HIT was insufficient. Both requests went to Lambda — different generatedAt confirms cache bypass."
+      }
+    }
+  ],
+  "awsObservations": {
+    "deployDurationSec": 165,
+    "cacheClusterCreateSec": 238,
+    "cacheClusterCreateStatusHistory": [
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 2 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 18 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 34 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 51 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 67 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 91 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 107 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 123 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 140 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 156 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 173 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 189 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 205 },
+      { "status": "CREATE_IN_PROGRESS", "elapsedSec": 222 },
+      { "status": "AVAILABLE", "elapsedSec": 238 }
+    ],
+    "removeDurationSec": 25
+  },
+  "totalAwsCostUsdEstimate": 0.02,
+  "fixApplied": "Replaced fixed 2.5s delay in testCacheHit with retry loop: try every 5s for up to 60s until response body matches the MISS timestamp. Tighter success path (often passes in 10-15s) and clearer failure mode. Documented as Bug #3 in scripts/e2e/LEARNINGS.md."
+}

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "_backfilled": "Reconstructed from console output. Future runs persist automatically via persistRunLog().",
+  "startedAt": "2026-05-03T20:50:00Z",
+  "endedAt": "2026-05-03T20:55:30Z",
+  "status": "failed-with-emergency-cleanup",
+  "failedAtStep": 5,
+  "serviceName": "interlace-cache-e2e-qcjbkx",
+  "region": "us-east-1",
+  "awsIdentity": "arn:aws:iam::346133547796:user/interlace-cli",
+  "endpoint": "https://u5mriwuepg.execute-api.us-east-1.amazonaws.com/e2e/hello",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "pluginVersion": "0.0.0",
+  "steps": [
+    { "id": 1, "label": "Pre-flight", "status": "pass" },
+    { "id": 2, "label": "Stage fixture + npm pack", "status": "pass" },
+    {
+      "id": 3,
+      "label": "sls deploy",
+      "status": "pass",
+      "observations": { "deployDurationSec": 123 }
+    },
+    {
+      "id": 4,
+      "label": "Cache MISS test",
+      "status": "pass",
+      "observations": {
+        "statusCode": 200,
+        "responseTimeMs": 957,
+        "generatedAt": 1777847704582
+      }
+    },
+    {
+      "id": 5,
+      "label": "Cache HIT test",
+      "status": "fail",
+      "error": "Cache miss when hit was expected. First generatedAt=1777847704582, second generatedAt=1777847707334.",
+      "observations": {
+        "rootCause": "Cache cluster wasn't AVAILABLE yet when test ran (no polling at this iteration); also requests sent Cache-Control: no-cache which APIGW respects → bypassed cache."
+      }
+    }
+  ],
+  "awsObservations": {
+    "deployDurationSec": 123,
+    "removeDurationSec": 24
+  },
+  "totalAwsCostUsdEstimate": 0.01,
+  "fixApplied": "Two changes: (1) Added waitForCacheClusterReady() polling — APIGateway.getStage every 15s up to 6 min until cacheClusterStatus === 'AVAILABLE'; called BEFORE step 4 so the MISS response actually populates the cache. (2) Removed 'Cache-Control: no-cache' header from getEndpoint() — APIGW honors it and bypasses the cache cluster, defeating the test."
+}

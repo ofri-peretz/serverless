@@ -1,0 +1,97 @@
+---
+title: Migration Guide
+description: Migrate from serverless-api-gateway-caching to @interlace/serverless-api-gateway-caching.
+---
+
+## Step 1: Swap the package
+
+<InstallSnippet pkg="serverless-api-gateway-caching" command="uninstall" />
+
+<InstallSnippet pkg="@interlace/serverless-api-gateway-caching" dev />
+
+## Step 2: Update serverless.yml
+
+```diff
+plugins:
+-  - serverless-api-gateway-caching
++  - '@interlace/serverless-api-gateway-caching'
+
+custom:
+-  apiGatewayCaching:
++  interlaceCaching:
+    enabled: true
+    clusterSize: '0.5'
+    ttlInSeconds: 300
+-    apiGatewayIsShared: true
++    sharedApiGateway: true
+```
+
+## Step 3: No other changes
+
+Per-endpoint `caching` config on `http` events is **100% compatible**:
+
+```yaml
+# Works identically in both plugins
+events:
+  - http:
+      path: /users/{id}
+      method: get
+      caching:
+        enabled: true
+        ttlInSeconds: 600
+        cacheKeyParameters:
+          - name: request.path.id
+```
+
+## Step 4: Deploy and verify
+
+```bash
+sls deploy
+sls caching status
+```
+
+## Config Key Mapping
+
+| Community Plugin | @interlace | Changed? |
+|---|---|---|
+| `apiGatewayCaching` | `interlaceCaching` | ✅ Renamed |
+| `apiGatewayIsShared` | `sharedApiGateway` | ✅ Renamed |
+| `endpointsInheritCloudWatchSettingsFromStage` | Same | No |
+| `additionalEndpoints` | Same | No |
+| `clusterSize` | Same | No |
+| `ttlInSeconds` | Same | No |
+| `dataEncrypted` | Same | No |
+| `perKeyInvalidation` | Same | No |
+| `basePath` | Same | No |
+| `restApiId` | Same | No |
+
+## Full Capability Matrix
+
+Everything the community plugin does, plus the things it does badly or not at all.
+
+| Capability | Community plugin | `@interlace/serverless-api-gateway-caching` |
+|---|---|---|
+| Enable/disable cache cluster | ✅ | ✅ |
+| Cluster size (0.5–237 GB) | ✅ | ✅ (+ enum-validated config) |
+| Per-method TTL (0–3600s) | ✅ | ✅ |
+| Data encryption at rest | ✅ | ✅ |
+| Cache key from path / query / header | ✅ | ✅ |
+| Cache key from request body | ✅ | ✅ (`mappedFrom`) |
+| Per-key invalidation control | ✅ | ✅ |
+| Unauthorized invalidation handling | ✅ | ✅ |
+| CloudWatch settings inheritance | ✅ (stage-only) | ✅ (stage + per-endpoint override) |
+| **Auto-flush on deploy** | ❌ | ✅ `flushOnDeploy: true` |
+| **`sls caching flush` command** | ❌ | ✅ |
+| **`sls caching status` command** | ❌ | ✅ |
+| **`sls caching disable` command** | ❌ | ✅ (safe offboarding) |
+| **`sls caching preview` (dry-run)** | ❌ | ✅ Shows patch ops without calling AWS write APIs |
+| **`before:remove:remove` cleanup hook** | ❌ ghost billing | ✅ |
+| **`ANY` method → GET-only caching** | ❌ partial | ✅ Enables GET, explicitly disables DELETE/HEAD/OPTIONS/PATCH/POST/PUT |
+| **Shared API Gateway support** | ⚠️ partial | ✅ `sharedApiGateway` flag |
+| **CF-defined additional endpoints** | ✅ | ✅ `additionalEndpoints` |
+| **`CacheKeyParameters` + `CacheNamespace` on CF template** | ⚠️ partial | ✅ Per-method namespace isolation |
+| **Jittered exponential backoff (no thundering herd)** | ❌ | ✅ |
+| **JSON-schema config validation (Serverless v3+)** | ❌ | ✅ Full schema, TTL range enforcement |
+| **TypeScript types & IntelliSense** | ❌ | ✅ |
+| **Zero runtime dependencies** | ❌ `lodash.isempty` | ✅ |
+| **No prototype pollution** | 🔴 monkey-patches `String.prototype.replaceAll` | ✅ |

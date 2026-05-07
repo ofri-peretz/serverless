@@ -1,0 +1,36 @@
+---
+title: Benchmark
+description: Reproducible scorecard for @interlace/serverless-iam-roles-per-function vs serverless-iam-roles-per-function.
+---
+
+import { PluginScorecard } from '#interlace/components/docs/plugin-scorecard';
+
+Every claim on this page is backed by a reproducible benchmark. See [How We Measure](../../concepts/how-we-measure) for the methodology.
+
+## Scorecard
+
+<PluginScorecard slug="iam-roles-per-function" />
+
+Result file: [`benchmarks/benchmark-results/iam-roles-per-function/latest.json`](https://github.com/ofri-peretz/serverless/blob/main/benchmarks/benchmark-results/iam-roles-per-function/latest.json). Dated runs live under `benchmark-results/iam-roles-per-function/<YYYY-MM-DD>_v<version>/result.json`.
+
+## Per-dimension scores
+
+<PluginScorecard slug="iam-roles-per-function" view="dimensions" />
+
+## Honest losses
+
+When @interlace/serverless-iam-roles-per-function loses on a dimension, the table shows it. We don't tune the rubric to win.
+
+The community plugin has been on npm since 2018-01-31 and accumulated ~118k weekly downloads. We start at zero on download share — that's expected for a freshly-published replacement and it does NOT enter the composite score (popularity is not a quality signal). As the plugin publishes and adoption grows, that number will move; the rubric will not change to reward it.
+
+We don't expect to lose on any of the seven measured dimensions. If we ever do — bundle weight is the most likely candidate, since shipping `.d.ts` for the config types adds a few KB — the scorecard above will show it, and we'll narrate it here instead of removing the row.
+
+## Re-run policy
+
+- **Quarterly:** refresh competitor versions
+- **On every PR** that touches `@interlace/serverless-iam-roles-per-function` source
+- **Manually** before any major release
+
+```bash
+npm run bench:iam-roles-per-function
+```

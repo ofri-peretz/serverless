@@ -39,7 +39,15 @@ export interface IamRoleConfig {
 /** HTTP API event (API Gateway v1 REST or v2 HTTP) */
 export interface HttpEvent {
   path: string;
-  method: 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'options' | 'any';
+  method:
+    | 'get'
+    | 'post'
+    | 'put'
+    | 'patch'
+    | 'delete'
+    | 'head'
+    | 'options'
+    | 'any';
   cors?: boolean | CorsConfig;
   authorizer?: AuthorizerConfig | string;
   private?: boolean;
@@ -70,8 +78,14 @@ export interface AuthorizerConfig {
 
 export interface HttpRequestConfig {
   parameters?: {
-    querystrings?: Record<string, boolean | { required: boolean; mappedValue?: string }>;
-    headers?: Record<string, boolean | { required: boolean; mappedValue?: string }>;
+    querystrings?: Record<
+      string,
+      boolean | { required: boolean; mappedValue?: string }
+    >;
+    headers?: Record<
+      string,
+      boolean | { required: boolean; mappedValue?: string }
+    >;
     paths?: Record<string, boolean>;
   };
   schemas?: Record<string, Record<string, unknown>>;
@@ -387,6 +401,37 @@ export interface ResourcesConfig {
 // ---------------------------------------------------------------------------
 
 /** Full Serverless Framework configuration */
+/**
+ * Extension point for plugin-specific `custom.*` typing.
+ *
+ * Each Interlace plugin (and any third-party plugin that follows the
+ * convention) declares its config slot here via TypeScript module
+ * augmentation:
+ *
+ * @example
+ * ```ts
+ * // In `@interlace/serverless-some-plugin/src/types.ts`
+ * declare module '@interlace/serverless-devkit' {
+ *   interface PluginConfigRegistry {
+ *     somePlugin?: SomePluginConfig;
+ *   }
+ * }
+ * ```
+ *
+ * Importing the plugin (or any of its types) is enough to pull the
+ * augmentation in — `defineConfig({ custom: { somePlugin: ... } })` then
+ * gets full IntelliSense and refuses unknown keys.
+ *
+ * Empty by default. Untyped `custom` keys remain valid at runtime via the
+ * `& Record<string, unknown>` intersection on `ServerlessConfig.custom` —
+ * so non-Interlace plugins still work without ceremony.
+ *
+ * Convention: use the same string key the plugin reads at runtime
+ * (e.g. `interlaceCaching`, not `caching` or `@interlace/...:caching`).
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- empty by design; populated via module augmentation
+export interface PluginConfigRegistry {}
+
 export interface ServerlessConfig {
   service: string;
   frameworkVersion?: string;
@@ -415,7 +460,12 @@ export interface ServerlessConfig {
 
   resources?: ResourcesConfig;
   plugins?: string[];
-  custom?: Record<string, unknown>;
+  /**
+   * Custom plugin configuration. Known plugins (those that augment
+   * {@link PluginConfigRegistry}) get fully-typed slots; arbitrary keys
+   * remain accepted as `unknown` for unknown plugins.
+   */
+  custom?: PluginConfigRegistry & Record<string, unknown>;
 
   params?: Record<string, Record<string, string>>;
 }
@@ -449,7 +499,12 @@ export interface ServerlessInstance {
     aws: AwsProvider;
   };
   cli: {
-    log(message: string, entity?: string): void;
+    /**
+     * Legacy plugin log surface — verified against `lib/classes/cli.js` in
+     * `serverless/serverless@4.35.0`. The third arg is accepted but unused by
+     * the framework; only `message` (and optional `entity` prefix) is rendered.
+     */
+    log(message: string, entity?: string, opts?: unknown): void;
   };
   configSchemaHandler?: {
     defineCustomProperties(schema: Record<string, unknown>): void;
@@ -464,15 +519,23 @@ export interface ServerlessInstance {
   };
 }
 
+/**
+ * AWS provider — verified against `lib/plugins/aws/provider.js` in
+ * `serverless/serverless@4.35.0`:
+ * - `getStage()` returns `string` with `'dev'` fallback (line 3588)
+ * - `getRegion()` returns `string` with `'us-east-1'` fallback (line 3372)
+ * - `getCredentials()` is **async** and returns the resolved credentials object (line 3316)
+ * - `request()` accepts a 4th options arg with `{ region?, useCache? }` (line 3285)
+ */
 export interface AwsProvider {
   getStage(): string;
   getRegion(): string;
-  getCredentials(): unknown;
+  getCredentials(): Promise<unknown>;
   request(
     service: string,
     method: string,
     params: Record<string, unknown>,
-    options?: { region?: string },
+    options?: { region?: string; useCache?: boolean },
   ): Promise<Record<string, unknown>>;
 }
 

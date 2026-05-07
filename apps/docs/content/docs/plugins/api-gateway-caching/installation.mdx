@@ -1,0 +1,92 @@
+---
+title: Installation
+description: Install @interlace/serverless-api-gateway-caching and verify it loads.
+---
+
+import { InstallSnippet } from '#interlace/components/docs/install-snippet';
+import {
+  ServerlessConfigTabs,
+  ServerlessConfigYaml,
+  ServerlessConfigTypescript,
+  ServerlessConfigJavascript,
+  ServerlessConfigJson,
+} from '#interlace/components/docs/serverless-config-tabs';
+
+## Install
+
+<InstallSnippet pkg="@interlace/serverless-api-gateway-caching" dev />
+
+## Wire into the project
+
+<ServerlessConfigTabs>
+  <ServerlessConfigYaml>
+```yaml title="serverless.yml"
+plugins:
+  - '@interlace/serverless-api-gateway-caching'
+
+custom:
+  interlaceCaching:
+    enabled: true
+    clusterSize: '0.5'
+    ttlInSeconds: 300
+```
+  </ServerlessConfigYaml>
+  <ServerlessConfigTypescript>
+```ts title="serverless.ts"
+const serverlessConfiguration = {
+  plugins: ['@interlace/serverless-api-gateway-caching'],
+  custom: {
+    interlaceCaching: {
+      enabled: true,
+      clusterSize: '0.5',
+      ttlInSeconds: 300,
+    },
+  },
+};
+```
+  </ServerlessConfigTypescript>
+  <ServerlessConfigJavascript>
+```js title="serverless.js"
+module.exports = {
+  plugins: ['@interlace/serverless-api-gateway-caching'],
+  custom: {
+    interlaceCaching: {
+      enabled: true,
+      clusterSize: '0.5',
+      ttlInSeconds: 300,
+    },
+  },
+};
+```
+  </ServerlessConfigJavascript>
+  <ServerlessConfigJson>
+```json title="serverless.json"
+{
+  "plugins": ["@interlace/serverless-api-gateway-caching"],
+  "custom": {
+    "interlaceCaching": {
+      "enabled": true,
+      "clusterSize": "0.5",
+      "ttlInSeconds": 300
+    }
+  }
+}
+```
+  </ServerlessConfigJson>
+</ServerlessConfigTabs>
+
+## Smoke test
+
+The dry-run command verifies the plugin registered and your config parses, without touching AWS:
+
+```bash
+sls caching preview
+```
+
+Expected output: a `Caching plan` block listing each `http`-event endpoint and the patch operations a deploy would apply.
+
+## Next
+
+- [Configuration](./configuration) — every option you can set under `custom.interlaceCaching`
+- [Migration](./migration) — switching from the community `serverless-api-gateway-caching`
+- [Recipes / cache keys](./recipes/cache-keys) — the most common gotcha

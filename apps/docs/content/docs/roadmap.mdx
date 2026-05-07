@@ -1,26 +1,24 @@
 ---
 title: Roadmap
-description: Upcoming @interlace serverless plugins and features.
+description: Status of every @interlace serverless plugin — shipped, planned, or under research.
 ---
 
-## Active Development
+Every plugin in the ecosystem under one table — what's shipping, what's next, and the npm download volume of the community alternatives we plan to replace.
 
-### @interlace/serverless-api-gateway-caching `v0.1.0` ✅
+## Plugin status
 
-API Gateway caching with proper cleanup, CLI commands, and TypeScript support.
+The "Weekly Downloads" column shows the **community alternative**'s download volume — the addressable user base we're targeting. Interlace plugins are pre-publish or recently published; their own download numbers are tracked separately on each plugin's npm page.
 
-### @interlace/serverless-devkit `v0.1.0` ✅
+| Plugin | Replaces | Community plugin DL/wk | Version | Status |
+|---|---|---|---|---|
+| `@interlace/serverless-api-gateway-caching` | `serverless-api-gateway-caching` | ~20K | `v1.0.0` | 📦 Queued for release — first public publish via Changesets workflow |
+| `@interlace/serverless-devkit` | — | — | `v1.0.0` | 📦 Queued for release — `defineConfig()`, `defineFunction()`, plugin-development types |
+| `@interlace/serverless-plugin-warmup` | `serverless-plugin-warmup` | ~150K | — | 🟡 Planned |
+| `@interlace/serverless-plugin-prune` | `serverless-prune-plugin` | ~200K | — | 🟡 Planned |
+| `@interlace/serverless-plugin-canary` | `serverless-plugin-canary-deployments` | ~30K | — | 🟡 Planned |
+| `@interlace/serverless-plugin-split-stacks` | `serverless-plugin-split-stacks` | ~50K | — | 🔬 Research |
 
-TypeScript configuration toolkit with `defineConfig()`, `defineFunction()`, and plugin development interfaces.
-
-## Planned Plugins
-
-| Plugin | Replaces | Weekly Downloads | Status |
-|---|---|---|---|
-| `@interlace/serverless-plugin-warmup` | `serverless-plugin-warmup` | ~150K | Planned |
-| `@interlace/serverless-plugin-prune` | `serverless-prune-plugin` | ~200K | Planned |
-| `@interlace/serverless-plugin-canary` | `serverless-plugin-canary-deployments` | ~30K | Planned |
-| `@interlace/serverless-plugin-split-stacks` | `serverless-plugin-split-stacks` | ~50K | Research |
+Status legend: ✅ Shipped (live on npm) · 📦 Queued for release · 🟡 Planned · 🔬 Research · ⏳ In progress
 
 ## Design Principles
 
@@ -30,5 +28,5 @@ Every `@interlace` plugin follows these non-negotiable standards:
 2. **TypeScript-native** — full IntelliSense, JSON schema validation
 3. **Cleanup hooks** — `before:remove:remove` prevents resource leaks
 4. **CLI commands** — manage resources without the AWS console
-5. **Fail-to-Test** — no release without comprehensive test coverage
+5. **Fail-to-Test** — no release without comprehensive test coverage (≥ 90% lines / 100% functions)
 6. **Jittered retries** — no thundering herd on concurrent deploys

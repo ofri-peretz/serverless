@@ -2,7 +2,22 @@ import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
 
+/**
+ * @interlace ecosystem ESLint config — strict for published-package source,
+ * relaxed for tests and tooling.
+ *
+ * Tiers:
+ *   1. Repo-wide baseline   (TypeScript recommended + Prettier compat)
+ *   2. TS-only rules        (unused vars, type imports)
+ *   3. Published-package src (no `any`, no `console`, explicit return types
+ *      for exported APIs, prefer-readonly, exhaustive switch, etc.)
+ *   4. Test files           (allow `any`, allow non-null assertions, looser)
+ *   5. Tooling              (config files, scripts: allow `any`, skip strict)
+ */
 export default [
+  // ────────────────────────────────────────────────────────────────────────
+  // 0. Ignore generated/vendor paths
+  // ────────────────────────────────────────────────────────────────────────
   {
     ignores: [
       '**/dist/**',
@@ -11,8 +26,19 @@ export default [
       '**/.turbo/**',
       '**/.next/**',
       'apps/docs/.source/**',
+      // Auto-generated docs baseline — owned by agents repo, do not lint here.
+      // Edits to baseline files happen in the source-of-truth at
+      // ofriperetz.dev/agents/apps/interlace-docs-baseline/. See
+      // memory/project_docs_baseline.md for the sync model.
+      'apps/docs/.interlace/**',
+      // Out-of-source upstream clones (read-only reference)
+      'oos/**',
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 1. Baseline — TypeScript recommended + Prettier compatibility
+  // ────────────────────────────────────────────────────────────────────────
   ...tseslint.configs.recommended,
   eslintConfigPrettier,
   {
@@ -20,6 +46,10 @@ export default [
       reportUnusedDisableDirectives: 'error',
     },
   },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 2. TypeScript-only rules across the repo
+  // ────────────────────────────────────────────────────────────────────────
   {
     files: ['**/*.ts', '**/*.mts'],
     rules: {
@@ -32,27 +62,77 @@ export default [
         },
       ],
       'no-unused-vars': 'off',
+      // Force `import type` for type-only imports — needed for build emit
+      // (Vite's dts plugin trips when value imports are used for types only).
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
+      ],
+      // Prefer `as const` over let bindings for literal-only data.
+      '@typescript-eslint/prefer-as-const': 'error',
     },
   },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 3. Published-package source — strict
+  // Applies to packages/*/src/** (excluding test files, handled in tier 4).
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    files: ['packages/*/src/**/*.ts'],
+    ignores: ['packages/*/src/**/*.test.ts', 'packages/*/src/**/*.spec.ts'],
+    rules: {
+      // No `any` in published code — we ship .d.ts files; users see these types
+      '@typescript-eslint/no-explicit-any': 'error',
+      // No console in published src — plugins should log via the framework's
+      // CLI (`serverless.cli.log`) so users get consistent output formatting
+      'no-console': 'error',
+      // Stop accidental string concat that's nicer as template literal
+      'prefer-template': 'error',
+      // Ban `let` when a value is never reassigned
+      'prefer-const': 'error',
+      // Ban implicit boolean coercion of `null`/`undefined` in conditions
+      // (subtle correctness wins, especially for endpoint config defaults)
+      '@typescript-eslint/no-non-null-assertion': 'error',
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 4. Test files — relaxed
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      'no-console': 'off',
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 5. Plain JS / config / tooling — looser
+  // ────────────────────────────────────────────────────────────────────────
   {
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     rules: {
       'no-unused-vars': 'error',
     },
   },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 6. Cross-language conventions (unicorn)
+  // ────────────────────────────────────────────────────────────────────────
   {
-    files: [
-      '**/*.ts',
-      '**/*.mts',
-      '**/*.js',
-      '**/*.mjs',
-      '**/*.cjs',
-    ],
+    files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs', '**/*.cjs'],
     plugins: {
       unicorn: eslintPluginUnicorn,
     },
     rules: {
+      // node:fs > fs — explicit Node import scheme
       'unicorn/prefer-node-protocol': 'error',
+      // Catch the common monkey-patching footgun (this is what the community
+      // serverless-api-gateway-caching plugin did with `String.prototype.replaceAll`).
+      // Lives in ESLint core, not the unicorn plugin.
+      'no-extend-native': 'error',
     },
   },
 ];

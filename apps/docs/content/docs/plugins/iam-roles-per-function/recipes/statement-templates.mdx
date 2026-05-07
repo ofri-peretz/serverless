@@ -1,0 +1,82 @@
+---
+title: Statement templates
+description: Share base IAM policies across functions without copy-paste.
+---
+
+## When to use this
+
+You have several functions that need the same baseline permissions (e.g. read access to a shared `users` DynamoDB table) plus their own function-specific extras. Without templates, you copy-paste the baseline into each `iamRoleStatements` block — and the baseline drifts over time.
+
+Templates let you define the baseline once and reference it by name from any function.
+
+## Steps
+
+### 1. Define the template under `custom`
+
+```yaml title="serverless.yml"
+custom:
+  interlaceIamRolesPerFunction:
+    statementTemplates:
+      data-read:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            Fn::GetAtt: [UsersTable, Arn]
+      data-write:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            Fn::GetAtt: [UsersTable, Arn]
+```
+
+### 2. Reference the template from a function
+
+```yaml
+functions:
+  listUsers:
+    handler: src/handler.list
+    iamRoleStatementsTemplate: data-read
+    iamRoleStatements: # plus function-specific extras
+      - Effect: Allow
+        Action: ['s3:GetObject']
+        Resource: 'arn:aws:s3:::my-bucket/*'
+
+  createUser:
+    handler: src/handler.create
+    iamRoleStatementsTemplate: data-write
+```
+
+### 3. (Optional) Reference multiple templates
+
+The current plugin accepts a single template per function via `iamRoleStatementsTemplate`. To compose multiple templates, alias them under a third one:
+
+```yaml
+custom:
+  interlaceIamRolesPerFunction:
+    statementTemplates:
+      data-read: [...]
+      data-write: [...]
+      data-readwrite:
+        - Fn::FindInMap: [..., data-read, ...]   # not supported — use the explicit form
+```
+
+Or simpler: keep both lists in the function's own `iamRoleStatements` and use the template only for the larger of the two.
+
+## Verification
+
+```bash
+sls iam preview
+```
+
+The preview output will show the resolved statement list per function, with template entries first followed by function-specific entries.
+
+## See also
+
+- [Configuration / `statementTemplates`](../configuration#properties)
+- [Recipe / least-privilege enforcement](./least-privilege)

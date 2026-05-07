@@ -11,7 +11,7 @@
  * - Jittered exponential backoff for ConflictException retries
  */
 
-import type { AwsProvider } from '@interlace/serverless-devkit';
+import type { AwsProvider } from './framework.js';
 import type {
   ResolvedCachingSettings,
   PatchOperation,
@@ -41,7 +41,10 @@ export function buildPatchOperations(
   // For shared gateways, skip stage-level changes entirely
   if (settings.sharedApiGateway) {
     // Only apply per-endpoint settings, not cluster-level
-    const allEndpoints = [...settings.endpoints, ...settings.additionalEndpoints];
+    const allEndpoints = [
+      ...settings.endpoints,
+      ...settings.additionalEndpoints,
+    ];
     for (const endpoint of allEndpoints) {
       ops.push(...buildEndpointOps(endpoint, stageMethodSettings));
     }
@@ -160,7 +163,10 @@ export async function getStageState(
       restApiId,
       stageName,
     });
-    return (response.methodSettings ?? {}) as Record<string, StageMethodSettings>;
+    return (response.methodSettings ?? {}) as Record<
+      string,
+      StageMethodSettings
+    >;
   } catch {
     return {};
   }
@@ -198,21 +204,25 @@ function buildAnyMethodOps(
 
   // Disable caching for non-GET methods
   for (const method of NON_GET_METHODS) {
-    ops.push(...buildMethodOps(
-      endpoint.resourcePath,
-      method,
-      { ...endpoint, cachingEnabled: false },
-      undefined,
-    ));
+    ops.push(
+      ...buildMethodOps(
+        endpoint.resourcePath,
+        method,
+        { ...endpoint, cachingEnabled: false },
+        undefined,
+      ),
+    );
   }
 
   // Enable caching for GET only
-  ops.push(...buildMethodOps(
-    endpoint.resourcePath,
-    'GET',
-    endpoint,
-    stageMethodSettings,
-  ));
+  ops.push(
+    ...buildMethodOps(
+      endpoint.resourcePath,
+      'GET',
+      endpoint,
+      stageMethodSettings,
+    ),
+  );
 
   return ops;
 }
@@ -265,7 +275,10 @@ function buildMethodOps(
   }
 
   // CloudWatch settings inheritance from stage */* defaults
-  if (endpoint.inheritCloudWatchSettingsFromStage && stageMethodSettings?.['*/*']) {
+  if (
+    endpoint.inheritCloudWatchSettingsFromStage &&
+    stageMethodSettings?.['*/*']
+  ) {
     const stageDefaults = stageMethodSettings['*/*'];
 
     if (stageDefaults.loggingLevel) {
@@ -301,9 +314,7 @@ function buildMethodOps(
  * - '/' → '~1'
  */
 function toMethodPath(path: string, method: string): string {
-  const escaped = path
-    .replace(/~/g, '~0')
-    .replace(/\//g, '~1');
+  const escaped = path.replace(/~/g, '~0').replace(/\//g, '~1');
 
   return `/${escaped}/${method.toUpperCase()}`;
 }

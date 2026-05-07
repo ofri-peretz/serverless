@@ -1,0 +1,72 @@
+---
+title: Caching Plugin
+description: API Gateway caching for Serverless Framework — done right.
+---
+
+## Overview
+
+`@interlace/serverless-api-gateway-caching` is a TypeScript-native replacement for [`serverless-api-gateway-caching`](https://github.com/DianaIonita/serverless-api-gateway-caching) that fixes ghost billing, adds CLI commands, and provides full config validation.
+
+Supports **Serverless Framework v3 and v4** out of the box — runtime and TypeScript types. The exported config types (`CachingPluginConfig`, `EndpointCachingConfig`) work from `serverless.ts` regardless of framework version.
+
+<InstallSnippet pkg="@interlace/serverless-api-gateway-caching" dev />
+
+## Why switch?
+
+Everything the community plugin does, plus the things it does badly or not at all. See the [migration guide](/docs/plugins/api-gateway-caching/migration#full-capability-matrix) for the full feature-by-feature comparison.
+
+Headline differences:
+
+| Capability | Community plugin | @interlace |
+|---|---|---|
+| **`before:remove:remove` cleanup hook** | ❌ ghost billing | ✅ |
+| **`sls caching flush` / `status` / `disable` / `preview`** | ❌ | ✅ |
+| **Auto-flush on deploy** | ❌ | ✅ `flushOnDeploy: true` |
+| **Jittered retry (no thundering herd)** | ❌ pure exponential | ✅ |
+| **`ANY` method → GET-only caching** | ❌ partial | ✅ |
+| **Zero runtime dependencies** | ❌ `lodash.isempty` | ✅ |
+| **No prototype pollution** | 🔴 monkey-patches `String.prototype.replaceAll` | ✅ |
+| **TypeScript types & IntelliSense** | ❌ | ✅ |
+
+## Quick Start
+
+```yaml
+plugins:
+  - '@interlace/serverless-api-gateway-caching'
+
+custom:
+  interlaceCaching:
+    enabled: true
+    clusterSize: '0.5'
+    ttlInSeconds: 300
+
+functions:
+  getUser:
+    handler: src/handler.get
+    events:
+      - http:
+          path: /users/{id}
+          method: get
+          caching:
+            enabled: true
+            cacheKeyParameters:
+              - name: request.path.id
+```
+
+<Callout type="info">
+Enabling caching globally does **not** automatically cache all endpoints — you must set `caching.enabled: true` on each endpoint individually.
+</Callout>
+
+## REST API Only
+
+This plugin only supports **REST API** (`http` events). HTTP API (`httpApi`) does not support API Gateway caching. See [AWS docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-vs-rest.html).
+
+## Next Steps
+
+- [Installation](./installation)
+- [Configuration reference](./configuration)
+- [CLI commands](./cli-commands)
+- [Recipes / cache key parameters](./recipes/cache-keys)
+- [Migration from community plugin](./migration)
+- [Benchmark](./benchmark)
+- [FAQ](./faq)

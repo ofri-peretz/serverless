@@ -1,0 +1,9 @@
+{
+  "name": "interlace-iam-e2e-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fixture deployed by the parent plugin's E2E test. Not for distribution.",
+  "dependencies": {
+    "serverless": "^3.40.0"
+  }
+}

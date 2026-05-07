@@ -1,0 +1,5 @@
+{
+  "title": "Recipes",
+  "description": "Common how-tos for the API Gateway Caching plugin.",
+  "pages": ["index", "cache-keys", "shared-gateway", "removal"]
+}

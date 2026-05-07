@@ -115,7 +115,9 @@ describe('defineConfig', () => {
             Type: 'AWS::DynamoDB::Table',
             Properties: {
               TableName: 'users',
-              AttributeDefinitions: [{ AttributeName: 'id', AttributeType: 'S' }],
+              AttributeDefinitions: [
+                { AttributeName: 'id', AttributeType: 'S' },
+              ],
               KeySchema: [{ AttributeName: 'id', KeyType: 'HASH' }],
               BillingMode: 'PAY_PER_REQUEST',
             },
@@ -135,7 +137,9 @@ describe('defineConfig', () => {
     expect(config.provider.architecture).toBe('arm64');
     expect(config.functions?.getUser.handler).toBe('src/handlers/user.get');
     expect(config.build?.esbuild).not.toBe(false);
-    expect(config.resources?.Resources?.UsersTable.Type).toBe('AWS::DynamoDB::Table');
+    expect(config.resources?.Resources?.UsersTable.Type).toBe(
+      'AWS::DynamoDB::Table',
+    );
   });
 
   it('accepts minimal configuration', () => {

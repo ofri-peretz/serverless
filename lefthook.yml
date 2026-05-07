@@ -4,23 +4,23 @@ pre-commit:
   parallel: true
   commands:
     prettier:
-      glob: "*.{md,yml,yaml,json,ts,mts,js,mjs}"
+      glob: '*.{md,yml,yaml,json,ts,mts,js,mjs}'
       run: sh scripts/lefthook-with-node-path.sh npx --no -- prettier --check {staged_files}
-      fail_text: "Run `npm run fix` to auto-format, then re-stage."
+      fail_text: 'Run `npm run fix` to auto-format, then re-stage.'
     eslint:
-      glob: "*.{js,ts,mjs,mts,cjs,cts}"
+      glob: '*.{js,ts,mjs,mts,cjs,cts}'
       run: sh scripts/lefthook-with-node-path.sh npx --no eslint .
-      fail_text: "Fix ESLint errors. Run `npx eslint --fix .` for auto-fixable issues."
+      fail_text: 'Fix ESLint errors. Run `npx eslint --fix .` for auto-fixable issues.'
     typecheck:
-      glob: "**/*.ts"
+      glob: '**/*.ts'
       run: sh scripts/lefthook-with-node-path.sh npx --no tsc --noEmit
-      fail_text: "TypeScript error. Run `npx tsc --noEmit` to see details."
+      fail_text: 'TypeScript error. Run `npx tsc --noEmit` to see details.'
 
 pre-push:
   commands:
     build:
       run: sh scripts/lefthook-with-node-path.sh npx --no -- turbo run build --output-logs errors-only
-      fail_text: "Build failed. Fix errors before pushing."
+      fail_text: 'Build failed. Fix errors before pushing.'
 
 commit-msg:
   commands:

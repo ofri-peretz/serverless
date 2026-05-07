@@ -5,9 +5,10 @@ description: Install and configure @interlace serverless plugins in under 2 minu
 
 ## Install
 
-```bash
-npm install @interlace/serverless-api-gateway-caching @interlace/serverless-devkit
-```
+<InstallSnippet
+  pkg={['@interlace/serverless-api-gateway-caching', '@interlace/serverless-iam-roles-per-function', '@interlace/serverless-devkit']}
+  dev
+/>
 
 ## Quick Start
 
@@ -95,7 +96,7 @@ sls caching status
 
 ## What's next?
 
-- [Caching plugin configuration](/docs/plugins/caching/configuration) — full config reference
-- [Cache key parameters](/docs/plugins/caching/cache-keys) — path, query, header, and body keys
-- [Migration guide](/docs/plugins/caching/migration) — switch from the community plugin
+- [Caching plugin configuration](/docs/plugins/api-gateway-caching/configuration) — full config reference
+- [Cache key parameters](/docs/plugins/api-gateway-caching/recipes/cache-keys) — path, query, header, and body keys
+- [Migration guide](/docs/plugins/api-gateway-caching/migration) — switch from the community plugin
 - [Devkit API](/docs/serverless-devkit) — `defineConfig()`, `defineFunction()`, typed helpers

@@ -1,0 +1,96 @@
+---
+title: Permissions boundaries and managed policies
+description: Apply org-wide IAM permissions boundaries and AWS-managed policies to per-function roles.
+---
+
+## When to use this
+
+Your AWS org enforces an IAM permissions boundary on every role (a common compliance pattern — the boundary caps what a role can do, no matter what its inline policies grant). Or, your function needs the AWS-managed VPC execution policy because it runs in a VPC. Both are declarative — you don't have to inline the same ARN into every function.
+
+## Steps
+
+### 1. Org-wide permissions boundary
+
+Set once under `custom`; the plugin applies it to every per-function role _and_ the global role:
+
+```yaml title="serverless.yml"
+custom:
+  interlaceIamRolesPerFunction:
+    iamGlobalPermissionsBoundary:
+      Fn::Sub: 'arn:aws:iam::${AWS::AccountId}:policy/SecurityBoundary'
+```
+
+### 2. Per-function override
+
+If one function needs a different boundary:
+
+```yaml
+functions:
+  legacyHandler:
+    handler: src/legacy.handle
+    iamRoleStatements:
+      - Effect: Allow
+        Action: ['s3:GetObject']
+        Resource: '*'
+    iamPermissionsBoundary:
+      Fn::Sub: 'arn:aws:iam::${AWS::AccountId}:policy/LegacyBoundary'
+```
+
+The per-function boundary wins over `iamGlobalPermissionsBoundary`.
+
+### 3. Managed policies
+
+Attach AWS-managed (or customer-managed) policies declaratively:
+
+```yaml
+functions:
+  apiHandler:
+    handler: src/handler.api
+    iamRoleStatements:
+      - Effect: Allow
+        Action: ['dynamodb:GetItem']
+        Resource: '*'
+    iamManagedPolicies:
+      - 'arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess'
+      - 'arn:aws:iam::aws:policy/SecretsManagerReadWrite'
+      - Fn::Sub: 'arn:aws:iam::${AWS::AccountId}:policy/MyCustomManagedPolicy'
+```
+
+The plugin merges these with the inline statements from `iamRoleStatements`.
+
+### 4. VPC functions
+
+The plugin auto-attaches `service-role/AWSLambdaVPCAccessExecutionRole` to any function with VPC config:
+
+```yaml
+functions:
+  vpcHandler:
+    handler: src/handler.vpc
+    vpc:
+      securityGroupIds: [sg-12345]
+      subnetIds: [subnet-abcde, subnet-fghij]
+    iamRoleStatements:
+      - Effect: Allow
+        Action: ['s3:GetObject']
+        Resource: 'arn:aws:s3:::data-bucket/*'
+```
+
+You don't need to add the VPC managed-policy ARN to `iamManagedPolicies` — the plugin detects `vpc:` and adds it. Override the auto-attach by setting `iamManagedPolicies` explicitly (which resets the list).
+
+## Verification
+
+```bash
+sls iam preview
+```
+
+Look for `PermissionsBoundary` and `ManagedPolicyArns` on each per-function role. Or after deploy:
+
+```bash
+aws iam get-role --role-name <stack>-listUsers-<region>-lambdaRole
+```
+
+## See also
+
+- [Configuration / `iamGlobalPermissionsBoundary`](../configuration#properties)
+- [Configuration / `iamManagedPolicies`](../configuration#per-function)
+- [Recipe / least-privilege enforcement](./least-privilege)

@@ -1,0 +1,36 @@
+---
+title: FAQ
+description: Edge cases, gotchas, and frequently-asked questions for @interlace/serverless-iam-roles-per-function.
+---
+
+## Does it work with Serverless Framework v4?
+
+Yes. The plugin is built against the v3 + v4 plugin API surface and tested against both. The official `@serverless/iam-roles-per-function` plugin shipped with v4 is a fork of community v3 with the same gaps (no CLI commands, no EventBridge / S3 auto-permissions, no statement templates).
+
+## Does it support `provider.iam.role.statements` (v3+) and the deprecated `provider.iamRoleStatements` (v2)?
+
+Both. The settings resolver reads from either; `defaultInherit` covers both shapes.
+
+## My function uses `events: [http]` — does the plugin do anything?
+
+No. HTTP events don't need extra IAM. Auto-permissions only kick in for event sources where Lambda needs to _pull_ data (SQS, streams) or _push_ to AWS (DLQ, EventBridge, S3 events).
+
+## What if my function has `role: arn:…` (a pre-existing role)?
+
+The plugin throws an error if both `role` and `iamRoleStatements` are set on the same function. They're mutually exclusive. Pick one — typically `iamRoleStatements`, unless you have a reason the function needs an externally-managed role.
+
+## Will the role logical ID stay stable across migration?
+
+Yes. Both plugins use `<NormalizedFunctionName>IamRoleLambdaExecution`. CloudFormation will not recreate the role.
+
+## What's the role-name length limit?
+
+AWS caps IAM role names at 64 characters. When `<service>-<stage>-<function>-<region>-lambdaRole` exceeds that, the plugin first drops the `lambdaRole` suffix; if it's still over, it truncates predictably. Override entirely with `iamRoleStatementsName: 'my-custom-name'`.
+
+## Does `suppressGlobalRole: true` affect functions that use `role: arn:…`?
+
+No. The setting only removes the auto-generated `IamRoleLambdaExecution` resource. Functions with their own pre-existing role are untouched.
+
+## Couldn't find your question?
+
+[Open an issue on GitHub](https://github.com/ofri-peretz/serverless/issues) — issue templates include a "documentation question" option.

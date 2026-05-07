@@ -1,6 +1,6 @@
 name: Feature Request
 description: Suggest a new feature or enhancement
-labels: ["enhancement"]
+labels: ['enhancement']
 body:
   - type: dropdown
     id: package
@@ -8,12 +8,12 @@ body:
       label: Package
       description: Which package is this for?
       options:
-        - "@interlace/serverless-devkit"
-        - "@interlace/serverless-plugin-openapi"
-        - "@interlace/serverless-plugin-package"
-        - "@interlace/serverless-plugin-proxy"
-        - "@interlace/serverless-plugin-build-layers"
-        - "@interlace/serverless-plugin-throttling"
+        - '@interlace/serverless-devkit'
+        - '@interlace/serverless-plugin-openapi'
+        - '@interlace/serverless-plugin-package'
+        - '@interlace/serverless-plugin-proxy'
+        - '@interlace/serverless-plugin-build-layers'
+        - '@interlace/serverless-plugin-throttling'
         - New plugin idea
         - Other
     validations:

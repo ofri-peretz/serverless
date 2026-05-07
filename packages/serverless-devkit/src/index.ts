@@ -53,6 +53,7 @@ export function defineConfig(config: ServerlessConfig): ServerlessConfig {
 export type {
   // Top-level
   ServerlessConfig,
+  PluginConfigRegistry,
   BuildConfig,
   EsbuildConfig,
   PackageConfig,

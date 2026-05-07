@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-05-04T06:06:47.174Z",
+  "status": "passed",
+  "environment": {
+    "nodeVersion": "v24.12.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "steps": [
+    {
+      "id": 3,
+      "label": "sls iam preview",
+      "startedAt": "2026-05-04T06:07:03.200Z",
+      "durationMs": 20514,
+      "status": "pass"
+    },
+    {
+      "id": 4,
+      "label": "sls iam validate",
+      "startedAt": "2026-05-04T06:07:23.714Z",
+      "durationMs": 2527,
+      "status": "pass"
+    },
+    {
+      "id": 5,
+      "label": "sls iam audit",
+      "startedAt": "2026-05-04T06:07:26.242Z",
+      "durationMs": 1694,
+      "status": "pass"
+    },
+    {
+      "id": 6,
+      "label": "sls iam status",
+      "startedAt": "2026-05-04T06:07:27.936Z",
+      "durationMs": 1786,
+      "status": "pass",
+      "observations": {
+        "snippet": "\n[interlace-iam] --- IAM Roles Per Function — Status ---\n[interlace-iam]   Functions:                   3\n[interlace-iam]   With per-function role:      3\n[interlace-iam]   Falling back to global role"
+      }
+    },
+    {
+      "id": 7,
+      "label": "sls deploy",
+      "startedAt": "2026-05-04T06:07:29.723Z",
+      "durationMs": 171437,
+      "status": "pass"
+    },
+    {
+      "id": 8,
+      "label": "aws iam list-roles + get-role",
+      "startedAt": "2026-05-04T06:10:21.161Z",
+      "durationMs": 925,
+      "status": "pass",
+      "observations": {
+        "roles": [
+          "interlace-iam-e2e-qsrl79-e2e-us-east-1-lambdaRole",
+          "interlace-iam-e2e-qsrl79-e2e-withInline-us-east-1-lambdaRole",
+          "interlace-iam-e2e-qsrl79-e2e-withSqs-us-east-1-lambdaRole",
+          "interlace-iam-e2e-qsrl79-e2e-withTemplate-us-east-1-lambdaRole"
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "label": "aws iam get-role-policy",
+      "startedAt": "2026-05-04T06:10:22.086Z",
+      "durationMs": 3149,
+      "status": "pass"
+    },
+    {
+      "id": 10,
+      "label": "aws lambda invoke",
+      "startedAt": "2026-05-04T06:10:25.235Z",
+      "durationMs": 1855,
+      "status": "pass"
+    },
+    {
+      "id": 11,
+      "label": "sls remove",
+      "startedAt": "2026-05-04T06:10:27.090Z",
+      "durationMs": 103014,
+      "status": "pass"
+    },
+    {
+      "id": 12,
+      "label": "post-remove verification",
+      "startedAt": "2026-05-04T06:12:10.104Z",
+      "durationMs": 1948,
+      "status": "pass"
+    }
+  ],
+  "awsObservations": {
+    "deployDurationSec": 171,
+    "rolesCreated": [
+      "interlace-iam-e2e-qsrl79-e2e-us-east-1-lambdaRole",
+      "interlace-iam-e2e-qsrl79-e2e-withInline-us-east-1-lambdaRole",
+      "interlace-iam-e2e-qsrl79-e2e-withSqs-us-east-1-lambdaRole",
+      "interlace-iam-e2e-qsrl79-e2e-withTemplate-us-east-1-lambdaRole"
+    ],
+    "removeDurationSec": 103,
+    "rolesPostRemove": []
+  },
+  "awsIdentity": "346133547796 / arn:aws:iam::346133547796:user/interlace-cli",
+  "region": "us-east-1",
+  "serviceName": "interlace-iam-e2e-qsrl79",
+  "pluginVersion": "0.0.0",
+  "endedAt": "2026-05-04T06:12:12.052Z"
+}

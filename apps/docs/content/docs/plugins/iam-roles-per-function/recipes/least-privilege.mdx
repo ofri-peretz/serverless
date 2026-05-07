@@ -1,0 +1,78 @@
+---
+title: Least-privilege enforcement
+description: Drop the broad global role and require every function to declare its permissions.
+---
+
+## When to use this
+
+You want to **prevent** the situation where a new function quietly inherits the global Lambda execution role's permissions. The default Serverless Framework behavior assigns every function to the broad `IamRoleLambdaExecution` role unless the function declares `iamRoleStatements`. That's a footgun: a developer can ship a function with full S3 / DynamoDB access without anyone noticing.
+
+This recipe combines two settings to enforce least-privilege at deploy time:
+
+- `suppressGlobalRole: true` — drops the broad fallback role from the CFN template.
+- `requirePerFunctionRoles: true` — fails the deploy if any function lacks `iamRoleStatements`.
+
+## Steps
+
+### 1. Enable both flags
+
+```yaml title="serverless.yml"
+custom:
+  interlaceIamRolesPerFunction:
+    suppressGlobalRole: true
+    requirePerFunctionRoles: true
+```
+
+### 2. Add `iamRoleStatements` to every function
+
+For functions that need permissions:
+
+```yaml
+functions:
+  listUsers:
+    handler: src/handler.list
+    iamRoleStatements:
+      - Effect: Allow
+        Action: ['dynamodb:GetItem', 'dynamodb:Query']
+        Resource:
+          Fn::GetAtt: [UsersTable, Arn]
+```
+
+For functions that legitimately need **no** permissions (no AWS API calls beyond CloudWatch Logs, which is auto-granted):
+
+```yaml
+functions:
+  healthCheck:
+    handler: src/handler.health
+    iamRoleStatements: []   # explicitly empty — declares intent
+```
+
+### 3. Wire `sls iam audit --strict` into CI
+
+```yaml title=".github/workflows/ci.yml"
+- name: IAM audit
+  run: npx sls iam audit --strict
+```
+
+The audit command fails when any function has no `iamRoleStatements` block at all (not even empty). Combined with `requirePerFunctionRoles: true`, this gives you two layers — local deploys fail fast, and PRs without `iamRoleStatements: []` are rejected before merge.
+
+## Verification
+
+```bash
+sls iam preview     # every function should show its own role
+sls iam status      # "Falling back to global role" should be 0
+```
+
+If the preview shows `(global role)` for any function — `suppressGlobalRole: true` won't take effect (the global role is needed by that function). Either declare `iamRoleStatements: []` on it or fix its statements.
+
+## Trade-offs
+
+- **Reduced blast radius.** A compromised credential for one function only sees that function's permissions.
+- **More PR friction.** Every new function needs an `iamRoleStatements` block (even if empty).
+- **No more silent inheritance.** Permissions are explicit at the function level.
+
+## See also
+
+- [Configuration / `suppressGlobalRole`](../configuration#properties)
+- [Configuration / `requirePerFunctionRoles`](../configuration#properties)
+- [CLI / `iam audit`](../cli-commands#sls-iam-audit)

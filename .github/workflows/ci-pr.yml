@@ -4,10 +4,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - "docs/**"
-      - "*.md"
-      - "!README.md"
-      - ".github/ISSUE_TEMPLATE/**"
+      - 'docs/**'
+      - '*.md'
+      - '!README.md'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
 
 concurrency:
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: "npm"
+          cache: 'npm'
 
       - run: npm ci
 
@@ -55,7 +55,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [18, 20, 22, 24]
+        # Pinned to 24 — root tooling (turbo/vitest/etc) and engines.node=24.x
+        # with engine-strict=true require it. Cross-version support for the
+        # *published* plugins themselves is verified in their per-package
+        # release tests, not the monorepo CI matrix.
+        node-version: [24]
 
     steps:
       - name: 📥 Checkout repository
@@ -90,7 +94,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: 📦 Install dependencies
         if: steps.docs_only.outputs.docs_only != 'true'

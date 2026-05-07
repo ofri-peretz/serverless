@@ -1,0 +1,47 @@
+# Community plugin fixture for the comparative E2E.
+#
+# Same minimal app shape as scripts/e2e/fixture/, but uses the COMMUNITY plugin
+# `serverless-api-gateway-caching` (DianaIonita/serverless-api-gateway-caching).
+# Note the config key is `apiGatewayCaching` (not `interlaceCaching`) — different
+# config schema is one of several plugin differences we verify behaviorally.
+#
+# DO NOT ship this serverless.yml as a recommendation; it exists solely to
+# measure community plugin behavior at sls remove for the ghost-billing claim.
+
+service: interlace-cache-e2e-community
+
+frameworkVersion: '>=3.0.0'
+
+plugins:
+  - serverless-api-gateway-caching
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: e2e
+  logRetentionInDays: 1
+  apiGateway:
+    metrics: false
+
+custom:
+  apiGatewayCaching:
+    enabled: true
+    clusterSize: '0.5'
+    ttlInSeconds: 60
+    perKeyInvalidation:
+      requireAuthorization: false
+      handleUnauthorizedRequests: 'Ignore'
+
+functions:
+  hello:
+    handler: handler.hello
+    timeout: 6
+    memorySize: 256
+    events:
+      - http:
+          path: /hello
+          method: get
+          caching:
+            enabled: true
+            ttlInSeconds: 60

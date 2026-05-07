@@ -1,0 +1,110 @@
+---
+title: Migration Guide
+description: Migrate from serverless-iam-roles-per-function to @interlace/serverless-iam-roles-per-function.
+---
+
+> **Compatibility:** Serverless Framework v3 + v4. Community plugin tested at v3.2.0.
+
+The `@interlace` plugin is config-compatible with the community plugin. **Existing function-level config keys (`iamRoleStatements`, `iamRoleStatementsInherit`, `iamRoleStatementsName`, `iamPermissionsBoundary`) work without changes.** The only required edit is the entry under `plugins:`.
+
+## The 5-second migration
+
+```diff title="serverless.yml"
+ plugins:
+-  - serverless-iam-roles-per-function
++  - '@interlace/serverless-iam-roles-per-function'
+```
+
+<InstallSnippet pkg="serverless-iam-roles-per-function" command="uninstall" />
+
+<InstallSnippet pkg="@interlace/serverless-iam-roles-per-function" dev />
+
+That's it. Your existing `iamRoleStatements` and global `defaultInherit` / `iamGlobalPermissionsBoundary` continue to work. The plugin reads both `custom.interlaceIamRolesPerFunction` (the new canonical key) and `custom.serverless-iam-roles-per-function` (the community key) as a backwards-compat alias.
+
+## What changes silently for the better
+
+These take effect on the first deploy after the swap, with no config edits needed:
+
+1. **EventBridge auto-permission.** Functions with `events: [eventBridge: {eventBus: ...}]` get `events:PutEvents` automatically. The community plugin grants nothing here — most users were copy-pasting this into `iamRoleStatements` manually.
+2. **S3 event auto-permission.** Functions with `events: [s3: ...]` get `s3:GetObject` scoped to `arn:aws:s3:::<bucket>/*`. Same gap as above.
+3. **Stricter statement validation at deploy.** The synth-time check fails fast on missing/wrong `Effect`, mutually-exclusive `Action`/`NotAction` pairs, and malformed `Sid`.
+4. **Zero runtime dependencies.** Drops `lodash@^4.17.20` (~70 KB unpacked) from your `node_modules`.
+5. **Active maintenance.** Community plugin's last release: 2021-05-21. Anything broken since (Node 22 / Serverless v4 quirks) is now actively fixed.
+
+## Breaking changes
+
+There are no intentional breaking changes for users on community v3.2.0. If you observe a behavior difference, it's a bug — open an issue with a minimal repro at [github.com/ofri-peretz/serverless](https://github.com/ofri-peretz/serverless/issues).
+
+The few **edge cases** to be aware of:
+
+- **Strict validator may flag pre-existing config.** If your `iamRoleStatements` has `Sid: "my-sid"` (hyphen — invalid per AWS) or a malformed `Action` like `s3` (no colon), the synth-time validator will print a warning. Promote to error with `sls iam validate --warnings-as-errors` in CI.
+- **Wildcard `*` Action and `*` Resource emit warnings.** Off by default. Promote to errors with `--strict-wildcard-action` / `--strict-wildcard-resource`.
+
+## New config opportunities to adopt afterwards
+
+Once the migration is in, you can pick up the new features incrementally — see the [recipes](./recipes/statement-templates) for hands-on examples:
+
+- **`statementTemplates`** — share base policies across functions
+- **`suppressGlobalRole`** — drop the broad fallback role entirely
+- **`requirePerFunctionRoles`** — fail-fast enforcement
+- **`iamManagedPolicies`** — declarative per-function managed-policy attachment
+
+## Verification
+
+After the swap, run the dry-run + audit commands locally:
+
+```bash
+sls iam preview                 # see the per-function roles a deploy would create
+sls iam audit                   # list functions falling back to the global role
+sls iam validate                # strict grammar check
+sls iam status                  # one-line summary
+```
+
+For CI gating:
+
+```bash
+sls iam audit --strict
+sls iam validate --warnings-as-errors
+```
+
+If you have integration tests that read the synthesized template (e.g. from `sls package`), the per-function role logical IDs are unchanged: `<NormalizedFunctionName>IamRoleLambdaExecution`.
+
+## Full feature-by-feature comparison
+
+For source-line citations behind every row, see the contributor doc at [`docs/community-plugin-comparison.md`](https://github.com/ofri-peretz/serverless/blob/main/docs/community-plugin-comparison.md).
+
+## Rollback
+
+The migration is fully reversible. To go back:
+
+```diff title="serverless.yml"
+ plugins:
+-  - '@interlace/serverless-iam-roles-per-function'
++  - serverless-iam-roles-per-function
+```
+
+<InstallSnippet pkg="@interlace/serverless-iam-roles-per-function" command="uninstall" />
+
+<InstallSnippet pkg="serverless-iam-roles-per-function" dev />
+
+Caveats if you'd already adopted the new features:
+
+- `iamRoleStatementsTemplate`, `iamManagedPolicies`, `suppressGlobalRole`, and `requirePerFunctionRoles` will be silently rejected (community plugin's schema is `additionalProperties: false`). Remove or comment them out.
+- EventBridge / S3 auto-permissions revert to "not granted" — you'll need to add them to `iamRoleStatements` manually.
+
+## FAQ
+
+**Q: Does it work with Serverless Framework v4?**
+A: Yes. The plugin is built against the v3 + v4 plugin API surface.
+
+**Q: Does it support `provider.iam.role.statements` (v3+) and the deprecated `provider.iamRoleStatements` (v2)?**
+A: Both. `defaultInherit` covers both shapes.
+
+**Q: My function uses `events: [http]` — does the plugin do anything?**
+A: No. HTTP events don't need extra IAM. Auto-permissions only kick in for event sources where Lambda needs to _pull_ data (SQS, streams) or _push_ to AWS (DLQ, EventBridge, S3 events).
+
+**Q: What if my function has `role: arn:…` (a pre-existing role)?**
+A: The plugin throws an error if both `role` and `iamRoleStatements` are set on the same function. They're mutually exclusive.
+
+**Q: Will the role logical ID stay stable across the migration?**
+A: Yes. CloudFormation will not recreate the role.

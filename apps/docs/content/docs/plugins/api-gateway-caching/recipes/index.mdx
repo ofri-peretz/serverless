@@ -1,0 +1,21 @@
+---
+title: Recipes
+description: Common how-tos for the API Gateway caching plugin.
+---
+
+Recipes are task-shaped — each one solves a specific problem. Use the [configuration reference](../configuration) for the full surface; recipes here just show the right combination of settings for common scenarios.
+
+## Available recipes
+
+| Recipe | When to use |
+| --- | --- |
+| [Cache key parameters](./cache-keys) | You're seeing the same cached response for different requests — define what makes an entry unique. |
+| [Shared API Gateway](./shared-gateway) | Multiple services share one API Gateway and you need per-service caching. |
+| [Removing the plugin](./removal) | You're uninstalling — avoid the ghost-billing trap. |
+
+## Cross-cutting reading
+
+- [Installation](../installation) — setup + smoke test
+- [Configuration](../configuration) — full reference
+- [CLI commands](../cli-commands) — `flush`, `status`, `disable`, `preview`
+- [Migration](../migration) — switching from `serverless-api-gateway-caching`

@@ -12,11 +12,13 @@ Thank you for your interest in contributing to the Interlace Serverless ecosyste
 ## Creating a New Plugin
 
 1. Create a new directory under `packages/`:
+
    ```bash
    mkdir -p packages/serverless-plugin-<name>/src
    ```
 
 2. Add a `package.json` with the `@interlace` scope:
+
    ```json
    {
      "name": "@interlace/serverless-plugin-<name>",
@@ -41,6 +43,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/). Commits are
 - **Header** max length: 120 characters
 
 **Examples**:
+
 ```
 feat(serverless-plugin-openapi): add Zod schema generation
 fix(serverless-devkit): resolve type export issue

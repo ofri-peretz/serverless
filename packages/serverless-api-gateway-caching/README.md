@@ -4,25 +4,38 @@
 
 A TypeScript-native replacement for [`serverless-api-gateway-caching`](https://github.com/DianaIonita/serverless-api-gateway-caching) that fixes ghost billing, adds CLI commands, and provides full config validation.
 
+Supports **Serverless Framework v3 and v4** out of the box — runtime _and_ TypeScript types. The plugin's default export shape works with both versions' loader (verified via the `output.exports: 'default'` build flag), and the exported config types (`CachingPluginConfig`, `EndpointCachingConfig`) are usable from `serverless.ts` regardless of framework version.
+
 ## Why switch?
 
-| Feature | Community Plugin | @interlace |
-|---|---|---|
-| **Cleanup on `sls remove`** | ❌ Cache cluster keeps running → ghost billing | ✅ `before:remove:remove` disables cluster first |
-| **Safe offboarding** | ❌ Remove plugin → orphaned cache | ✅ `sls caching disable` tears down before removal |
-| **`sls caching flush`** | ❌ | ✅ Flush stage cache via CLI |
-| **`sls caching status`** | ❌ | ✅ Inspect cluster state |
-| **Flush on deploy** | ❌ | ✅ `flushOnDeploy: true` |
-| **Retry strategy** | Pure exponential (thundering herd) | Jittered exponential backoff |
-| **Prototype pollution** | 🔴 Overwrites `String.prototype.replaceAll` | ✅ Zero prototype mutation |
-| **Dependencies** | `lodash.get`, `lodash.isempty` | ✅ Zero runtime dependencies |
-| **TypeScript** | ❌ JavaScript only | ✅ Full types + IntelliSense |
-| **Config validation** | Partial JSON schema | ✅ Complete schema with TTL range enforcement |
-| **`ANY` method** | Partial handling | ✅ Enables GET, disables DELETE/HEAD/OPTIONS/PATCH/POST/PUT |
-| **CloudWatch inheritance** | ✅ | ✅ Log level, data trace, metrics from stage |
-| **Shared API Gateway** | ✅ | ✅ `sharedApiGateway` flag |
-| **Additional CF endpoints** | ✅ | ✅ `additionalEndpoints` |
-| **Body-based cache keys** | ✅ | ✅ `mappedFrom` support |
+Everything the community plugin does, plus the things it does badly or not at all. **Source-backed:** every win in this table is verified against the community plugin's npm tarball or a live AWS measurement. Full comparison with line-numbered citations: [`docs/community-plugin-comparison.md`](../../docs/community-plugin-comparison.md).
+
+| Capability                                             | Community plugin                                  | `@interlace/serverless-api-gateway-caching`                       |
+| ------------------------------------------------------ | ------------------------------------------------- | ----------------------------------------------------------------- |
+| Enable/disable cache cluster                           | ✅                                                | ✅                                                                |
+| Cluster size (0.5–237 GB)                              | ✅                                                | ✅ (+ enum-validated config)                                      |
+| Per-method TTL (0–3600s)                               | ✅                                                | ✅                                                                |
+| Data encryption at rest                                | ✅                                                | ✅                                                                |
+| Cache key from path / query / header                   | ✅                                                | ✅                                                                |
+| Cache key from request body                            | ✅                                                | ✅ (`mappedFrom`)                                                 |
+| Per-key invalidation control                           | ✅                                                | ✅                                                                |
+| Unauthorized invalidation handling                     | ✅                                                | ✅                                                                |
+| CloudWatch settings inheritance                        | ✅ (stage-only)                                   | ✅ (stage + per-endpoint override)                                |
+| **Auto-flush on deploy**                               | ❌                                                | ✅ `flushOnDeploy: true`                                          |
+| **`sls caching flush` command**                        | ❌                                                | ✅                                                                |
+| **`sls caching status` command**                       | ❌                                                | ✅                                                                |
+| **`sls caching disable` command**                      | ❌                                                | ✅ (safe offboarding)                                             |
+| **`sls caching preview` (dry-run)**                    | ❌                                                | ✅ Shows patch ops without calling AWS write APIs                 |
+| **`before:remove:remove` defensive-cleanup hook**      | ❌ none                                           | ✅ defense-in-depth on `sls remove`                               |
+| `ANY` method → GET-only caching                        | ✅                                                | ✅ (equivalent — both disable DELETE/HEAD/OPTIONS/PATCH/POST/PUT) |
+| Shared API Gateway support                             | ✅                                                | ✅ (equivalent — `apiGatewayIsShared` / `sharedApiGateway`)       |
+| CF-defined additional endpoints                        | ✅                                                | ✅ `additionalEndpoints`                                          |
+| `CacheKeyParameters` + `CacheNamespace` on CF template | ✅                                                | ✅ (equivalent — both inject into `AWS::ApiGateway::Method`)      |
+| **Jittered exponential backoff (no thundering herd)**  | ❌ (plain `2 ^ attempt`)                          | ✅ jittered                                                       |
+| JSON-schema config validation (Serverless v3+)         | ✅                                                | ✅ + **stricter** (clusterSize enum, TTL range 0-3600)            |
+| **TypeScript types & IntelliSense**                    | ❌                                                | ✅                                                                |
+| **Zero runtime dependencies**                          | ❌ 2 lodash deps (`lodash.get`, `lodash.isempty`) | ✅                                                                |
+| **No prototype pollution**                             | 🔴 monkey-patches `String.prototype.replaceAll`   | ✅                                                                |
 
 ## Install
 
@@ -40,10 +53,10 @@ plugins:
 custom:
   interlaceCaching:
     enabled: true
-    clusterSize: '0.5'    # GB — valid: 0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237
-    ttlInSeconds: 300      # 0–3600 (default: 300)
-    dataEncrypted: false   # encrypt cached data at rest
-    flushOnDeploy: false   # flush cache after every deploy
+    clusterSize: '0.5' # GB — valid: 0.5, 1.6, 6.1, 13.5, 28.4, 58.2, 118, 237
+    ttlInSeconds: 300 # 0–3600 (default: 300)
+    dataEncrypted: false # encrypt cached data at rest
+    flushOnDeploy: false # flush cache after every deploy
 
 functions:
   listUsers:
@@ -53,7 +66,7 @@ functions:
           path: /users
           method: get
           caching:
-            enabled: true  # must be explicitly enabled per endpoint
+            enabled: true # must be explicitly enabled per endpoint
 
   getUser:
     handler: src/handler.get
@@ -63,8 +76,8 @@ functions:
           method: get
           caching:
             enabled: true
-            ttlInSeconds: 600          # override global TTL
-            dataEncrypted: true        # override global encryption
+            ttlInSeconds: 600 # override global TTL
+            dataEncrypted: true # override global encryption
             cacheKeyParameters:
               - name: request.path.id
               - name: request.header.Accept-Language
@@ -129,15 +142,15 @@ custom:
   interlaceCaching:
     enabled: true
     perKeyInvalidation:
-      requireAuthorization: true              # default: true
-      handleUnauthorizedRequests: Ignore       # Ignore | IgnoreWithWarning | Fail
+      requireAuthorization: true # default: true
+      handleUnauthorizedRequests: Ignore # Ignore | IgnoreWithWarning | Fail
 ```
 
-| Strategy | Behavior |
-|---|---|
-| `Ignore` | Silently ignore unauthorized invalidation requests |
-| `IgnoreWithWarning` | Ignore but add a `Warning` header in the response |
-| `Fail` | Return 403 Forbidden |
+| Strategy            | Behavior                                           |
+| ------------------- | -------------------------------------------------- |
+| `Ignore`            | Silently ignore unauthorized invalidation requests |
+| `IgnoreWithWarning` | Ignore but add a `Warning` header in the response  |
+| `Fail`              | Return 403 Forbidden                               |
 
 Override per endpoint:
 
@@ -146,7 +159,7 @@ caching:
   enabled: true
   perKeyInvalidation:
     requireAuthorization: true
-    handleUnauthorizedRequests: Fail  # stricter than global default
+    handleUnauthorizedRequests: Fail # stricter than global default
 ```
 
 ## Shared API Gateway
@@ -200,7 +213,7 @@ By default, per-method CloudWatch settings (log level, data trace, metrics) are 
 custom:
   interlaceCaching:
     enabled: true
-    endpointsInheritCloudWatchSettingsFromStage: true  # default: true
+    endpointsInheritCloudWatchSettingsFromStage: true # default: true
 ```
 
 Override per endpoint:
@@ -223,7 +236,7 @@ sls caching status
 #   Enabled:  true
 #   Size:     0.5 GB
 #   Status:   AVAILABLE
-#   Stage:    dev
+#   Stage:    development
 #   API ID:   abc123xyz
 ```
 
@@ -233,7 +246,7 @@ Flush all cached responses for a stage:
 
 ```bash
 sls caching flush
-sls caching flush --stage prod
+sls caching flush --stage production
 ```
 
 ### `sls caching disable`
@@ -242,19 +255,43 @@ sls caching flush --stage prod
 
 ```bash
 sls caching disable
-sls caching disable --stage prod
+sls caching disable --stage production
+```
+
+### `sls caching preview`
+
+Dry-run — print every patch operation a `sls deploy` would apply, without calling AWS write APIs. Useful for verifying config in CI gates and reviewing exact changes before committing:
+
+```bash
+sls caching preview --stage production
+# --- Cache Preview (dry-run) ---
+#   REST API:    abc123def4
+#   Stage:       production
+#   Cluster:     enabled
+#   Size:        0.5 GB
+#   Default TTL: 300s
+#   Operations:  6 (would chunk into 1 UpdateStage call(s))
+#
+#   replace /*/*/caching/enabled  →  false
+#   replace /cacheClusterEnabled  →  true
+#   replace /cacheClusterSize     →  0.5
+#   replace /~1users~1{id}/GET/caching/enabled       →  true
+#   replace /~1users~1{id}/GET/caching/ttlInSeconds  →  600
+#   replace /~1users~1{id}/GET/caching/dataEncrypted →  true
+#
+# No AWS write APIs were called. Run `sls deploy` to apply.
 ```
 
 ## ⚠️ Removing This Plugin
 
-> **Critical:** If you remove the plugin from `serverless.yml` without disabling the cache first, the cache cluster continues running on AWS and you will be billed for it indefinitely.
+> **Critical:** If you remove the plugin from `serverless.yml` without disabling the cache first, the cache cluster continues running on AWS and you will be billed for it indefinitely. The community `serverless-api-gateway-caching` plugin has the same trap — see the [reproducible end-to-end demo on real AWS](https://github.com/ofri-peretz/serverless/blob/main/docs/ghost-billing-reproduction.md) for proof and cost projections.
 
 ### Safe removal procedure
 
 ```bash
 # Step 1: Disable the cache cluster on AWS
-sls caching disable --stage dev
-sls caching disable --stage prod    # repeat for each stage
+sls caching disable --stage development
+sls caching disable --stage production    # repeat for each stage
 
 # Step 2: Edit serverless.yml
 #   - Remove '@interlace/serverless-api-gateway-caching' from plugins
@@ -262,8 +299,8 @@ sls caching disable --stage prod    # repeat for each stage
 #   - Remove 'caching' from function http events
 
 # Step 3: Deploy clean
-sls deploy --stage dev
-sls deploy --stage prod
+sls deploy --stage development
+sls deploy --stage production
 
 # Step 4: Uninstall
 npm uninstall @interlace/serverless-api-gateway-caching
@@ -274,6 +311,7 @@ npm uninstall @interlace/serverless-api-gateway-caching
 API Gateway cache clusters are provisioned resources that cost ~$0.02/hour ($14.40/month for 0.5 GB). They are **not** part of your CloudFormation stack — they're managed via the `UpdateStage` API at deploy time.
 
 When you remove a caching plugin and redeploy:
+
 - CloudFormation doesn't know about the cache cluster → it stays running
 - No plugin hooks fire → nothing disables it
 - You get ghost billing until you manually disable it in the AWS console
@@ -334,47 +372,63 @@ sls caching status    # verify cache is active
 
 ### Config key mapping
 
-| Community Plugin | @interlace | Notes |
-|---|---|---|
-| `apiGatewayCaching` | `interlaceCaching` | Top-level config key |
-| `apiGatewayIsShared` | `sharedApiGateway` | Renamed |
-| `endpointsInheritCloudWatchSettingsFromStage` | Same | No change |
-| `additionalEndpoints` | Same | No change |
-| `clusterSize` | Same | No change |
-| `ttlInSeconds` | Same | No change |
-| `dataEncrypted` | Same | No change |
-| `perKeyInvalidation` | Same | No change |
-| `basePath` | Same | No change |
-| `restApiId` | Same | No change |
+| Community Plugin                              | @interlace         | Notes                |
+| --------------------------------------------- | ------------------ | -------------------- |
+| `apiGatewayCaching`                           | `interlaceCaching` | Top-level config key |
+| `apiGatewayIsShared`                          | `sharedApiGateway` | Renamed              |
+| `endpointsInheritCloudWatchSettingsFromStage` | Same               | No change            |
+| `additionalEndpoints`                         | Same               | No change            |
+| `clusterSize`                                 | Same               | No change            |
+| `ttlInSeconds`                                | Same               | No change            |
+| `dataEncrypted`                               | Same               | No change            |
+| `perKeyInvalidation`                          | Same               | No change            |
+| `basePath`                                    | Same               | No change            |
+| `restApiId`                                   | Same               | No change            |
 
 ## Configuration Reference
 
 ### Global Settings (`custom.interlaceCaching`)
 
-| Property | Type | Default | Description |
-|---|---|---|---|
-| `enabled` | `boolean` | `false` | Enable the cache cluster |
-| `clusterSize` | `string` | `'0.5'` | Cache size in GB: `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118`, `237` |
-| `ttlInSeconds` | `number` | `300` | Default TTL (0–3600) |
-| `dataEncrypted` | `boolean` | `false` | Encrypt cached data at rest |
-| `flushOnDeploy` | `boolean` | `false` | Flush cache after every deploy |
-| `sharedApiGateway` | `boolean` | `false` | Skip stage-level cluster changes |
-| `restApiId` | `string` | auto | Explicit REST API ID (for cross-stack) |
-| `basePath` | `string` | — | Path prefix for shared gateways |
-| `endpointsInheritCloudWatchSettingsFromStage` | `boolean` | `true` | Copy CloudWatch settings from stage to methods |
-| `perKeyInvalidation` | `object` | — | Default invalidation settings |
-| `additionalEndpoints` | `array` | `[]` | CF-defined endpoints to cache |
+| Property                                      | Type      | Default | Description                                                                 |
+| --------------------------------------------- | --------- | ------- | --------------------------------------------------------------------------- |
+| `enabled`                                     | `boolean` | `false` | Enable the cache cluster                                                    |
+| `clusterSize`                                 | `string`  | `'0.5'` | Cache size in GB: `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118`, `237` |
+| `ttlInSeconds`                                | `number`  | `300`   | Default TTL (0–3600)                                                        |
+| `dataEncrypted`                               | `boolean` | `false` | Encrypt cached data at rest                                                 |
+| `flushOnDeploy`                               | `boolean` | `false` | Flush cache after every deploy                                              |
+| `sharedApiGateway`                            | `boolean` | `false` | Skip stage-level cluster changes                                            |
+| `restApiId`                                   | `string`  | auto    | Explicit REST API ID (for cross-stack)                                      |
+| `basePath`                                    | `string`  | —       | Path prefix for shared gateways                                             |
+| `endpointsInheritCloudWatchSettingsFromStage` | `boolean` | `true`  | Copy CloudWatch settings from stage to methods                              |
+| `perKeyInvalidation`                          | `object`  | —       | Default invalidation settings                                               |
+| `additionalEndpoints`                         | `array`   | `[]`    | CF-defined endpoints to cache                                               |
 
 ### Endpoint Settings (`http.caching`)
 
-| Property | Type | Default | Description |
-|---|---|---|---|
-| `enabled` | `boolean` | `false` | Enable caching for this endpoint |
-| `ttlInSeconds` | `number` | global | Override TTL |
-| `dataEncrypted` | `boolean` | global | Override encryption |
-| `inheritCloudWatchSettingsFromStage` | `boolean` | `true` | Override CloudWatch inheritance |
-| `perKeyInvalidation` | `object` | global | Override invalidation settings |
-| `cacheKeyParameters` | `array` | `[]` | Cache key parameters |
+| Property                             | Type      | Default | Description                      |
+| ------------------------------------ | --------- | ------- | -------------------------------- |
+| `enabled`                            | `boolean` | `false` | Enable caching for this endpoint |
+| `ttlInSeconds`                       | `number`  | global  | Override TTL                     |
+| `dataEncrypted`                      | `boolean` | global  | Override encryption              |
+| `inheritCloudWatchSettingsFromStage` | `boolean` | `true`  | Override CloudWatch inheritance  |
+| `perKeyInvalidation`                 | `object`  | global  | Override invalidation settings   |
+| `cacheKeyParameters`                 | `array`   | `[]`    | Cache key parameters             |
+
+## Release Verification
+
+Every claim in this README is backed by a reproducible E2E test. Before tagging a release, run:
+
+```bash
+npm run e2e
+```
+
+11-step verification: deploys real AWS resources, makes a request, confirms cache HIT on retry, runs `sls caching flush` and verifies invalidation, runs `sls caching disable` then `sls remove`, and asserts CloudFormation reports the stack as fully gone.
+
+Cost: ~$0.05–$0.10 per run (cache cluster × 5–10 minutes). Always cleans up via `try/finally` — even on test failure, an emergency `sls remove` runs so AWS isn't left billing for orphaned resources.
+
+See [`scripts/e2e/README.md`](./scripts/e2e/README.md) for prereqs, troubleshooting, and the full step-by-step.
+
+The release-verified claims are tracked in [`CLAIMS.md`](../../CLAIMS.md) at the repo root, alongside the static-evidence claims (zero deps, types coverage) sourced from the [`api-gateway-caching` competitive benchmark](../../benchmarks/suites/api-gateway-caching/).
 
 ## REST API Only
 

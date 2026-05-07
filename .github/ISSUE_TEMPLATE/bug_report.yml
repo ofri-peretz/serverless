@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report a bug in an @interlace/serverless-* package
-labels: ["bug"]
+labels: ['bug']
 body:
   - type: dropdown
     id: package
@@ -8,12 +8,12 @@ body:
       label: Package
       description: Which package is affected?
       options:
-        - "@interlace/serverless-devkit"
-        - "@interlace/serverless-plugin-openapi"
-        - "@interlace/serverless-plugin-package"
-        - "@interlace/serverless-plugin-proxy"
-        - "@interlace/serverless-plugin-build-layers"
-        - "@interlace/serverless-plugin-throttling"
+        - '@interlace/serverless-devkit'
+        - '@interlace/serverless-plugin-openapi'
+        - '@interlace/serverless-plugin-package'
+        - '@interlace/serverless-plugin-proxy'
+        - '@interlace/serverless-plugin-build-layers'
+        - '@interlace/serverless-plugin-throttling'
         - Other
     validations:
       required: true
@@ -35,14 +35,14 @@ body:
     id: version
     attributes:
       label: Package Version
-      placeholder: "1.0.0"
+      placeholder: '1.0.0'
   - type: input
     id: serverless-version
     attributes:
       label: Serverless Framework Version
-      placeholder: "4.30.0"
+      placeholder: '4.30.0'
   - type: input
     id: node-version
     attributes:
       label: Node.js Version
-      placeholder: "24.x"
+      placeholder: '24.x'

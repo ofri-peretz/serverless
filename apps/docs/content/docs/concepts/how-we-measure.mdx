@@ -1,0 +1,88 @@
+---
+title: How We Measure
+description: The methodology behind every benchmark on this site — what we measure, why these dimensions, how we score, and what we refuse to claim.
+---
+
+This page explains the methodology behind every benchmark result on this site. If you're reading this skeptically, that's the point — every claim should be auditable.
+
+## The contract
+
+Every claim that appears anywhere on this site (home page, docs, OG images) must be backed by a versioned benchmark result. The bar is set by the [Interlace Evidence Framework](https://github.com/ofri-peretz/agents/blob/main/interlace/evidence-framework.md):
+
+1. **Reproducible** — run `npm run bench:caching` (or the matching script for any other suite) from the serverless repo root and you get the same numbers, modulo competitor releases since the dated run.
+2. **Versioned** — every run produces a dated JSON file in [`benchmarks/benchmark-results/<suite>/`](https://github.com/ofri-peretz/serverless/tree/main/benchmarks/benchmark-results). We don't regenerate retroactively; history is preserved in `git log`.
+3. **Methodology disclosed** — this page, plus a `methodology.md` next to each suite, explains the rubric. Anyone can audit the weights.
+4. **Compared against a named landscape** — not "fast," but "this composite, against these specific competitor versions, on this hardware."
+
+If a claim doesn't satisfy all four, it's a hypothesis. Hypotheses live on roadmap pages; claims live in the dated result JSON.
+
+## Why composite scoring
+
+For a serverless plugin, "quality" is multi-dimensional:
+
+- A plugin can have great types but no cleanup behavior.
+- A plugin can be small but have 0 releases in 12 months.
+- A plugin can have many CLI commands but ship no docs.
+
+No single metric captures this. The composite — a weighted average across 7 dimensions, each normalized to `[0, 1]` — surfaces the trade-offs honestly. You can see Interlace **lose** on Bundle Weight (we ship `.d.ts` so we're heavier) while **winning** the composite. The rubric doesn't hide trade-offs — it shows them.
+
+## The seven dimensions
+
+| Dimension | Weight | What it measures | Why this weight |
+|---|---:|---|---|
+| **Lifecycle Correctness** | 25% | Does `sls remove` clean up cache clusters? Are cleanup hooks registered? | Highest stakes — orphaned resources mean real-money "ghost billing" |
+| **TypeScript Coverage** | 15% | Ships `.d.ts`? Strict types? Inferred config schema? | Catches misconfigs at edit time vs deploy time — saves hours per error |
+| **Maintenance Signal** | 15% | Days since last publish + releases in last 12 months | Stale infrastructure plugins are landmines (they break with framework updates) |
+| **CLI Surface** | 15% | Number of working `sls <plugin> <cmd>` subcommands | Users get observability/control for free |
+| **Bundle Weight** | 10% | Unpacked tarball size + transitive dep count | Lower = less attack surface, faster installs |
+| **Hook Coverage** | 10% | Lifecycle hooks listened to | More hooks = more correctness opportunities |
+| **Documentation Quality** | 10% | README has Installation/Usage/TypeScript/Lifecycle sections | Adoption-blocker if missing |
+
+Weights sum to 100%. They're declared in [`benchmarks/lib/score.ts`](https://github.com/ofri-peretz/serverless/blob/main/benchmarks/lib/score.ts) — change them via PR, never silently.
+
+## Score normalization
+
+Per dimension, raw measurements collapse to `[0, 1]`:
+
+- **Binary** (TypeScript Coverage, Lifecycle Correctness): 0 or 1.
+- **Counted** (CLI Surface, Hook Coverage): `count / ceiling`, capped at 1.0. Ceilings declared in code.
+- **Inverse** (Bundle Weight): best (smallest) value scores 1.0, worst scores 0.0, others linear.
+- **Decay** (Maintenance Signal): 1.0 for ≤90 days since publish, linear decline to 0.0 at 365 days.
+
+The composite = `Σ(dimension_score × weight) / Σ(weights of dimensions with non-null scores)`. Dimensions returning `null` (because measurement isn't yet wired up) are excluded from numerator AND denominator. Partial measurement still produces a valid composite — just over fewer dimensions.
+
+## What we refuse to claim
+
+These are anti-patterns the framework explicitly forbids:
+
+| Anti-pattern | Why we refuse |
+|---|---|
+| "Up to 10x faster" with no methodology | Not reproducible |
+| Bench result in a slide deck only | Not versioned |
+| "We tested against the latest version of competitor X" | Doesn't record which version — not reproducible |
+| Cherry-picked corpus that favors one plugin | Comparison set must be defensible (we add competitors based on npm-popularity, not curation) |
+| Asserting "best UX" with no rubric | Subjective; can't be a benchmark |
+
+If you see a claim on this site that doesn't link to a result file in [`benchmarks/benchmark-results/`](https://github.com/ofri-peretz/serverless/tree/main/benchmarks/benchmark-results), open an issue — it's a bug.
+
+## Comparison set selection
+
+For each category we benchmark, the comparison set is fixed and grows over time. Adding a competitor:
+
+1. Edit `benchmarks/suites/<category>/competitors.json`.
+2. Document why this competitor matters (e.g., dominant npm downloads, official AWS plugin).
+3. Re-run via `npm run bench:<category>` (e.g. `npm run bench:caching`); commit the new dated JSON.
+
+Competitors are NOT removed unless they're truly abandoned (no publishes in 24 months). Removing a competitor would let us hide an unfavorable comparison — that's exactly the trust we're trying to build.
+
+## Reading the result JSON
+
+Each `latest.json` follows a [standard schema](https://github.com/ofri-peretz/agents/blob/main/interlace/evidence-framework.md#standard-result-schema). Key fields:
+
+- `installedVersions` — exact npm versions tested. If a number on this site looks off, check this first; a competitor may have shipped a new version since the last run.
+- `methodology.dimensions` — the weights at the time of the run. Matches the table above.
+- `plugins.<id>.dimensionScores` — per-dimension `[0, 1]` for that plugin.
+- `plugins.<id>.measurements` — raw values that fed the scores (raw deps count, raw KB, raw days, etc.).
+- `summary.ranked` — sorted plugin ids, winner first.
+
+If you want to verify a number anywhere on this site, open the JSON and trace it: measurement → dimension score → composite contribution. The math is closed; nothing's hidden.
