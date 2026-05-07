@@ -1,6 +1,6 @@
 {
   "name": "@interlace/serverless-api-gateway-caching",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "API Gateway caching plugin for Serverless Framework — cache clusters, flush commands, cleanup hooks, and full AWS API coverage",
   "type": "module",
   "sideEffects": false,
