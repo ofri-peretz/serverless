@@ -1,0 +1,49 @@
+# Excludes for Vercel CLI deploys (`vercel deploy`). Trims the upload to source
+# files only — without this, the CLI ships node_modules + .next + e2e/runs +
+# .serverless artifacts and trips the 100MB-per-file limit.
+#
+# Git-triggered auto-deploys ignore this file (they use git-tracked files only).
+
+# Build / cache directories
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+
+# Test artifacts & coverage
+coverage/
+**/coverage/
+.nyc_output/
+**/.nyc_output/
+test-results/
+**/test-results/
+*.junit.xml
+
+# Plugin E2E run logs (each is a serialized AWS response — many MB)
+**/e2e/runs/
+
+# Lambda/Serverless artifacts
+.serverless/
+**/.serverless/
+*.zip
+
+# Editor/OS junk
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+
+# Git
+.git/
+.gitignore
