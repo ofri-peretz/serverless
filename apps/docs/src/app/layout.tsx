@@ -4,6 +4,8 @@ import {
   createRootMetadata,
   DocsRootLayout,
 } from '#interlace/layouts/root-layout';
+import { PostHogProvider } from '@/components/posthog-provider';
+import { PostHogPageviewTracker } from '@/components/posthog-pageview-tracker';
 
 export const metadata = createRootMetadata({
   title: '@interlace/serverless — TypeScript Serverless Plugins',
@@ -26,5 +28,10 @@ export const metadata = createRootMetadata({
 });
 
 export default function Layout({ children }: { children: ReactNode }) {
-  return <DocsRootLayout>{children}</DocsRootLayout>;
+  return (
+    <PostHogProvider>
+      <PostHogPageviewTracker />
+      <DocsRootLayout>{children}</DocsRootLayout>
+    </PostHogProvider>
+  );
 }
