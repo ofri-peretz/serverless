@@ -1,6 +1,8 @@
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import reactA11y from 'eslint-plugin-react-a11y';
+import reactFeatures from 'eslint-plugin-react-features';
 
 /**
  * @interlace ecosystem ESLint config — strict for published-package source,
@@ -133,6 +135,51 @@ export default [
       // serverless-api-gateway-caching plugin did with `String.prototype.replaceAll`).
       // Lives in ESLint core, not the unicorn plugin.
       'no-extend-native': 'error',
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 7. React surfaces — accessibility + features (TSX only)
+  //
+  //    react-a11y:     WCAG 2.1 A/AA — Level A violations as errors,
+  //                    AA/AAA as warnings. Spread the recommended preset
+  //                    (it embeds its own plugins:{} map).
+  //    react-features: Core React correctness + security rules
+  //                    (jsx-key, jsx-no-target-blank, hooks-exhaustive-deps …).
+  //                    The published recommended config uses categorized rule
+  //                    names (react/jsx-key) that ESLint 9 flat-config cannot
+  //                    resolve, so we register the plugin under "react-features"
+  //                    and spell out the flat-name equivalents explicitly.
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    ...reactA11y.configs.recommended,
+    files: ['**/*.tsx'],
+  },
+  {
+    files: ['**/*.tsx'],
+    plugins: {
+      'react-features': reactFeatures,
+    },
+    rules: {
+      // Core correctness
+      'react-features/jsx-key': 'error',
+      'react-features/no-children-prop': 'warn',
+      'react-features/no-danger': 'warn',
+      'react-features/no-string-refs': 'error',
+      // Downgraded to warn: this codebase uses Framer Motion / animation libs
+      // whose custom prop names (initial, animate, exit, whileHover …) are
+      // flagged as unknown DOM properties without type-awareness context.
+      'react-features/no-unknown-property': 'warn',
+      'react-features/hooks-exhaustive-deps': 'warn',
+      // Security
+      'react-features/jsx-no-target-blank': 'error',
+      'react-features/jsx-no-script-url': 'error',
+      'react-features/jsx-no-duplicate-props': 'error',
+      'react-features/no-danger-with-children': 'error',
+      'react-features/no-deprecated': 'warn',
+      // Performance
+      'react-features/no-unnecessary-rerenders': 'warn',
+      'react-features/react-render-optimization': 'warn',
     },
   },
 ];
