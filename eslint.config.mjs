@@ -3,6 +3,23 @@ import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import reactA11y from 'eslint-plugin-react-a11y';
 import reactFeatures from 'eslint-plugin-react-features';
+// Interlace ecosystem — à-la-carte (each plugin's own `recommended`), NOT the
+// @interlace/eslint-config meta-config. Only the relevant, currently-working
+// plugins are wired:
+//   security: secure-coding + node-security (the rules that fire for a
+//     build-time Serverless-Framework plugin repo).
+//   quality:  conventions, import-next, reliability, modularity, modernization.
+// SKIPPED until their PUBLISHED builds are fixed + republished (dogfooding
+// findings 2026-06-20; see agents memory eslint-dogfooding-doctrine):
+//   maintainability, operability — doubled-namespace `recommended` breaks config
+//     resolution; lambda-security — invalid esquery `:exit` crashes ESLint 9.39.
+import { configs as secureCodingCfg } from 'eslint-plugin-secure-coding';
+import { configs as nodeSecurityCfg } from 'eslint-plugin-node-security';
+import { configs as conventionsCfg } from 'eslint-plugin-conventions';
+import { configs as importNextCfg } from 'eslint-plugin-import-next';
+import { configs as reliabilityCfg } from 'eslint-plugin-reliability';
+import { configs as modularityCfg } from 'eslint-plugin-modularity';
+import { configs as modernizationCfg } from 'eslint-plugin-modernization';
 
 /**
  * @interlace ecosystem ESLint config — strict for published-package source,
@@ -48,6 +65,20 @@ export default [
       reportUnusedDisableDirectives: 'error',
     },
   },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 1b. Interlace dogfooding — à-la-carte recommended presets (see the import
+  //     block for which plugins are wired vs skipped, and why). The react
+  //     preset is omitted — react-features `recommended` uses categorized rule
+  //     names flat-config can't resolve; tier 7 hand-wires it.
+  // ────────────────────────────────────────────────────────────────────────
+  secureCodingCfg.recommended,
+  nodeSecurityCfg.recommended,
+  conventionsCfg.recommended,
+  importNextCfg.recommended,
+  reliabilityCfg.recommended,
+  modularityCfg.recommended,
+  modernizationCfg.recommended,
 
   // ────────────────────────────────────────────────────────────────────────
   // 2. TypeScript-only rules across the repo
