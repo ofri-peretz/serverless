@@ -224,9 +224,12 @@ export default [
   // ────────────────────────────────────────────────────────────────────────
   {
     rules: {
-      // The one error-level rule that fires on this codebase (101 hits in
-      // CI — network calls in build-time utils). Ratchet to error once fixed.
+      // Error-level interlace rules that fire on this codebase, kept at `warn`
+      // for the first-run baseline (ratchet to error as cleaned):
+      //  - network calls in build-time utils (~101 hits)
       'modularity/no-external-api-calls-in-utils': 'warn',
+      //  - ESM extensionful-import resolver noise (~93 hits), not a real backlog
+      'import-next/no-unresolved': 'warn',
     },
   },
 ];
