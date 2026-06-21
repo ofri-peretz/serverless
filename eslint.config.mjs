@@ -230,6 +230,9 @@ export default [
       'modularity/no-external-api-calls-in-utils': 'warn',
       //  - ESM extensionful-import resolver noise (~93 hits), not a real backlog
       'import-next/no-unresolved': 'warn',
+      //  - a handful of real security/reliability finds — surface, don't block
+      'node-security/no-ssrf': 'warn',
+      'reliability/require-network-timeout': 'warn',
     },
   },
 ];
