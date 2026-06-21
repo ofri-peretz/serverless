@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:oxlint": "oxlint -c ../../.oxlintrc.json --deny=correctness --deny=suspicious --deny=perf --allow=no-await-in-loop --allow=no-shadow --allow=no-underscore-dangle --allow=unicorn/no-array-sort src",
     "test": "vitest run",
     "test:watch": "vitest",
     "postinstall": "fumadocs-mdx"

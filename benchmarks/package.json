@@ -10,7 +10,8 @@
     "bench:cold-start": "tsx suites/cold-start/run.ts",
     "bench:feature-coverage": "tsx suites/feature-coverage/run.ts",
     "bench": "npm run bench:caching",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint:oxlint": "oxlint -c ../.oxlintrc.json --deny=correctness --deny=suspicious --deny=perf --allow=no-await-in-loop --allow=no-shadow --allow=no-underscore-dangle --allow=unicorn/no-array-sort suites lib"
   },
   "engines": {
     "node": ">=20"
