@@ -52,6 +52,8 @@ export default [
       'apps/docs/.interlace/**',
       // Out-of-source upstream clones (read-only reference)
       'oos/**',
+      // oxlint JS-plugin shims — CJS tooling, legit `require()`.
+      'tools/oxlint-plugins/**',
     ],
   },
 
@@ -211,6 +213,20 @@ export default [
       // Performance
       'react-features/no-unnecessary-rerenders': 'warn',
       'react-features/react-render-optimization': 'warn',
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 8. Interlace first-run baseline — non-blocking.
+  //    Pre-existing findings stay at `warn` so PRs aren't blocked; ratchet each
+  //    to `error` as the codebase is cleaned. See agents memory
+  //    eslint-dogfooding-doctrine ("baseline-then-ratchet").
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    rules: {
+      // The one error-level rule that fires on this codebase (101 hits in
+      // CI — network calls in build-time utils). Ratchet to error once fixed.
+      'modularity/no-external-api-calls-in-utils': 'warn',
     },
   },
 ];
