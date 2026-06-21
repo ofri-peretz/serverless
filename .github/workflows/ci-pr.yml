@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: 'npm'
 
       - run: npm ci
@@ -69,7 +69,7 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: 'npm'
 
       - name: 📦 Install dependencies
@@ -84,20 +84,12 @@ jobs:
   # ESLint has moved to its own parallel `eslint` job above.
   # ──────────────────────────────────────────────────────────────────────
   ci:
-    name: CI (Node ${{ matrix.node-version }})
+    name: CI
     needs: fast-gate
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        # Pinned to 24 — root tooling (turbo/vitest/etc) and engines.node=24.x
-        # with engine-strict=true require it. Cross-version support for the
-        # *published* plugins themselves is verified in their per-package
-        # release tests, not the monorepo CI matrix.
-        node-version: [24]
 
     steps:
       - name: 📥 Checkout repository
@@ -131,7 +123,7 @@ jobs:
         if: steps.docs_only.outputs.docs_only != 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: .nvmrc
           cache: 'npm'
 
       - name: 📦 Install dependencies
