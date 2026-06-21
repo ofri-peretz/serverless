@@ -17,7 +17,10 @@ concurrency:
 jobs:
   # ──────────────────────────────────────────────────────────────────────
   # Fast gate — oxlint (~200ms) + format check
-  # Fails fast before expensive Node matrix starts
+  # oxlint is scoped to turbo-affected workspaces (per-package lint:oxlint
+  # tasks), so only changed packages are linted. fetch-depth: 0 is required
+  # for turbo to compute the affected diff against the base ref.
+  # Runs in PARALLEL with the `eslint` job below (no `needs` between them).
   # ──────────────────────────────────────────────────────────────────────
   fast-gate:
     name: Fast Gate (oxlint + format)
@@ -27,6 +30,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -35,15 +40,48 @@ jobs:
 
       - run: npm ci
 
-      - name: ⚡ oxlint (fast pass)
-        run: npm run ci:oxlint
+      - name: ⚡ oxlint (fast pass, turbo-affected)
+        run: npx turbo run lint:oxlint --affected --output-logs errors-only
 
       - name: 📐 Prettier format check
         run: npm run ci:format
 
   # ──────────────────────────────────────────────────────────────────────
-  # Deep gate — ESLint + TypeScript + tests + build
-  # Runs in parallel per Node version, waits for fast-gate
+  # ESLint deep pass — its OWN job, runs in PARALLEL with the oxlint Fast
+  # Gate (no `needs`, neither blocks the other). Whole-repo `eslint .`:
+  # the flat config is path-tiered (severity depends on root-relative
+  # paths), so per-package `eslint src/` scoping would mis-tier files and
+  # surface false errors — hence eslint is NOT turbo-affected-scoped here.
+  # See report / commit message for the limitation.
+  # ──────────────────────────────────────────────────────────────────────
+  eslint:
+    name: ESLint (deep pass)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔍 ESLint
+        run: npm run ci:lint
+
+  # ──────────────────────────────────────────────────────────────────────
+  # Deep gate — TypeScript + tests + build
+  # Runs per Node version, waits for fast-gate (fail-fast economics).
+  # ESLint has moved to its own parallel `eslint` job above.
   # ──────────────────────────────────────────────────────────────────────
   ci:
     name: CI (Node ${{ matrix.node-version }})
@@ -117,10 +155,6 @@ jobs:
       - name: 🧪 Test
         if: steps.docs_only.outputs.docs_only != 'true'
         run: npx turbo run test --output-logs errors-only
-
-      - name: 🔍 ESLint (deep pass)
-        if: steps.docs_only.outputs.docs_only != 'true'
-        run: npm run ci:lint
 
       - name: 🔍 Typecheck
         if: steps.docs_only.outputs.docs_only != 'true'

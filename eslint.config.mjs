@@ -1,6 +1,25 @@
 import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier';
+import reactA11y from 'eslint-plugin-react-a11y';
+import reactFeatures from 'eslint-plugin-react-features';
+// Interlace ecosystem — à-la-carte (each plugin's own `recommended`), NOT the
+// @interlace/eslint-config meta-config. Only the relevant, currently-working
+// plugins are wired:
+//   security: secure-coding + node-security (the rules that fire for a
+//     build-time Serverless-Framework plugin repo).
+//   quality:  conventions, import-next, reliability, modularity, modernization.
+// SKIPPED until their PUBLISHED builds are fixed + republished (dogfooding
+// findings 2026-06-20; see agents memory eslint-dogfooding-doctrine):
+//   maintainability, operability — doubled-namespace `recommended` breaks config
+//     resolution; lambda-security — invalid esquery `:exit` crashes ESLint 9.39.
+import { configs as secureCodingCfg } from 'eslint-plugin-secure-coding';
+import { configs as nodeSecurityCfg } from 'eslint-plugin-node-security';
+import { configs as conventionsCfg } from 'eslint-plugin-conventions';
+import { configs as importNextCfg } from 'eslint-plugin-import-next';
+import { configs as reliabilityCfg } from 'eslint-plugin-reliability';
+import { configs as modularityCfg } from 'eslint-plugin-modularity';
+import { configs as modernizationCfg } from 'eslint-plugin-modernization';
 
 /**
  * @interlace ecosystem ESLint config — strict for published-package source,
@@ -33,6 +52,8 @@ export default [
       'apps/docs/.interlace/**',
       // Out-of-source upstream clones (read-only reference)
       'oos/**',
+      // oxlint JS-plugin shims — CJS tooling, legit `require()`.
+      'tools/oxlint-plugins/**',
     ],
   },
 
@@ -46,6 +67,20 @@ export default [
       reportUnusedDisableDirectives: 'error',
     },
   },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 1b. Interlace dogfooding — à-la-carte recommended presets (see the import
+  //     block for which plugins are wired vs skipped, and why). The react
+  //     preset is omitted — react-features `recommended` uses categorized rule
+  //     names flat-config can't resolve; tier 7 hand-wires it.
+  // ────────────────────────────────────────────────────────────────────────
+  secureCodingCfg.recommended,
+  nodeSecurityCfg.recommended,
+  conventionsCfg.recommended,
+  importNextCfg.recommended,
+  reliabilityCfg.recommended,
+  modularityCfg.recommended,
+  modernizationCfg.recommended,
 
   // ────────────────────────────────────────────────────────────────────────
   // 2. TypeScript-only rules across the repo
@@ -133,6 +168,71 @@ export default [
       // serverless-api-gateway-caching plugin did with `String.prototype.replaceAll`).
       // Lives in ESLint core, not the unicorn plugin.
       'no-extend-native': 'error',
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 7. React surfaces — accessibility + features (TSX only)
+  //
+  //    react-a11y:     WCAG 2.1 A/AA — Level A violations as errors,
+  //                    AA/AAA as warnings. Spread the recommended preset
+  //                    (it embeds its own plugins:{} map).
+  //    react-features: Core React correctness + security rules
+  //                    (jsx-key, jsx-no-target-blank, hooks-exhaustive-deps …).
+  //                    The published recommended config uses categorized rule
+  //                    names (react/jsx-key) that ESLint 9 flat-config cannot
+  //                    resolve, so we register the plugin under "react-features"
+  //                    and spell out the flat-name equivalents explicitly.
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    ...reactA11y.configs.recommended,
+    files: ['**/*.tsx'],
+  },
+  {
+    files: ['**/*.tsx'],
+    plugins: {
+      'react-features': reactFeatures,
+    },
+    rules: {
+      // Core correctness
+      'react-features/jsx-key': 'error',
+      'react-features/no-children-prop': 'warn',
+      'react-features/no-danger': 'warn',
+      'react-features/no-string-refs': 'error',
+      // Downgraded to warn: this codebase uses Framer Motion / animation libs
+      // whose custom prop names (initial, animate, exit, whileHover …) are
+      // flagged as unknown DOM properties without type-awareness context.
+      'react-features/no-unknown-property': 'warn',
+      'react-features/hooks-exhaustive-deps': 'warn',
+      // Security
+      'react-features/jsx-no-target-blank': 'error',
+      'react-features/jsx-no-script-url': 'error',
+      'react-features/jsx-no-duplicate-props': 'error',
+      'react-features/no-danger-with-children': 'error',
+      'react-features/no-deprecated': 'warn',
+      // Performance
+      'react-features/no-unnecessary-rerenders': 'warn',
+      'react-features/react-render-optimization': 'warn',
+    },
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 8. Interlace first-run baseline — non-blocking.
+  //    Pre-existing findings stay at `warn` so PRs aren't blocked; ratchet each
+  //    to `error` as the codebase is cleaned. See agents memory
+  //    eslint-dogfooding-doctrine ("baseline-then-ratchet").
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    rules: {
+      // Error-level interlace rules that fire on this codebase, kept at `warn`
+      // for the first-run baseline (ratchet to error as cleaned):
+      //  - network calls in build-time utils (~101 hits)
+      'modularity/no-external-api-calls-in-utils': 'warn',
+      //  - ESM extensionful-import resolver noise (~93 hits), not a real backlog
+      'import-next/no-unresolved': 'warn',
+      //  - a handful of real security/reliability finds — surface, don't block
+      'node-security/no-ssrf': 'warn',
+      'reliability/require-network-timeout': 'warn',
     },
   },
 ];
