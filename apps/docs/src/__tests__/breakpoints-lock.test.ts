@@ -101,8 +101,8 @@ describe('Breakpoint contract (BREAKPOINTS.md)', () => {
   it('package.json pins `tailwindcss` to ^4.1.18 or higher (no bare `^4`)', () => {
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON_PATH, 'utf-8'));
     const deps: Record<string, string> = {
-      ...(pkg.dependencies ?? {}),
-      ...(pkg.devDependencies ?? {}),
+      ...pkg.dependencies,
+      ...pkg.devDependencies,
     };
     const range = deps['tailwindcss'];
     expect(range, 'tailwindcss is not listed in this app').toBeTruthy();
@@ -122,8 +122,8 @@ describe('Breakpoint contract (BREAKPOINTS.md)', () => {
   it('package.json pins `@tailwindcss/postcss` to the same floor', () => {
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON_PATH, 'utf-8'));
     const deps: Record<string, string> = {
-      ...(pkg.dependencies ?? {}),
-      ...(pkg.devDependencies ?? {}),
+      ...pkg.dependencies,
+      ...pkg.devDependencies,
     };
     const range = deps['@tailwindcss/postcss'];
     // Some apps don't ship the postcss plugin directly (it can come via a
