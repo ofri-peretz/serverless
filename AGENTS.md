@@ -1,6 +1,6 @@
 # Agents — serverless repository
 
-> **See also:** [ARCHITECTURE.md](./ARCHITECTURE.md) for this repo's bird's-eye map, and [`../agents/ARCHITECTURE.md`](../agents/ARCHITECTURE.md) for the broader **Interlace** ecosystem (how this repo fits with `agents/` and `eslint/`).
+> **See also:** [ARCHITECTURE.md](./ARCHITECTURE.md) for this repo's bird's-eye map, and [`../agents/ARCHITECTURE.md`](../agents/ARCHITECTURE.md) for the broader **Interlace** ecosystem (how this repo fits with `agents/` and `eslint/`). For the synchronised viewport-breakpoint contract shared across `eslint`, `agents`, and `serverless`, see [BREAKPOINTS.md](./BREAKPOINTS.md).
 
 ## Purpose
 
