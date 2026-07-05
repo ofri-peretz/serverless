@@ -18,41 +18,63 @@ updates:
       - 'npm'
     commit-message:
       prefix: 'chore(deps)'
-      include: 'scope'
     groups:
-      # All dev/runtime deps in a single weekly PR — keeps merges atomic.
+      # Minor/patch dev/runtime deps in a single weekly PR — safe to batch.
+      # Majors (breaking-by-convention) are excluded so each opens its own PR
+      # and gets evaluated on its own merits instead of riding along silently.
       all-packages:
+        update-types:
+          - 'minor'
+          - 'patch'
         patterns:
           - '*'
-      # Group Turborepo packages together
+      # Group Turborepo packages together (minor/patch only, see above)
       turbo:
+        update-types:
+          - 'minor'
+          - 'patch'
         patterns:
           - 'turbo'
           - 'eslint-config-turbo'
-      # Group changesets together
+      # Group changesets together (minor/patch only, see above)
       changesets:
+        update-types:
+          - 'minor'
+          - 'patch'
         patterns:
           - '@changesets/*'
-      # Group TypeScript ESLint together
+      # Group TypeScript ESLint together (minor/patch only, see above)
       typescript-eslint:
+        update-types:
+          - 'minor'
+          - 'patch'
         patterns:
           - '@typescript-eslint/*'
           - 'typescript-eslint'
-      # Group the Vitest universe
+      # Group the Vitest universe (minor/patch only, see above)
       testing:
+        update-types:
+          - 'minor'
+          - 'patch'
         patterns:
           - 'vitest'
           - '@vitest/*'
           - '@testing-library/*'
-      # Group Vite + dts plugin
+      # Group Vite + dts plugin (minor/patch only, see above)
       build-tools:
+        update-types:
+          - 'minor'
+          - 'patch'
         patterns:
           - 'vite'
           - 'vite-plugin-*'
           - '@vitejs/*'
           - 'tslib'
-      # Group Fumadocs + Next together (docs site)
+      # Group Fumadocs + Next together (docs site) (minor/patch only, see above)
       docs:
+        update-types:
+          - 'minor'
+          - 'patch'
         patterns:
           - 'fumadocs-*'
           - '@fumadocs/*'
@@ -79,7 +101,6 @@ updates:
       - 'github-actions'
     commit-message:
       prefix: 'chore(ci)'
-      include: 'scope'
     groups:
       all-actions:
         patterns:
