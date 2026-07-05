@@ -108,8 +108,8 @@ export function setVisitorProfileOnFirstPageview(
       last_visitor_profile: profile,
       last_seen_app: 'serverless_docs',
     });
-  } catch {
-    // swallow
+  } catch (err) {
+    console.warn('visitor profile posthog sync failed', err);
   }
   return profile;
 }

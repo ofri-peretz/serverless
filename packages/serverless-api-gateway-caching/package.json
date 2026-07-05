@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "@interlace/serverless-devkit": "*",
-    "tsx": "^4.20.0"
+    "tsx": "^4.23.0"
   },
   "publishConfig": {
     "access": "public"

@@ -258,8 +258,7 @@ describe('role-builder — Bug 2 (Policies array leak)', () => {
     applyPerFunctionRoles({ serverless, provider, settings: DEFAULT_SETTINGS });
 
     const perFunctionRole = template.Resources.FnIamRoleLambdaExecution as
-      | { Properties: IamRoleProperties }
-      | undefined;
+      { Properties: IamRoleProperties } | undefined;
     expect(perFunctionRole).toBeDefined();
     const policies = perFunctionRole?.Properties.Policies;
     expect(policies).toBeDefined();

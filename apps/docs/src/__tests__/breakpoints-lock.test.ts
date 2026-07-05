@@ -77,7 +77,11 @@ describe('Breakpoint contract (BREAKPOINTS.md)', () => {
     // Viewport arbitraries look like `min-[920px]:flex` or `max-[640px]:hidden`.
     // Container queries (`@min-[…]:`, `@max-[…]:`) are different — they carry
     // a leading `@` and are explicitly allowed.
-    const PATTERN = /(?<![@\w])(?:min|max)-\[\d+(?:\.\d+)?px\]:/;
+    // Explicit two-branch alternation, not `\d+(?:\.\d+)?`: functionally
+    // identical, but avoids a nested-optional-quantifier shape that trips
+    // static ReDoS analysis even though the two quantifiers here can't
+    // actually exchange characters (digits vs. a literal `.` boundary).
+    const PATTERN = /(?<![@\w])(?:min|max)-\[(?:\d+\.\d+|\d+)px\]:/g;
     const offenders: Array<{ file: string; matches: string[] }> = [];
     for (const file of sourceFiles) {
       const source = readFileSync(file, 'utf-8');
@@ -86,7 +90,7 @@ describe('Breakpoint contract (BREAKPOINTS.md)', () => {
       const stripped = source
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/\/\/.*$/gm, '');
-      const matches = stripped.match(new RegExp(PATTERN, 'g'));
+      const matches = stripped.match(PATTERN);
       if (matches && matches.length > 0) {
         offenders.push({ file, matches });
       }

@@ -18,20 +18,20 @@ The data surfaces **one large abandoned-incumbent opportunity not currently in t
 
 Each candidate `@interlace/*` plugin scored against its primary incumbent.
 
-| Replacement candidate                                       | Primary incumbent(s)                     | Incumbent dl/wk | Last publish | Maintenance signal    |
+| Replacement candidate | Primary incumbent(s) | Incumbent dl/wk | Last publish | Maintenance signal |
 | ----------------------------------------------------------- | ---------------------------------------- | --------------: | ------------ | --------------------- | --------------------------------------------------------------------------- |
-| **`serverless-iam-roles-per-function`**                     | `serverless-iam-roles-per-function`      |     **118,761** | 2021-05-21   | 🔴 abandoned (5 yr)   |
-| **`serverless-plugin-security`**                            | `serverless-associate-waf`               |          40,164 | 2020-04-17   | 🔴 abandoned (6 yr)   |
-| (same)                                                      | `serverless-plugin-tracing`              |          31,738 | 2017-10-13   | 🔴 abandoned (8.5 yr) |
-| **`serverless-package`**                                    | `serverless-plugin-common-excludes`      |          27,782 | 2021-07-06   | 🔴 abandoned (5 yr)   |
-| (same)                                                      | `serverless-plugin-include-dependencies` |          24,743 | 2024-07-22   | 🟡 slow (650 d)       |
-| **`serverless-throttling`**                                 | `serverless-api-gateway-throttling`      |          42,677 | 2023-03-19   | 🟡 slow (3 yr)        |
-| **`serverless-plugin-canary-deployments`** ← NOT in roadmap | `serverless-plugin-canary-deployments`   |          25,170 | 2022-04-11   | 🔴 abandoned (4 yr)   |
-| **`serverless-openapi`**                                    | `serverless-aws-documentation`           |          14,916 | 2018-04-18   | 🔴 abandoned (8 yr)   |
-| (same)                                                      | `serverless-openapi-documenter`          |           4,142 | recent       | 🟡 niche / fragmented |
-| **`serverless-plugin-observability`**                       | `serverless-log-forwarding`              |           3,756 | 2024-11-27   | 🟡 slow (522 d)       |
-| **`serverless-offline-scheduler`** ← NOT in roadmap         | `serverless-offline-scheduler`           |          16,880 | 2021-06-07   | 🔴 abandoned (5 yr)   |
-| **(skipped)** `serverless-plugin-typescript`                | `serverless-plugin-typescript`           |         150,601 | 2023-06-05   | 🔴 archived           | sls v4 native TS replaces this — devkit `doctor` migration story handles it |
+| **`serverless-iam-roles-per-function`** | `serverless-iam-roles-per-function` | **118,761** | 2021-05-21 | 🔴 abandoned (5 yr) |
+| **`serverless-plugin-security`** | `serverless-associate-waf` | 40,164 | 2020-04-17 | 🔴 abandoned (6 yr) |
+| (same) | `serverless-plugin-tracing` | 31,738 | 2017-10-13 | 🔴 abandoned (8.5 yr) |
+| **`serverless-package`** | `serverless-plugin-common-excludes` | 27,782 | 2021-07-06 | 🔴 abandoned (5 yr) |
+| (same) | `serverless-plugin-include-dependencies` | 24,743 | 2024-07-22 | 🟡 slow (650 d) |
+| **`serverless-throttling`** | `serverless-api-gateway-throttling` | 42,677 | 2023-03-19 | 🟡 slow (3 yr) |
+| **`serverless-plugin-canary-deployments`** ← NOT in roadmap | `serverless-plugin-canary-deployments` | 25,170 | 2022-04-11 | 🔴 abandoned (4 yr) |
+| **`serverless-openapi`** | `serverless-aws-documentation` | 14,916 | 2018-04-18 | 🔴 abandoned (8 yr) |
+| (same) | `serverless-openapi-documenter` | 4,142 | recent | 🟡 niche / fragmented |
+| **`serverless-plugin-observability`** | `serverless-log-forwarding` | 3,756 | 2024-11-27 | 🟡 slow (522 d) |
+| **`serverless-offline-scheduler`** ← NOT in roadmap | `serverless-offline-scheduler` | 16,880 | 2021-06-07 | 🔴 abandoned (5 yr) |
+| **(skipped)** `serverless-plugin-typescript` | `serverless-plugin-typescript` | 150,601 | 2023-06-05 | 🔴 archived | sls v4 native TS replaces this — devkit `doctor` migration story handles it |
 
 **Active competitors — DO NOT try to replace:**
 

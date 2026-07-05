@@ -40,14 +40,7 @@ export interface IamRoleConfig {
 export interface HttpEvent {
   path: string;
   method:
-    | 'get'
-    | 'post'
-    | 'put'
-    | 'patch'
-    | 'delete'
-    | 'head'
-    | 'options'
-    | 'any';
+    'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'options' | 'any';
   cors?: boolean | CorsConfig;
   authorizer?: AuthorizerConfig | string;
   private?: boolean;

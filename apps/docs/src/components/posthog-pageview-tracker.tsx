@@ -26,13 +26,13 @@ function PageviewTrackerInner() {
         if (isPlausibleDistinctId(utm.phDistinctId)) {
           try {
             posthog.identify?.(utm.phDistinctId as string);
-          } catch {
-            // swallow
+          } catch (err) {
+            console.warn('posthog identify failed', err);
           }
         }
         setVisitorProfileOnFirstPageview({ utm, landingPath: pathname });
-      } catch {
-        // defensive
+      } catch (err) {
+        console.warn('first-pageview tracking failed', err);
       }
     }
     let url = pathname;

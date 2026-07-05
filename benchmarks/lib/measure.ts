@@ -6,8 +6,7 @@
  * (npm registry data + tarball inspection + local source grep).
  */
 
-import { execSync } from 'node:child_process';
-import { readFileSync, statSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** A simplified shape of an npm packument. We only type the fields we read. */
@@ -100,8 +99,9 @@ export function readLocalPackument(localSourceDir: string): Packument | null {
       }
     };
     walk(distPath);
-  } catch {
+  } catch (err) {
     // dist/ may not exist if the package isn't built — leave size at 0
+    console.warn(`unpackedSize: ${(err as Error).message}`);
   }
 
   return {
@@ -154,20 +154,58 @@ export function unpackedSizeKB(packument: Packument): number | null {
   return Math.round(size / 1024);
 }
 
+/** Recursively lists every file under `dir` (skips node_modules/dist/.git). */
+function walkFiles(dir: string): string[] {
+  if (!existsSync(dir)) return [];
+  const out: string[] = [];
+  const walk = (current: string): void => {
+    for (const entry of readdirSync(current)) {
+      const full = join(current, entry);
+      if (statSync(full).isDirectory()) {
+        if (entry === 'node_modules' || entry === 'dist' || entry === '.git')
+          continue;
+        walk(full);
+      } else {
+        out.push(full);
+      }
+    }
+  };
+  walk(dir);
+  return out;
+}
+
+/**
+ * Count `pattern` matches across every file under `dir` (in-process regex
+ * scan — no shell involved, replacing the previous `grep`/`sort`/`wc` pipe).
+ */
+function countMatchesInDir(
+  dir: string,
+  pattern: RegExp,
+  unique: boolean,
+): number {
+  const matches: string[] = [];
+  for (const file of walkFiles(dir)) {
+    let content: string;
+    try {
+      content = readFileSync(file, 'utf-8');
+    } catch {
+      continue;
+    }
+    matches.push(...(content.match(pattern) ?? []));
+  }
+  return unique ? new Set(matches).size : matches.length;
+}
+
 /**
  * Count Serverless Framework lifecycle hooks listened to in a local source
- * tree. Greps for `'foo:bar:baz':` patterns inside src/.
+ * tree. Matches `'foo:bar:baz':` patterns inside src/.
  */
 export function countHooksInLocalSource(sourceDir: string): number {
-  try {
-    const grep = execSync(
-      `grep -rEoh "['\\"][a-z]+:[a-z:]+['\\"]\\s*:" "${sourceDir}/src" 2>/dev/null | sort -u | wc -l`,
-      { encoding: 'utf-8' },
-    );
-    return Number.parseInt(grep.trim(), 10) || 0;
-  } catch {
-    return 0;
-  }
+  return countMatchesInDir(
+    join(sourceDir, 'src'),
+    /['"][a-z]+:[a-z:]+['"]\s*:/g,
+    true,
+  );
 }
 
 /**
@@ -180,15 +218,11 @@ export function countHooksInLocalSource(sourceDir: string): number {
  * For the Interlace plugin (`flush`, `status`, `disable`, `preview`) → 4.
  */
 export function countCliCommands(sourceDir: string): number {
-  try {
-    const out = execSync(
-      `grep -rEoh "lifecycleEvents\\s*:" "${sourceDir}/src" 2>/dev/null | wc -l`,
-      { encoding: 'utf-8' },
-    );
-    return Number.parseInt(out.trim(), 10) || 0;
-  } catch {
-    return 0;
-  }
+  return countMatchesInDir(
+    join(sourceDir, 'src'),
+    /lifecycleEvents\s*:/g,
+    false,
+  );
 }
 
 export interface ReadmeQuality {
@@ -265,15 +299,13 @@ export function readLatestE2eVerdict(
  * `sls remove`.
  */
 export function hasRemovePhaseHook(sourceDir: string): boolean {
-  try {
-    const out = execSync(
-      `grep -rEoh "['\\"][a-z]+:remove:[a-z]+['\\"]" "${sourceDir}/src" 2>/dev/null | wc -l`,
-      { encoding: 'utf-8' },
-    );
-    return Number.parseInt(out.trim(), 10) > 0;
-  } catch {
-    return false;
-  }
+  return (
+    countMatchesInDir(
+      join(sourceDir, 'src'),
+      /['"][a-z]+:remove:[a-z]+['"]/g,
+      false,
+    ) > 0
+  );
 }
 
 /**
@@ -286,13 +318,11 @@ export function hasRemovePhaseHook(sourceDir: string): boolean {
  * For the community plugin (no commands) → false.
  */
 export function hasSafeOffboardingCommand(sourceDir: string): boolean {
-  try {
-    const out = execSync(
-      `grep -rEoh "(disable|cleanup|teardown|offboard|remove)\\s*:\\s*\\{" "${sourceDir}/src" 2>/dev/null | wc -l`,
-      { encoding: 'utf-8' },
-    );
-    return Number.parseInt(out.trim(), 10) > 0;
-  } catch {
-    return false;
-  }
+  return (
+    countMatchesInDir(
+      join(sourceDir, 'src'),
+      /(disable|cleanup|teardown|offboard|remove)\s*:\s*\{/g,
+      false,
+    ) > 0
+  );
 }

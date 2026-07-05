@@ -177,9 +177,9 @@ custom:
 custom:
   interlaceCaching:
     enabled: true
-    sharedApiGateway: true                                           # skip stage-level cluster changes
-    restApiId: ${cf:api-gateway-${self:provider.stage}.RestApiId}   # cross-stack reference
-    basePath: /animals                                               # optional path prefix
+    sharedApiGateway: true # skip stage-level cluster changes
+    restApiId: ${cf:api-gateway-${self:provider.stage}.RestApiId} # cross-stack reference
+    basePath: /animals # optional path prefix
 ```
 
 ## Additional Endpoints (CloudFormation-Defined)
