@@ -53,14 +53,7 @@ export interface EndpointCachingConfig {
 
 /** Valid API Gateway cache cluster sizes (in GB) */
 export type CacheClusterSize =
-  | '0.5'
-  | '1.6'
-  | '6.1'
-  | '13.5'
-  | '28.4'
-  | '58.2'
-  | '118'
-  | '237';
+  '0.5' | '1.6' | '6.1' | '13.5' | '28.4' | '58.2' | '118' | '237';
 
 /** Additional endpoint — for CF-defined resources that aren't Lambda functions */
 export interface AdditionalEndpointConfig {

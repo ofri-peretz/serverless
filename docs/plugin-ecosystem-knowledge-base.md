@@ -319,7 +319,7 @@ plugins:
   - serverless-associate-waf
 custom:
   associateWaf:
-    name: "my-web-acl"
+    name: 'my-web-acl'
 
 # After
 plugins:
@@ -327,7 +327,7 @@ plugins:
 custom:
   interlaceSecurity:
     waf:
-      name: "my-web-acl"
+      name: 'my-web-acl'
     # Plus: tracing, cross-account access, security headers — all in one plugin
 ```
 
@@ -600,7 +600,7 @@ custom:
           allowedMethods: [GET, HEAD]
           cachePolicy: 'CachingOptimized'
         - path: '/api/v1/auth/*'
-          ttl: 0  # No cache for auth
+          ttl: 0 # No cache for auth
     security:
       wafAcl: 'arn:aws:wafv2:...'
       geoRestriction: { type: 'whitelist', locations: ['US', 'EU'] }
@@ -793,12 +793,12 @@ functions:
 # Before (manual boilerplate)
 functions:
   api:
-    handler: src/lambda.handler    # 30 lines of bootstrap code
+    handler: src/lambda.handler # 30 lines of bootstrap code
 
 # After (@interlace/serverless-plugin-nestjs)
 functions:
   api:
-    handler: nestjs                # Zero boilerplate
+    handler: nestjs # Zero boilerplate
 # The plugin generates the adapter, caches the app, handles cold starts.
 ```
 
@@ -1032,12 +1032,8 @@ import { proxyConfig } from '@interlace/serverless-plugin-proxy';
 // Each returns a typed object that spreads into `custom`:
 export default defineConfig({
   custom: {
-    ...openApiConfig({
-      /* fully typed */
-    }),
-    ...packageConfig({
-      /* fully typed */
-    }),
+    ...openApiConfig({/* fully typed */}),
+    ...packageConfig({/* fully typed */}),
   },
 });
 ```

@@ -251,6 +251,24 @@ function run(
   return result.stdout;
 }
 
+/**
+ * Run `cmd` and return combined stdout+stderr, never throwing — for AWS CLI
+ * status probes where a non-zero exit is itself the signal (e.g. "stack does
+ * not exist"), not an error to propagate.
+ */
+function runQuiet(
+  cmd: string,
+  args: string[],
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const result = spawnSync(cmd, args, {
+    env,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return `${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}`;
+}
+
 function runStreaming(
   cmd: string,
   args: string[],
@@ -294,12 +312,16 @@ function preflight(): { region: string } {
 
   let identity: string | null = null;
   try {
-    const profileArg = profile ? `--profile ${profile}` : '';
-    identity = execSync(
-      `aws sts get-caller-identity ${profileArg} --output text 2>/dev/null`,
-      {
-        encoding: 'utf-8',
-      },
+    identity = run(
+      'aws',
+      [
+        'sts',
+        'get-caller-identity',
+        ...(profile ? ['--profile', profile] : []),
+        '--output',
+        'text',
+      ],
+      process.cwd(),
     ).trim();
   } catch {
     // AWS CLI missing OR creds missing — sls will surface a clearer error if it's the latter.
@@ -409,19 +431,27 @@ function deploy(ctx: RunContext): string {
   );
 
   // Extract the endpoint URL — sls v3 prints `endpoint: <method> - <url>`.
-  // Match a few output styles to be resilient to framework version drift.
-  const patterns = [
-    /(?:endpoint|GET|HEAD):\s+(?:GET|HEAD|ANY)?\s*-?\s*(https:\/\/[^\s]+\.execute-api\.[^\s]+\/[^\s]+)/,
-    /(https:\/\/[a-z0-9]+\.execute-api\.[^\s]+\.amazonaws\.com\/[^\s]+\/hello)/,
-  ];
-  let endpoint: string | null = null;
-  for (const re of patterns) {
-    const m = re.exec(output);
-    if (m) {
-      endpoint = m[1];
-      break;
-    }
-  }
+  // Primary: match the execute-api domain directly (specific, unambiguous).
+  // Fallback: don't regex-parse the "endpoint: <method> - " separator at all
+  // — that shape trips static ReDoS analysis even though it's not actually
+  // exploitable here — just find the label as plain text, then apply a
+  // single-quantifier URL match after it.
+  const primaryMatch =
+    /https:\/\/[a-z0-9]+\.execute-api\.[^\s]+\.amazonaws\.com\/[^\s]+\/hello/.exec(
+      output,
+    )?.[0];
+  const labelIdx = ['endpoint:', 'GET:', 'HEAD:']
+    .map((label) => output.indexOf(label))
+    .filter((idx) => idx !== -1)
+    .sort((a, b) => a - b)[0];
+  const fallbackMatch =
+    labelIdx === undefined
+      ? undefined
+      : /https:\/\/[^\s]+\.execute-api\.[^\s]+\/[^\s]+/.exec(
+          output.slice(labelIdx),
+        )?.[0];
+
+  const endpoint = primaryMatch ?? fallbackMatch ?? null;
   if (!endpoint) {
     throw new Error('Could not parse endpoint URL from sls deploy output');
   }
@@ -473,9 +503,22 @@ async function waitForCacheClusterReady(
   while (Date.now() < deadline) {
     let status = 'UNKNOWN';
     try {
-      status = execSync(
-        `aws apigateway get-stage --rest-api-id ${restApiId} --stage-name ${ctx.stage} --query "cacheClusterStatus" --output text 2>/dev/null`,
-        { encoding: 'utf-8', env },
+      status = run(
+        'aws',
+        [
+          'apigateway',
+          'get-stage',
+          '--rest-api-id',
+          restApiId,
+          '--stage-name',
+          ctx.stage,
+          '--query',
+          'cacheClusterStatus',
+          '--output',
+          'text',
+        ],
+        process.cwd(),
+        env,
       ).trim();
     } catch {
       status = 'ERROR';
@@ -719,9 +762,19 @@ function verifyClean(ctx: RunContext): void {
   const stackName = `${ctx.serviceName}-${ctx.stage}`;
   let result = '';
   try {
-    result = execSync(
-      `aws cloudformation describe-stacks --stack-name ${stackName} --output text --query "Stacks[0].StackStatus" 2>&1 || true`,
-      { encoding: 'utf-8', env },
+    result = runQuiet(
+      'aws',
+      [
+        'cloudformation',
+        'describe-stacks',
+        '--stack-name',
+        stackName,
+        '--output',
+        'text',
+        '--query',
+        'Stacks[0].StackStatus',
+      ],
+      env,
     );
   } catch {
     // describe-stacks errors when the stack is fully gone — that's the success case
@@ -749,8 +802,8 @@ function cleanup(): void {
   // local cleanup. If we DIDN'T get past step 10, the catch handler runs sls remove.
   try {
     rmSync(CTX.workDir, { recursive: true, force: true });
-  } catch {
-    // not critical
+  } catch (err) {
+    warn(`work dir cleanup failed (non-critical): ${(err as Error).message}`);
   }
 }
 
@@ -796,18 +849,30 @@ async function main(): Promise<void> {
       readFileSync(join(PLUGIN_ROOT, 'package.json'), 'utf-8'),
     ) as { version?: string };
     RUN_LOG.pluginVersion = pluginPkg.version;
-  } catch {
-    /* non-fatal */
+  } catch (err) {
+    warn(
+      `could not read plugin version (non-fatal): ${(err as Error).message}`,
+    );
   }
   try {
     const profile = process.env.AWS_PROFILE;
-    const profileArg = profile ? `--profile ${profile}` : '';
-    RUN_LOG.awsIdentity = execSync(
-      `aws sts get-caller-identity ${profileArg} --query "Arn" --output text 2>/dev/null`,
-      { encoding: 'utf-8' },
+    RUN_LOG.awsIdentity = run(
+      'aws',
+      [
+        'sts',
+        'get-caller-identity',
+        ...(profile ? ['--profile', profile] : []),
+        '--query',
+        'Arn',
+        '--output',
+        'text',
+      ],
+      process.cwd(),
     ).trim();
-  } catch {
-    /* non-fatal */
+  } catch (err) {
+    warn(
+      `could not verify AWS identity (non-fatal): ${(err as Error).message}`,
+    );
   }
 
   try {
