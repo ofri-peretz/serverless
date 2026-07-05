@@ -32,7 +32,7 @@
  *        AWS_REGION=eu-west-1 npm run e2e
  */
 
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import {
   mkdtempSync,
   cpSync,
@@ -200,12 +200,14 @@ function run(
   args: string[],
   cwd: string,
   env: NodeJS.ProcessEnv = process.env,
+  maxBuffer?: number,
 ): string {
   const result = spawnSync(cmd, args, {
     cwd,
     env,
     encoding: 'utf-8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    ...(maxBuffer ? { maxBuffer } : {}),
   });
   if (result.status !== 0) {
     const detail = `${result.stdout || ''}${result.stderr || ''}`.trim();
@@ -236,6 +238,24 @@ function runStreaming(
   return `${result.stdout}\n${result.stderr}`;
 }
 
+/**
+ * Run `cmd` and return combined stdout+stderr, never throwing — for AWS CLI
+ * status probes where a non-zero exit is itself the signal (e.g. "stack does
+ * not exist"), not an error to propagate.
+ */
+function runQuiet(
+  cmd: string,
+  args: string[],
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const result = spawnSync(cmd, args, {
+    env,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return `${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}`;
+}
+
 function preflight(): { region: string } {
   step(1, 'Pre-flight checks');
 
@@ -250,10 +270,16 @@ function preflight(): { region: string } {
 
   let identity: string | null = null;
   try {
-    const profileArg = profile ? `--profile ${profile}` : '';
-    identity = execSync(
-      `aws sts get-caller-identity ${profileArg} --output text 2>/dev/null`,
-      { encoding: 'utf-8' },
+    identity = run(
+      'aws',
+      [
+        'sts',
+        'get-caller-identity',
+        ...(profile ? ['--profile', profile] : []),
+        '--output',
+        'text',
+      ],
+      process.cwd(),
     ).trim();
   } catch {
     warn('Could not verify AWS identity — proceeding.');
@@ -445,12 +471,22 @@ function listRolesForService(
 ): { name: string; logicalKind: string }[] {
   const env = { ...process.env, AWS_REGION: ctx.region };
   const profile = process.env.AWS_PROFILE;
-  const profileArg = profile ? `--profile ${profile}` : '';
   // List all roles whose path-or-name contains the service name.
   // Use list-roles + jq filter (we just rely on JSON parsing in node).
-  const raw = execSync(
-    `aws iam list-roles ${profileArg} --output json --query "Roles[?contains(RoleName, '${ctx.serviceName}')].{RoleName: RoleName}"`,
-    { encoding: 'utf-8', env, maxBuffer: 5 * 1024 * 1024 },
+  const raw = run(
+    'aws',
+    [
+      'iam',
+      'list-roles',
+      ...(profile ? ['--profile', profile] : []),
+      '--output',
+      'json',
+      '--query',
+      `Roles[?contains(RoleName, '${ctx.serviceName}')].{RoleName: RoleName}`,
+    ],
+    process.cwd(),
+    env,
+    5 * 1024 * 1024,
   );
   const arr = JSON.parse(raw) as AwsIamRoleSummary[];
   return arr.map((r) => ({ name: r.RoleName, logicalKind: 'per-function' }));
@@ -496,7 +532,7 @@ function verifyRolePolicies(ctx: RunContext): void {
 
   const env = { ...process.env, AWS_REGION: ctx.region };
   const profile = process.env.AWS_PROFILE;
-  const profileArg = profile ? `--profile ${profile}` : '';
+  const profileArgs = profile ? ['--profile', profile] : [];
 
   const roles = listRolesForService(ctx);
 
@@ -518,9 +554,19 @@ function verifyRolePolicies(ctx: RunContext): void {
   }
   ok(`found role for withSqs: ${sqsRole.name}`);
 
-  const policiesRaw = execSync(
-    `aws iam list-role-policies --role-name ${sqsRole.name} ${profileArg} --output json`,
-    { encoding: 'utf-8', env },
+  const policiesRaw = run(
+    'aws',
+    [
+      'iam',
+      'list-role-policies',
+      '--role-name',
+      sqsRole.name,
+      ...profileArgs,
+      '--output',
+      'json',
+    ],
+    process.cwd(),
+    env,
   );
   const policies = (JSON.parse(policiesRaw) as { PolicyNames: string[] })
     .PolicyNames;
@@ -529,9 +575,21 @@ function verifyRolePolicies(ctx: RunContext): void {
     throw new Error(`Role ${sqsRole.name} has no inline policies`);
   }
   const policyName = policies[0];
-  const docRaw = execSync(
-    `aws iam get-role-policy --role-name ${sqsRole.name} --policy-name ${policyName} ${profileArg} --output json`,
-    { encoding: 'utf-8', env },
+  const docRaw = run(
+    'aws',
+    [
+      'iam',
+      'get-role-policy',
+      '--role-name',
+      sqsRole.name,
+      '--policy-name',
+      policyName,
+      ...profileArgs,
+      '--output',
+      'json',
+    ],
+    process.cwd(),
+    env,
   );
   // PolicyDocument may come back URL-encoded; AWS CLI auto-decodes when --output json.
   const doc = JSON.parse(docRaw) as { PolicyDocument: IamRolePolicyDocument };
@@ -556,14 +614,26 @@ function invokeLambda(ctx: RunContext): void {
 
   const env = { ...process.env, AWS_REGION: ctx.region };
   const profile = process.env.AWS_PROFILE;
-  const profileArg = profile ? `--profile ${profile}` : '';
   const fnName = `${ctx.serviceName}-${ctx.stage}-withInline`;
   const out = join(ctx.workDir, 'invoke-out.json');
   // `--cli-binary-format raw-in-base64-out` makes INPUT raw (not base64) and
   // OUTPUT base64. So pass `'{}'` directly as the payload.
-  execSync(
-    `aws lambda invoke --function-name ${fnName} ${profileArg} --payload '{}' --cli-binary-format raw-in-base64-out ${out}`,
-    { encoding: 'utf-8', env },
+  run(
+    'aws',
+    [
+      'lambda',
+      'invoke',
+      '--function-name',
+      fnName,
+      ...(profile ? ['--profile', profile] : []),
+      '--payload',
+      '{}',
+      '--cli-binary-format',
+      'raw-in-base64-out',
+      out,
+    ],
+    process.cwd(),
+    env,
   );
   const body = JSON.parse(readFileSync(out, 'utf-8')) as {
     statusCode: number;
@@ -599,9 +669,19 @@ function verifyClean(ctx: RunContext): void {
   const stackName = `${ctx.serviceName}-${ctx.stage}`;
   let result = '';
   try {
-    result = execSync(
-      `aws cloudformation describe-stacks --stack-name ${stackName} --output text --query "Stacks[0].StackStatus" 2>&1 || true`,
-      { encoding: 'utf-8', env },
+    result = runQuiet(
+      'aws',
+      [
+        'cloudformation',
+        'describe-stacks',
+        '--stack-name',
+        stackName,
+        '--output',
+        'text',
+        '--query',
+        'Stacks[0].StackStatus',
+      ],
+      env,
     );
   } catch {
     result = '';
@@ -645,8 +725,8 @@ function cleanup(): void {
   if (!existsSync(CTX.workDir)) return;
   try {
     rmSync(CTX.workDir, { recursive: true, force: true });
-  } catch {
-    // not critical
+  } catch (err) {
+    warn(`work dir cleanup failed (non-critical): ${(err as Error).message}`);
   }
 }
 
@@ -689,8 +769,10 @@ async function main(): Promise<void> {
       readFileSync(join(PLUGIN_ROOT, 'package.json'), 'utf-8'),
     ) as { version?: string };
     RUN_LOG.pluginVersion = pluginPkg.version;
-  } catch {
-    /* non-fatal */
+  } catch (err) {
+    warn(
+      `could not read plugin version (non-fatal): ${(err as Error).message}`,
+    );
   }
 
   try {

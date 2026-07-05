@@ -329,8 +329,7 @@ function rewriteEventSourceMappings(
   for (const resource of Object.values(template.Resources)) {
     if (resource.Type !== 'AWS::Lambda::EventSourceMapping') continue;
     const props = resource.Properties as
-      | { FunctionName?: { 'Fn::GetAtt'?: unknown[] } }
-      | undefined;
+      { FunctionName?: { 'Fn::GetAtt'?: unknown[] } } | undefined;
     const fnGetAtt = props?.FunctionName?.['Fn::GetAtt'];
     if (!Array.isArray(fnGetAtt) || typeof fnGetAtt[0] !== 'string') continue;
     const fnLogicalId = fnGetAtt[0];

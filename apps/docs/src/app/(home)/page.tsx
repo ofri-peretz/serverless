@@ -11,6 +11,7 @@ import {
 import { Spotlight } from '@/components/ui/spotlight';
 import { FlipWords } from '@/components/ui/flip-words';
 import { BorderBeam } from '@/components/ui/border-beam';
+import { buildUtmHref } from '@/lib/utm';
 
 const heroWords = ['clean up', 'deploy safely', 'zero out bills', 'just work'];
 
@@ -157,7 +158,11 @@ export default function HomePage() {
           <span>
             Built by{' '}
             <a
-              href="https://ofriperetz.dev"
+              href={buildUtmHref('https://ofriperetz.dev', {
+                source: 'serverless_docs',
+                medium: 'referral',
+                content: 'footer_credit',
+              })}
               className="font-medium text-fd-foreground hover:text-fd-primary"
             >
               Ofri Peretz

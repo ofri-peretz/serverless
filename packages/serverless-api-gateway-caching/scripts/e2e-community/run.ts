@@ -29,7 +29,7 @@
  *   AWS_PROFILE=interlace npx tsx scripts/e2e-community/run.ts
  */
 
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import {
   mkdtempSync,
   cpSync,
@@ -211,6 +211,24 @@ function run(
   return result.stdout;
 }
 
+/**
+ * Run `cmd` and return combined stdout+stderr, never throwing — for AWS CLI
+ * status probes where a non-zero exit is itself the signal (e.g. "stack does
+ * not exist"), not an error to propagate.
+ */
+function runQuiet(
+  cmd: string,
+  args: string[],
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const result = spawnSync(cmd, args, {
+    env,
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return `${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}`;
+}
+
 function runStreaming(
   cmd: string,
   args: string[],
@@ -246,9 +264,16 @@ function preflight(): { region: string } {
 
   let identity: string | null = null;
   try {
-    identity = execSync(
-      `aws sts get-caller-identity ${profile ? `--profile ${profile}` : ''} --output text 2>/dev/null`,
-      { encoding: 'utf-8' },
+    identity = run(
+      'aws',
+      [
+        'sts',
+        'get-caller-identity',
+        ...(profile ? ['--profile', profile] : []),
+        '--output',
+        'text',
+      ],
+      process.cwd(),
     ).trim();
   } catch {
     log.warn('Could not verify AWS credentials — proceeding anyway');
@@ -300,22 +325,30 @@ function deploy(wd: string, region: string): string {
     (Date.now() - start) / 1000,
   );
 
-  // Endpoint extraction (same regex set as main E2E)
-  const patterns = [
-    /(https:\/\/[a-z0-9]+\.execute-api\.[^\s]+\.amazonaws\.com\/[^\s]+\/hello)/,
-    /endpoint:\s+(?:GET|HEAD|ANY)?\s*-?\s*(https:\/\/[^\s]+\/hello)/,
-  ];
-  for (const re of patterns) {
-    const m = re.exec(r.output);
-    if (m) {
-      const endpoint = m[1];
-      const apiIdMatch = /https:\/\/([a-z0-9]+)\.execute-api/.exec(endpoint);
-      RUN_LOG.endpoint = endpoint;
-      RUN_LOG.restApiId = apiIdMatch?.[1] ?? undefined;
-      log.ok(`endpoint: ${endpoint}`);
-      log.ok(`rest api id: ${RUN_LOG.restApiId}`);
-      return endpoint;
-    }
+  // Endpoint extraction (same approach as main E2E). Primary: match the
+  // execute-api domain directly (specific, unambiguous). Fallback: don't
+  // regex-parse the "endpoint: <method> - " separator at all — that shape
+  // trips static ReDoS analysis even though it's not actually exploitable
+  // here — just find "endpoint" as plain text, then apply a single-quantifier
+  // URL match after it.
+  const primaryMatch =
+    /https:\/\/[a-z0-9]+\.execute-api\.[^\s]+\.amazonaws\.com\/[^\s]+\/hello/.exec(
+      r.output,
+    )?.[0];
+  const endpointIdx = r.output.indexOf('endpoint');
+  const fallbackMatch =
+    endpointIdx === -1
+      ? undefined
+      : /https:\/\/[^\s]+\/hello/.exec(r.output.slice(endpointIdx))?.[0];
+
+  const endpoint = primaryMatch ?? fallbackMatch;
+  if (endpoint) {
+    const apiIdMatch = /https:\/\/([a-z0-9]+)\.execute-api/.exec(endpoint);
+    RUN_LOG.endpoint = endpoint;
+    RUN_LOG.restApiId = apiIdMatch?.[1] ?? undefined;
+    log.ok(`endpoint: ${endpoint}`);
+    log.ok(`rest api id: ${RUN_LOG.restApiId}`);
+    return endpoint;
   }
   throw new Error('Could not parse endpoint URL from sls deploy output');
 }
@@ -331,9 +364,22 @@ async function waitForClusterReady(
   while (Date.now() < deadline) {
     let status = 'UNKNOWN';
     try {
-      status = execSync(
-        `aws apigateway get-stage --rest-api-id ${restApiId} --stage-name e2e --query "cacheClusterStatus" --output text 2>/dev/null`,
-        { encoding: 'utf-8', env },
+      status = run(
+        'aws',
+        [
+          'apigateway',
+          'get-stage',
+          '--rest-api-id',
+          restApiId,
+          '--stage-name',
+          'e2e',
+          '--query',
+          'cacheClusterStatus',
+          '--output',
+          'text',
+        ],
+        process.cwd(),
+        env,
       ).trim();
     } catch {
       status = 'ERROR';
@@ -460,9 +506,19 @@ function checkOrphans(
   let cfStatus: RunLog['observations']['cloudFormationStatusPostRemove'] =
     'OTHER';
   try {
-    const out = execSync(
-      `aws cloudformation describe-stacks --stack-name ${stackName} --query "Stacks[0].StackStatus" --output text 2>&1 || true`,
-      { encoding: 'utf-8', env },
+    const out = runQuiet(
+      'aws',
+      [
+        'cloudformation',
+        'describe-stacks',
+        '--stack-name',
+        stackName,
+        '--query',
+        'Stacks[0].StackStatus',
+        '--output',
+        'text',
+      ],
+      env,
     ).trim();
     if (out.includes('does not exist') || out.includes('ValidationError')) {
       cfStatus = 'NOT_FOUND';
@@ -492,9 +548,19 @@ function checkOrphans(
   let cacheClusterStatusPostRemove: string | null = null;
   if (restApiId) {
     try {
-      const stageOut = execSync(
-        `aws apigateway get-stage --rest-api-id ${restApiId} --stage-name e2e --output json 2>&1 || true`,
-        { encoding: 'utf-8', env },
+      const stageOut = runQuiet(
+        'aws',
+        [
+          'apigateway',
+          'get-stage',
+          '--rest-api-id',
+          restApiId,
+          '--stage-name',
+          'e2e',
+          '--output',
+          'json',
+        ],
+        env,
       ).trim();
       if (
         stageOut.includes('NotFoundException') ||
@@ -531,9 +597,17 @@ function checkOrphans(
   let restApiExists = false;
   if (restApiId) {
     try {
-      const apiOut = execSync(
-        `aws apigateway get-rest-api --rest-api-id ${restApiId} --output text 2>&1 || true`,
-        { encoding: 'utf-8', env },
+      const apiOut = runQuiet(
+        'aws',
+        [
+          'apigateway',
+          'get-rest-api',
+          '--rest-api-id',
+          restApiId,
+          '--output',
+          'text',
+        ],
+        env,
       ).trim();
       if (
         apiOut.includes('NotFoundException') ||
@@ -544,8 +618,8 @@ function checkOrphans(
         restApiExists = true;
         log.fail('APIGateway: REST API STILL EXISTS — ORPHAN');
       }
-    } catch {
-      // Non-fatal
+    } catch (err) {
+      log.warn(`APIGateway get-rest-api errored: ${(err as Error).message}`);
     }
   }
   RUN_LOG.observations.restApiExistsPostRemove = restApiExists;
@@ -641,8 +715,10 @@ async function main(): Promise<void> {
     if (WORK_DIR && existsSync(WORK_DIR)) {
       try {
         rmSync(WORK_DIR, { recursive: true, force: true });
-      } catch {
-        /* non-critical */
+      } catch (err) {
+        log.warn(
+          `work dir cleanup failed (non-critical): ${(err as Error).message}`,
+        );
       }
     }
   }

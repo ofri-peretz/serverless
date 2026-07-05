@@ -4,22 +4,23 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import reactA11y from 'eslint-plugin-react-a11y';
 import reactFeatures from 'eslint-plugin-react-features';
 // Interlace ecosystem — à-la-carte (each plugin's own `recommended`), NOT the
-// @interlace/eslint-config meta-config. Only the relevant, currently-working
-// plugins are wired:
-//   security: secure-coding + node-security (the rules that fire for a
-//     build-time Serverless-Framework plugin repo).
-//   quality:  conventions, import-next, reliability, modularity, modernization.
-// SKIPPED until their PUBLISHED builds are fixed + republished (dogfooding
-// findings 2026-06-20; see agents memory eslint-dogfooding-doctrine):
-//   maintainability, operability — doubled-namespace `recommended` breaks config
-//     resolution; lambda-security — invalid esquery `:exit` crashes ESLint 9.39.
+// @interlace/eslint-config meta-config.
+//   security: secure-coding + node-security + lambda-security
+//   quality:  conventions, import-next, reliability, modularity, modernization,
+//             maintainability, operability
+// maintainability/operability/lambda-security were SKIPPED on 2026-06-20 due to
+// dogfooding bugs (doubled namespace + :exit crash). Fixed and republished in
+// 3.0.4/3.0.6/1.2.4 respectively (eslint repo release #203, 2026-06-21).
 import { configs as secureCodingCfg } from 'eslint-plugin-secure-coding';
 import { configs as nodeSecurityCfg } from 'eslint-plugin-node-security';
+import { configs as lambdaSecurityCfg } from 'eslint-plugin-lambda-security';
 import { configs as conventionsCfg } from 'eslint-plugin-conventions';
 import { configs as importNextCfg } from 'eslint-plugin-import-next';
 import { configs as reliabilityCfg } from 'eslint-plugin-reliability';
 import { configs as modularityCfg } from 'eslint-plugin-modularity';
 import { configs as modernizationCfg } from 'eslint-plugin-modernization';
+import { configs as maintainabilityCfg } from 'eslint-plugin-maintainability';
+import { configs as operabilityCfg } from 'eslint-plugin-operability';
 
 /**
  * @interlace ecosystem ESLint config — strict for published-package source,
@@ -76,11 +77,14 @@ export default [
   // ────────────────────────────────────────────────────────────────────────
   secureCodingCfg.recommended,
   nodeSecurityCfg.recommended,
+  lambdaSecurityCfg.recommended,
   conventionsCfg.recommended,
   importNextCfg.recommended,
   reliabilityCfg.recommended,
   modularityCfg.recommended,
   modernizationCfg.recommended,
+  maintainabilityCfg.recommended,
+  operabilityCfg.recommended,
 
   // ────────────────────────────────────────────────────────────────────────
   // 2. TypeScript-only rules across the repo
@@ -233,6 +237,19 @@ export default [
       //  - a handful of real security/reliability finds — surface, don't block
       'node-security/no-ssrf': 'warn',
       'reliability/require-network-timeout': 'warn',
+      // New from 2026-06-21 — maintainability/operability/lambda-security added
+      // after their published-build bugs were fixed (3.0.4/3.0.6/1.2.4):
+      //  - console.log IS CloudWatch logging in Lambda plugins — keep at warn
+      'operability/no-console-log': 'warn',
+      'operability/no-debug-code-in-production': 'warn',
+      //  - maintainability backlog (~19 hits) — ratchet file-by-file
+      'maintainability/cognitive-complexity': 'warn',
+      'maintainability/identical-functions': 'warn',
+      'maintainability/max-parameters': 'warn',
+      //  - lambda-security: REAL security issues, surfaced as warn to not block
+      //    current PRs; ratchet to error once each handler is reviewed
+      'lambda-security/no-error-swallowing': 'warn',
+      'lambda-security/no-exposed-debug-endpoints': 'warn',
     },
   },
 ];

@@ -20,13 +20,7 @@ export type UtmSource =
   | 'email';
 
 export type UtmMedium =
-  | 'blog'
-  | 'docs'
-  | 'landing'
-  | 'social'
-  | 'email'
-  | 'referral'
-  | 'cli';
+  'blog' | 'docs' | 'landing' | 'social' | 'email' | 'referral' | 'cli';
 
 export interface UtmOptions {
   source: UtmSource;
@@ -57,8 +51,9 @@ export function buildUtmHref(href: string, opts: UtmOptions): string {
       try {
         const id = posthog.get_distinct_id?.();
         if (id) url.searchParams.set('ph_distinct_id', id);
-      } catch {
+      } catch (err) {
         // pre-init — skip
+        console.warn('posthog distinct_id lookup failed', err);
       }
     }
     return url.toString();

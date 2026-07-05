@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "rootDir": ".",
     "sourceMap": true,
     "declaration": true,
@@ -13,6 +14,7 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "types": ["node"],
     "baseUrl": ".",
     "paths": {}
   },

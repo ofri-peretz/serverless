@@ -126,8 +126,9 @@ export function initPostHog(): void {
             props['$referrer'] as string,
           );
         }
-      } catch {
+      } catch (err) {
         // never block ingest
+        console.warn('posthog before_send normalisation failed', err);
       }
       return event;
     },
@@ -140,8 +141,9 @@ export function initPostHog(): void {
         ) {
           ph.people.set({ is_internal_user: true });
         }
-      } catch {
+      } catch (err) {
         // never throw
+        console.warn('posthog loaded-callback setup failed', err);
       }
     },
   };

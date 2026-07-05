@@ -151,18 +151,18 @@ function settings(endpoints: EndpointSettings[]): ResolvedCachingSettings {
   };
 }
 
-describe('cache-key-params — mappedFrom branches & legacy shorthand', () => {
-  function makeSlsForCfMutation(
-    resources: Record<string, unknown>,
-  ): ServerlessInstance {
-    return {
-      service: {
-        provider: { compiledCloudFormationTemplate: { Resources: resources } },
-      },
-      cli: { log: vi.fn() },
-    } as unknown as ServerlessInstance;
-  }
+function makeSlsForCfMutation(
+  resources: Record<string, unknown>,
+): ServerlessInstance {
+  return {
+    service: {
+      provider: { compiledCloudFormationTemplate: { Resources: resources } },
+    },
+    cli: { log: vi.fn() },
+  } as unknown as ServerlessInstance;
+}
 
+describe('cache-key-params — mappedFrom branches & legacy shorthand', () => {
   it('mappedFrom targeting method.request.path adds RequestParameters entry', () => {
     const resources = {
       ApiGatewayMethodItemsGet: { Type: 'AWS::ApiGateway::Method' },
