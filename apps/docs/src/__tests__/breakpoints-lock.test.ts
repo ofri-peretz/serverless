@@ -62,7 +62,7 @@ describe('Breakpoint contract (BREAKPOINTS.md)', () => {
     const offenders: string[] = [];
     for (const file of cssFiles) {
       const source = readFileSync(file, 'utf-8');
-      if (/--breakpoint-(?:sm|md|lg|xl|2xl)\s*:/.test(source)) {
+      if (/--breakpoint-[\w-]+\s*:/.test(source)) {
         offenders.push(file);
       }
     }
