@@ -27,7 +27,7 @@
     "mermaid": "^11.16.0",
     "motion": "^12.42.2",
     "next": "^16.1.6",
-    "posthog-js": "^1.396.6",
+    "posthog-js": "^1.396.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-tweet": "3.3.1",
