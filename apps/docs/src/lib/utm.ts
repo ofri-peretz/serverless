@@ -12,7 +12,7 @@ export type UtmSource =
   | 'serverless_docs'
   | 'ds'
   | 'storybook'
-  | 'dev_to'
+  | 'devto'
   | 'github'
   | 'npm'
   | 'x'
@@ -20,7 +20,14 @@ export type UtmSource =
   | 'email';
 
 export type UtmMedium =
-  'blog' | 'docs' | 'landing' | 'social' | 'email' | 'referral' | 'cli';
+  | 'article'
+  | 'blog'
+  | 'docs'
+  | 'landing'
+  | 'social'
+  | 'email'
+  | 'referral'
+  | 'cli';
 
 export interface UtmOptions {
   source: UtmSource;
