@@ -23,7 +23,7 @@ export default function HomePage() {
         {/* Spotlight background */}
         <Spotlight
           className="-top-40 left-0 md:-top-20 md:left-60"
-          fill="hsl(250 95% 64%)"
+          fill="hsl(17 89% 55%)"
         />
 
         {/* Gradient background */}
@@ -40,7 +40,7 @@ export default function HomePage() {
           <br />
           <FlipWords
             words={heroWords}
-            className="bg-gradient-to-r from-fd-primary to-purple-400 bg-clip-text text-transparent"
+            className="bg-gradient-to-r from-fd-primary to-orange-400 bg-clip-text text-transparent"
           />
         </h1>
 
@@ -72,8 +72,8 @@ export default function HomePage() {
           <BorderBeam
             size={80}
             duration={8}
-            colorFrom="hsl(250 95% 64%)"
-            colorTo="hsl(280 80% 60%)"
+            colorFrom="hsl(17 89% 55%)"
+            colorTo="hsl(157 84% 32%)"
             borderWidth={1}
           />
         </div>
@@ -228,8 +228,8 @@ function PackageCard({
       <BorderBeam
         size={60}
         duration={10}
-        colorFrom="hsl(250 95% 64%)"
-        colorTo="hsl(280 80% 60%)"
+        colorFrom="hsl(17 89% 55%)"
+        colorTo="hsl(157 84% 32%)"
         borderWidth={1}
         delay={Math.random() * 5}
       />

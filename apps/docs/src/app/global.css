@@ -2,76 +2,38 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
+/* Brand tokens — single source of truth synced from `interlace/docs-baseline`.
+ * Imported AFTER fumadocs presets so natural cascade order wins (no `!important`
+ * needed). NEVER duplicate token values here — edit `interlace/docs-baseline/
+ * css/brand.css` and re-sync. The previous duplicate-with-!important pattern
+ * caused dark-mode contrast bugs when the source bumped a value the consumer
+ * didn't see. */
+@import '../../.interlace/css/brand.css';
+
+/* Shared animation keyframes + utility classes — synced from
+ * `interlace/docs-baseline/css/animations.css`. Covers spotlight (Aceternity),
+ * shimmer-slide / spin-around (MagicUI shimmer-button), border-beam, and the
+ * rest of the decorative-primitive set. NEVER hand-roll keyframes here. */
+@import '../../.interlace/css/animations.css';
+
 @custom-variant dark (&:is(.dark *));
 
 /* Scan fumadocs packages from app-level node_modules (symlinked to workspace root) */
 @source "../../node_modules/fumadocs-ui";
 
-/* =========================================
-   BRAND COLORS - @interlace/serverless
-   Purple accent with WCAG AA compliance
-   ========================================= */
+/* Scan baseline components/layouts copy-synced from `interlace/docs-baseline`.
+ * Lives at the app root (sibling of `src/`), outside Next's default content
+ * scan — without this, classes referenced only inside `.interlace/` (e.g.
+ * `via-chart-2` on the collision beams) aren't compiled and the element falls
+ * back to inherited color. */
+@source "../../.interlace";
 
-/* Light mode */
-:root {
-  --color-fd-primary: hsl(250, 80%, 50%) !important;
-  --color-fd-primary-foreground: hsl(0, 0%, 100%) !important;
-  --color-fd-foreground: hsl(0, 0%, 3.9%) !important;
-  --color-fd-muted-foreground: hsl(0, 0%, 40%) !important;
-  --color-fd-ring: hsl(250, 70%, 55%) !important;
+/* Brand green for gradient endpoints (`to-chart-2`, `via-chart-2`) used by the
+ * baseline decorative components. Registered with @theme so Tailwind v4
+ * generates the utilities; `.dark` lifts lightness for contrast on near-black. */
+@theme {
+  --color-chart-2: oklch(0.55 0.14 162);
 }
-
-/* Dark mode */
 .dark {
-  --color-fd-primary: hsl(255, 75%, 75%) !important;
-  --color-fd-primary-foreground: hsl(0, 0%, 5%) !important;
-  --color-fd-foreground: hsl(0, 0%, 92%) !important;
-  --color-fd-muted-foreground: hsl(0, 0%, 65%) !important;
-  --color-fd-ring: hsl(255, 70%, 70%) !important;
-}
-
-/* Spotlight animation (Aceternity) */
-@keyframes spotlight {
-  0% {
-    opacity: 0;
-    transform: translate(-72%, -62%) scale(0.5);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -40%) scale(1);
-  }
-}
-
-.animate-spotlight {
-  animation: spotlight 2s ease 0.75s 1 forwards;
-}
-
-/* Shimmer button animations (MagicUI) */
-@keyframes shimmer-slide {
-  to {
-    transform: translate(calc(100cqw - 100%), 0);
-  }
-}
-
-@keyframes spin-around {
-  0% {
-    transform: translateZ(0) rotate(0);
-  }
-  15%, 35% {
-    transform: translateZ(0) rotate(90deg);
-  }
-  65%, 85% {
-    transform: translateZ(0) rotate(270deg);
-  }
-  100% {
-    transform: translateZ(0) rotate(360deg);
-  }
-}
-
-.animate-shimmer-slide {
-  animation: shimmer-slide var(--speed) ease-in-out infinite alternate;
-}
-
-.animate-spin-around {
-  animation: spin-around calc(var(--speed) * 2) infinite linear;
+  --color-chart-2: oklch(0.78 0.12 162);
 }

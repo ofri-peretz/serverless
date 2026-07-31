@@ -19,8 +19,8 @@ import React, { useRef, useState, useEffect } from "react";
  * https://ui.aceternity.com/components/background-beams-with-collision
  *
  * Theme Support:
- * - Light mode: Purple/indigo beams on a light gradient background
- * - Dark mode: Brighter purple/cyan beams on a dark gradient background
+ * - Beams and glows read the brand tokens (`--color-primary`, `--color-chart-2`),
+ *   so light/dark resolve per theme — burnt orange into bottle green.
  *
  * @example
  * ```tsx
@@ -119,8 +119,8 @@ export const BackgroundBeamsWithCollision = ({
         // Theme-aware background gradient
         // Light mode: Clean white to neutral gradient
         "bg-gradient-to-b from-white to-neutral-100",
-        // Dark mode: Deep purple to dark gradient for cosmic feel
-        "dark:from-neutral-950 dark:via-purple-950/20 dark:to-neutral-900",
+        // Dark mode: a warm brand wash, not the inherited purple
+        "dark:from-neutral-950 dark:via-primary/8 dark:to-neutral-900",
         containerClassName
       )}
       // Performance: CSS containment to reduce layout thrashing
@@ -148,14 +148,28 @@ export const BackgroundBeamsWithCollision = ({
           !hideCollisionSurface && [
             // Light mode: Subtle neutral with soft shadow
             "bg-neutral-100",
-            // Dark mode: Darker surface with purple tint
+            // Dark mode: Darker translucent surface
             "dark:bg-neutral-900/50"
           ]
         )}
-        style={hideCollisionSurface ? undefined : {
-          boxShadow:
-            "0 0 24px rgba(34, 42, 53, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(34, 42, 53, 0.04), 0 0 4px rgba(34, 42, 53, 0.08), 0 16px 68px rgba(47, 48, 55, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset",
-        }}
+        style={
+          hideCollisionSurface
+            ? undefined
+            : {
+                // Composite box-shadow built from `--color-shadow-card-*`
+                // tokens (see `css/brand.css`). Each layer carries the same
+                // semantic role as the legacy literal layers it replaced;
+                // re-tune by overriding the tokens, not by editing here.
+                boxShadow: [
+                  "0 0 24px var(--color-shadow-card)",
+                  "0 1px 1px var(--color-shadow-card)",
+                  "0 0 0 1px var(--color-shadow-card)",
+                  "0 0 4px var(--color-shadow-card)",
+                  "0 16px 68px var(--color-shadow-card)",
+                  "0 1px 0 var(--color-shadow-card-inset) inset",
+                ].join(", "),
+              }
+        }
       />
     </div>
   );
@@ -260,11 +274,9 @@ const CollisionMechanism = React.forwardRef<
         className={cn(
           // Base beam styling
           "absolute left-0 top-20 m-auto h-14 w-px rounded-full",
-          // Light mode: Indigo/purple gradient beam
-          "bg-gradient-to-t from-indigo-500 via-purple-500 to-transparent",
-          // Dark mode: Brighter, more vibrant beam
-          "dark:from-cyan-400 dark:via-purple-400 dark:to-transparent",
-          beamOptions.className
+          // Brand beam. No dark: variant — the tokens resolve per theme.
+          "bg-gradient-to-t from-primary via-chart-2 to-transparent",
+                    beamOptions.className
         )}
       />
 
@@ -319,10 +331,8 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
         transition={{ duration: 1.5, ease: "easeOut" }}
         className={cn(
           "absolute -inset-x-10 top-0 m-auto h-2 w-10 rounded-full blur-sm",
-          // Light mode: Indigo glow
-          "bg-gradient-to-r from-transparent via-indigo-500 to-transparent",
-          // Dark mode: Cyan/purple glow
-          "dark:via-cyan-400"
+          // Brand glow
+          "bg-gradient-to-r from-transparent via-primary to-transparent"
         )}
       />
 
@@ -342,10 +352,8 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
           }}
           className={cn(
             "absolute h-1 w-1 rounded-full",
-            // Light mode: Indigo/purple particles
-            "bg-gradient-to-b from-indigo-500 to-purple-500",
-            // Dark mode: Cyan/purple particles
-            "dark:from-cyan-400 dark:to-purple-400"
+            // Brand particles
+            "bg-gradient-to-b from-primary to-chart-2"
           )}
         />
       ))}

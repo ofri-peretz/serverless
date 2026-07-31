@@ -17,7 +17,7 @@ export default async function OpengraphImage() {
           alignItems: 'flex-start',
           justifyContent: 'center',
           padding: '80px',
-          background: 'linear-gradient(135deg, #0f0a1a 0%, #1a0f2e 60%, #2d1b4d 100%)',
+          background: 'linear-gradient(135deg, #0d1117 0%, #1f1209 60%, #4d2412 100%)',
           color: 'white',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
@@ -30,8 +30,8 @@ export default async function OpengraphImage() {
             padding: '8px 20px',
             border: '1px solid rgba(255, 255, 255, 0.18)',
             borderRadius: '999px',
-            background: 'rgba(124, 58, 237, 0.18)',
-            color: '#c4b5fd',
+            background: 'rgba(244, 121, 74, 0.18)',
+            color: '#fbb99a',
             fontSize: '24px',
             marginBottom: '32px',
           }}
@@ -49,7 +49,7 @@ export default async function OpengraphImage() {
         >
           Serverless plugins
           <br />
-          <span style={{ color: '#a78bfa' }}>that just work.</span>
+          <span style={{ color: '#f4794a' }}>that just work.</span>
         </div>
         <div
           style={{
