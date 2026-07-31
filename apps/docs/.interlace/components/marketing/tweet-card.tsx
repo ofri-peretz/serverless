@@ -159,7 +159,10 @@ const TweetHeader = ({ tweet }: { tweet: EnrichedTweet }) => (
             href={tweet.user.url}
             target="_blank"
             rel="noreferrer"
-            className="relative z-10 text-sm text-fd-muted-foreground transition-colors hover:text-fd-foreground"
+            // WCAG 2.5.8 — touch targets ≥24x24. Visual line-height stays
+            // small via `text-sm`, but the clickable `<a>` gets a minimum
+            // hit target via `inline-flex` + `min-h-6`.
+            className="relative z-10 inline-flex min-h-6 items-center text-sm text-fd-muted-foreground transition-colors hover:text-fd-foreground"
           >
             @{truncate(tweet.user.screen_name, 16)}
           </a>
@@ -170,7 +173,8 @@ const TweetHeader = ({ tweet }: { tweet: EnrichedTweet }) => (
       href={tweet.url}
       target="_blank"
       rel="noreferrer"
-      className="relative z-10"
+      // WCAG 2.5.8 — pad the icon link to a 24x24 minimum target.
+      className="relative z-10 inline-flex min-h-6 min-w-6 items-center justify-center"
     >
       <span className="sr-only">Link to tweet</span>
       <TwitterIcon className="size-5 items-start text-fd-muted-foreground transition-all ease-in-out hover:scale-105 hover:text-fd-foreground" />
@@ -272,14 +276,25 @@ export const MagicTweet = ({
   tweet: Tweet;
   className?: string;
 }) => {
-  const enrichedTweet = enrichTweet(tweet);
+  // Twitter's syndication API has, over time, dropped fields that
+  // `react-tweet`'s `enrichTweet` spreads unconditionally — most recently
+  // `entities.hashtags / user_mentions / symbols` and per-entity `indices`.
+  // A missing field crashes the build during prerender with an opaque
+  // "c is not iterable". Degrade to the skeleton instead of taking down
+  // the whole homepage.
+  let enrichedTweet: ReturnType<typeof enrichTweet>;
+  try {
+    enrichedTweet = enrichTweet(tweet);
+  } catch {
+    return <TweetSkeleton className={className} />;
+  }
   const tweetUrl = `https://x.com/${tweet.user.screen_name}/status/${tweet.id_str}`;
 
   return (
-    <div className="block group cursor-pointer">
+    <div className="block group cursor-pointer w-full max-w-[32rem]">
       <div
         className={cn(
-          'relative flex h-full w-full max-w-lg flex-col gap-4 overflow-hidden',
+          'relative flex h-full w-full max-w-[32rem] flex-col gap-4 overflow-hidden',
           'rounded-3xl border border-fd-border bg-fd-card p-6',
           'shadow-lg shadow-fd-border/40',
           'transition-all duration-300 ease-out',
