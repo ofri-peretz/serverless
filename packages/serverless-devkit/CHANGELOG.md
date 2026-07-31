@@ -1,5 +1,11 @@
 # @interlace/serverless-devkit
 
+## 1.0.1
+
+### Patch Changes
+
+- [#47](https://github.com/ofri-peretz/serverless/pull/47) [`402b398`](https://github.com/ofri-peretz/serverless/commit/402b39875af9b2910533bc2fd3f9d1545d5e8e03) Thanks [@ofri-peretz](https://github.com/ofri-peretz)! - docs: dual-logo README header (Interlace mark + Serverless mark side by side) and closing Interlace footer — refreshes the README rendered on npmjs.com. No runtime changes.
+
 ## 1.0.0
 
 ### Major Changes
