@@ -4,8 +4,8 @@
   "description": "TypeScript-native Serverless Framework plugins. Zero dependencies. Full IntelliSense. No ghost billing.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f0a1a",
-  "theme_color": "#7c3aed",
+  "background_color": "#0a0a0a",
+  "theme_color": "#7d350c",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -13,11 +13,6 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
-    },
-    {
-      "src": "/favicon.ico",
-      "sizes": "48x48",
-      "type": "image/x-icon"
     }
   ],
   "categories": ["developer", "infrastructure", "productivity"],

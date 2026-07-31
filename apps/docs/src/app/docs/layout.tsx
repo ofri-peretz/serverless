@@ -5,7 +5,7 @@ import { buildPillarIcons } from '#interlace/layouts/pillar-icons';
 import { Shield, Wrench, BookOpen } from 'lucide-react';
 
 const { transform } = buildPillarIcons({
-  plugins: { icon: Shield, color: 'purple' },
+  plugins: { icon: Shield, color: 'brand' },
   'serverless-devkit': { icon: Wrench, color: 'blue' },
   guides: { icon: BookOpen, color: 'emerald' },
 });

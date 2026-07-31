@@ -65,17 +65,20 @@ export interface HeroProps {
   secondaryCta?: HeroCta;
   /** Optional install command shown in a code-styled box with a border beam. */
   installCommand?: string;
-  /** Spotlight color (CSS color expr). Defaults to brand purple. */
+  /** Spotlight color (CSS color expr). Defaults to the brand orange beam token. */
   spotlightColor?: string;
-  /** Border-beam start color. Defaults to brand purple. */
+  /** Border-beam start color. Defaults to the brand orange beam token. */
   beamColorFrom?: string;
-  /** Border-beam end color. Defaults to brand purple. */
+  /** Border-beam end color. Defaults to the brand green beam token. */
   beamColorTo?: string;
 }
 
-const DEFAULT_SPOTLIGHT = 'hsl(250 95% 64%)';
-const DEFAULT_BEAM_FROM = 'hsl(250 95% 64%)';
-const DEFAULT_BEAM_TO = 'hsl(280 80% 60%)';
+// Token-driven defaults — resolve per theme via `css/brand.css`
+// (`--color-beam-from` = brand burnt orange, `--color-beam-to` = brand
+// bottle green). Consumers can still pass any CSS color expression.
+const DEFAULT_SPOTLIGHT = 'var(--color-beam-from)';
+const DEFAULT_BEAM_FROM = 'var(--color-beam-from)';
+const DEFAULT_BEAM_TO = 'var(--color-beam-to)';
 
 function isAbsoluteUrl(href: string): boolean {
   return /^https?:\/\//.test(href);
@@ -138,7 +141,7 @@ export function Hero({
             <br />
             <FlipWords
               words={flipWords}
-              className="bg-gradient-to-r from-fd-primary to-purple-400 bg-clip-text text-transparent"
+              className="bg-gradient-to-r from-fd-primary to-beam-to bg-clip-text text-transparent"
             />
           </>
         ) : null}
