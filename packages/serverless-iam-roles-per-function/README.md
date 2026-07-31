@@ -1,3 +1,13 @@
+<!-- INTERLACE:BRAND_HEADER:START -->
+
+<p align="center">
+  <a href="https://serverless.interlace.tools/?utm_source=github&utm_medium=referral&utm_campaign=serverless-iam-roles-per-function" target="blank"><img src="https://serverless.interlace.tools/icon-light.svg" alt="Interlace" height="90" /></a>
+  &nbsp;&nbsp;
+  <a href="https://www.serverless.com" target="_blank"><img src="https://serverless.interlace.tools/serverless-logo.svg" alt="Serverless Framework" height="90" /></a>
+</p>
+
+<!-- INTERLACE:BRAND_HEADER:END -->
+
 # @interlace/serverless-iam-roles-per-function
 
 > Per-function IAM roles for Serverless Framework — strict, typed, observable.
@@ -233,3 +243,11 @@ The strict statement validator (`sls iam validate`) catches what the community p
 ## License
 
 MIT — © Ofri Peretz
+
+<!-- INTERLACE:BRAND_FOOTER:START -->
+
+<p align="center">
+  <a href="https://serverless.interlace.tools/?utm_source=github&utm_medium=referral&utm_campaign=serverless-iam-roles-per-function" target="blank"><img src="https://serverless.interlace.tools/icon-light.svg" alt="Interlace" height="70" /></a>
+</p>
+
+<!-- INTERLACE:BRAND_FOOTER:END -->
