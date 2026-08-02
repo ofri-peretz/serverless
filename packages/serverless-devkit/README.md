@@ -165,6 +165,10 @@ MIT
 <!-- INTERLACE:BRAND_FOOTER:START -->
 
 <p align="center">
+  <a href="https://serverless.interlace.tools/docs/serverless-devkit?utm_source=github&utm_medium=referral&utm_campaign=serverless-devkit"><img src="https://serverless.interlace.tools/images/og-devkit.png" alt="Serverless Interlace" width="100%" /></a>
+</p>
+
+<p align="center">
   <a href="https://serverless.interlace.tools/?utm_source=github&utm_medium=referral&utm_campaign=serverless-devkit" target="blank"><img src="https://serverless.interlace.tools/icon-light.svg" alt="Interlace" height="70" /></a>
 </p>
 

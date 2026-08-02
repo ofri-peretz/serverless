@@ -247,6 +247,10 @@ MIT — © Ofri Peretz
 <!-- INTERLACE:BRAND_FOOTER:START -->
 
 <p align="center">
+  <a href="https://serverless.interlace.tools/docs/plugins/iam-roles-per-function?utm_source=github&utm_medium=referral&utm_campaign=serverless-iam-roles-per-function"><img src="https://serverless.interlace.tools/images/og-iam-roles-per-function.png" alt="Serverless Interlace" width="100%" /></a>
+</p>
+
+<p align="center">
   <a href="https://serverless.interlace.tools/?utm_source=github&utm_medium=referral&utm_campaign=serverless-iam-roles-per-function" target="blank"><img src="https://serverless.interlace.tools/icon-light.svg" alt="Interlace" height="70" /></a>
 </p>
 
