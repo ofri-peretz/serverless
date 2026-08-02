@@ -451,6 +451,10 @@ MIT
 <!-- INTERLACE:BRAND_FOOTER:START -->
 
 <p align="center">
+  <a href="https://serverless.interlace.tools/docs/plugins/api-gateway-caching?utm_source=github&utm_medium=referral&utm_campaign=serverless-api-gateway-caching"><img src="https://serverless.interlace.tools/images/og-api-gateway-caching.png" alt="Serverless Interlace" width="100%" /></a>
+</p>
+
+<p align="center">
   <a href="https://serverless.interlace.tools/?utm_source=github&utm_medium=referral&utm_campaign=serverless-api-gateway-caching" target="blank"><img src="https://serverless.interlace.tools/icon-light.svg" alt="Interlace" height="70" /></a>
 </p>
 

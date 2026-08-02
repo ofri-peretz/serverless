@@ -11,7 +11,8 @@
     "lint:oxlint": "oxlint -c ../../.oxlintrc.json --deny=correctness --deny=suspicious --deny=perf --allow=no-await-in-loop --allow=no-shadow --allow=no-underscore-dangle --allow=unicorn/no-array-sort src",
     "test": "vitest run",
     "test:watch": "vitest",
-    "postinstall": "fumadocs-mdx"
+    "postinstall": "fumadocs-mdx",
+    "og:generate": "node scripts/generate-og-images.mjs --plugins-only"
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",
