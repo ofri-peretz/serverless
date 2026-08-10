@@ -143,14 +143,20 @@ export function initPostHog(): void {
         }),
     before_send: (event) => {
       if (!event) return event;
-      if (
-        event.event === '$exception' &&
-        isNoisyException(
-          event.properties as Record<string, unknown> | undefined,
-        )
-      )
-        return null;
       try {
+        // Inside the try on purpose. isNoisyException cannot throw as written
+        // — every access is optional-chained or typeof-guarded — but the rest
+        // of this handler follows a "never block ingest" rule, and a filter
+        // that is only safe by inspection stops being safe the moment someone
+        // extends it. A throw here would drop the event entirely.
+        if (
+          event.event === '$exception' &&
+          isNoisyException(
+            event.properties as Record<string, unknown> | undefined,
+          )
+        ) {
+          return null;
+        }
         const props = event.properties as Record<string, unknown> | undefined;
         if (props && typeof props['$current_url'] === 'string') {
           props['$current_url'] = normaliseCurrentUrl(
