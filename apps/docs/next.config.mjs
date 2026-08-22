@@ -1,5 +1,4 @@
 import { createMDX } from 'fumadocs-mdx/next';
-import { withPostHogConfig } from '@posthog/nextjs-config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,6 +27,12 @@ function cspReportOnlyHeaders() {
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
+    // TODO(csp-promotion): do NOT carry 'unsafe-eval' into the enforcing
+    // header. It re-enables eval()/new Function() and undermines the XSS
+    // mitigation this policy exists for (CWE-749). It is here only so the
+    // report-only stream isn't drowned by it; the violation data will say
+    // whether anything actually needs it, and Next's nonce support
+    // (experimental.cspHeader) is the replacement if something does.
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
@@ -49,10 +54,14 @@ function cspReportOnlyHeaders() {
  * Inert unless both env vars are set, so local builds and forks stay
  * byte-identical to today and no build can fail for want of a token.
  */
-function withSourcemapUpload(nextConfig) {
+async function withSourcemapUpload(nextConfig) {
   const personalApiKey = process.env.POSTHOG_PERSONAL_API_KEY?.trim();
   const projectId = process.env.POSTHOG_PROJECT_ID?.trim();
   if (!personalApiKey || !projectId) return nextConfig;
+  // Imported here rather than at module scope: the package is a
+  // devDependency, and a top-level import would make this config
+  // unloadable in an --omit=dev install even with the gate off.
+  const { withPostHogConfig } = await import('@posthog/nextjs-config');
   return withPostHogConfig(nextConfig, {
     personalApiKey,
     projectId,
@@ -171,4 +180,4 @@ const config = {
   ],
 };
 
-export default withSourcemapUpload(withMDX(config));
+export default await withSourcemapUpload(withMDX(config));
