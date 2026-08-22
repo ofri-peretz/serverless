@@ -37,6 +37,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@posthog/nextjs-config": "^1.9.70",
     "@types/node": "^24.9.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
