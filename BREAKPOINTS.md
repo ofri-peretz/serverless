@@ -8,7 +8,7 @@
 > ⚠️ **This repo's ladder and the design system's disagree.** The apps here use
 > Tailwind v4 defaults (`sm:` 640px, `2xl:` 1536px) and their lock test fails if
 > `--breakpoint-*` overrides exist. `@interlace/ui` narrowed to four rem tiers
-> (`sm:` **480px**, no `2xl:`) and *its* lock fails if they don't. Neither is
+> (`sm:` **480px**, no `2xl:`) and _its_ lock fails if they don't. Neither is
 > broken — they govern different surfaces — but a component pulled from
 > `@interlace/ui` into an app here hits `sm:` at 640px, not the 480px its
 > `MIN_VIEWPORT` contract assumes. **Adopting the DS ladder here is an open
