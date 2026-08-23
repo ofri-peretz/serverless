@@ -17,8 +17,7 @@
  * turns a crawler into a load generator. Middleware observes the request
  * without changing how either file is served.
  */
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 const MAX_UA_LENGTH = 300;
 
