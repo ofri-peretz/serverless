@@ -58,6 +58,23 @@ async function withSourcemapUpload(nextConfig) {
   const personalApiKey = process.env.POSTHOG_PERSONAL_API_KEY?.trim();
   const projectId = process.env.POSTHOG_PROJECT_ID?.trim();
   if (!personalApiKey || !projectId) return nextConfig;
+  // Shape-checked, not just present. The gate used to test presence alone,
+  // and this repo is where that proved insufficient: POSTHOG_PERSONAL_API_KEY
+  // here held a `phc_` project key, so the uploader ran, rejected it, and
+  // failed the production deploy with `Invalid Personal API key: "Token looks
+  // wrong, must start with 'phx_'"`. A deploy lost to a source-map upload,
+  // which is a nicety. Symbolication is worth having; it is not worth a
+  // deploy.
+  //
+  // `phx_` is the personal API key prefix. `phc_` is the *project* key — a
+  // different credential, public by design, that cannot authorise an upload.
+  // Confusing the two is the likely mistake, so name it in the warning.
+  if (!personalApiKey.startsWith('phx_')) {
+    console.warn(
+      '[sourcemaps] POSTHOG_PERSONAL_API_KEY is set but is not a personal API key (expected a `phx_` prefix; a `phc_` value is the public project key). Skipping source-map upload — errors will report unsymbolicated.',
+    );
+    return nextConfig;
+  }
   // Imported here rather than at module scope: the package is a
   // devDependency, and a top-level import would make this config
   // unloadable in an --omit=dev install even with the gate off.
