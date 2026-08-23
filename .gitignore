@@ -1,5 +1,10 @@
 # Dependencies
+# Both spellings on purpose. `node_modules/` matches a directory but NOT a
+# symlink of that name — git records a symlink as a file, so a worktree that
+# links node_modules to a sibling checkout sails straight past the trailing
+# slash and commits an absolute path to someone's laptop.
 node_modules/
+node_modules
 .pnp
 .pnp.js
 

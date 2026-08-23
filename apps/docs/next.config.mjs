@@ -82,7 +82,11 @@ const config = {
 
   images: {
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 31536000,
+    // One hour, not one year. The optimizer keys on the *source* URL, and
+    // sources are stable paths — a year-long floor pinned the optimized
+    // derivative long after its source had changed, with no way for a release
+    // to evict it. Same defect fixed in the eslint docs (ofri-peretz/eslint#628).
+    minimumCacheTTL: 3600,
   },
 
   experimental: {
@@ -115,6 +119,26 @@ const config = {
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        {
+          key: 'Permissions-Policy',
+          // `browsing-topics`, not `interest-cohort`: FLoC was withdrawn and
+          // no shipping browser reads the old token. The Topics API that
+          // replaced it reads this one.
+          value: 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+        },
+        // Vercel sends HSTS but omits includeSubDomains.
+        {
+          key: 'Strict-Transport-Security',
+          value: 'max-age=63072000; includeSubDomains',
+        },
+        // Severs the window.opener relationship with cross-origin openers, so
+        // this document cannot be reached by another browsing context group.
+        // Safe here: nothing in this app calls window.open, so there is no
+        // popup flow to break.
+        {
+          key: 'Cross-Origin-Opener-Policy',
+          value: 'same-origin',
+        },
         ...cspReportOnlyHeaders(),
       ],
     },
