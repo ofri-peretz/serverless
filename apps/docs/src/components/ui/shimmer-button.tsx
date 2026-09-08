@@ -30,7 +30,6 @@ export const ShimmerButton = React.forwardRef<
     ref
   ) => {
     return (
-      // eslint-disable-next-line react-a11y/no-missing-aria-labels -- accessible name comes from children
       <button
         style={
           {
