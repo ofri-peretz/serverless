@@ -17,7 +17,7 @@
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",
     "@fumadocs/mdx-remote": "^1.4.4",
-    "@supabase/supabase-js": "^2.115.0",
+    "@supabase/supabase-js": "^2.117.1",
     "@tailwindcss/postcss": "^4.1.18",
     "clsx": "^2.1.1",
     "fumadocs-core": "^16.5.0",
@@ -28,12 +28,12 @@
     "mermaid": "^11.17.2",
     "motion": "^12.42.2",
     "next": "^16.1.6",
-    "posthog-js": "^1.426.4",
+    "posthog-js": "^1.434.13",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-tweet": "3.3.1",
     "recharts": "^3.10.1",
-    "tailwind-merge": "^3.6.0",
+    "tailwind-merge": "^3.7.0",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
