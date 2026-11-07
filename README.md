@@ -10,16 +10,18 @@ The **Interlace Serverless** ecosystem is a collection of TypeScript-first plugi
 
 ## Packages
 
-All plugins are published under the `@interlace` scope on npm.
+Published plugins live under the `@interlace` scope on npm.
 
-| Package                                     | Description                                      | Status         |
-| ------------------------------------------- | ------------------------------------------------ | -------------- |
-| `@interlace/serverless-devkit`              | Shared types, config builder, layer helpers      | 🔜 Coming Soon |
-| `@interlace/serverless-plugin-openapi`      | OpenAPI-first: docs, Zod schemas, SDK generation | 🔜 Coming Soon |
-| `@interlace/serverless-plugin-package`      | Multi-region deploy, workspace isolation         | 🔜 Coming Soon |
-| `@interlace/serverless-plugin-proxy`        | Middleware composition with presets              | 🔜 Coming Soon |
-| `@interlace/serverless-plugin-build-layers` | Lambda Layer artifact building                   | 🔜 Coming Soon |
-| `@interlace/serverless-plugin-throttling`   | API Gateway throttling with rollout control      | 🔜 Coming Soon |
+| Package                                        | Description                                      | Status       |
+| ---------------------------------------------- | ------------------------------------------------ | ------------ |
+| `@interlace/serverless-api-gateway-caching`    | API Gateway caching; removes what it created     | ✅ Available |
+| `@interlace/serverless-iam-roles-per-function` | Least-privilege IAM role per function            | ✅ Available |
+| `@interlace/serverless-devkit`                 | Shared types, config builder, layer helpers      | ✅ Available |
+| `@interlace/serverless-plugin-openapi`         | OpenAPI-first: docs, Zod schemas, SDK generation | 🔜 Planned   |
+| `@interlace/serverless-plugin-package`         | Multi-region deploy, workspace isolation         | 🔜 Planned   |
+| `@interlace/serverless-plugin-proxy`           | Middleware composition with presets              | 🔜 Planned   |
+| `@interlace/serverless-plugin-build-layers`    | Lambda Layer artifact building                   | 🔜 Planned   |
+| `@interlace/serverless-plugin-throttling`      | API Gateway throttling with rollout control      | 🔜 Planned   |
 
 ## Quick Start
 

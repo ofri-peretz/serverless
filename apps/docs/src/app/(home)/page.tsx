@@ -32,7 +32,7 @@ export default function HomePage() {
 
         <div className="inline-flex items-center gap-2 rounded-full border border-fd-border bg-fd-card px-4 py-1.5 text-sm text-fd-muted-foreground">
           <Package className="h-3.5 w-3.5" />
-          <span>Now available — v0.1.0</span>
+          <span>Now available — v1</span>
         </div>
 
         <h1 className="max-w-4xl text-4xl font-bold tracking-tight md:text-6xl">
