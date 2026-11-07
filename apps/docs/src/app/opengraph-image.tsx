@@ -36,7 +36,7 @@ export default async function OpengraphImage() {
             marginBottom: '32px',
           }}
         >
-          @interlace/serverless · v0.1.0
+          @interlace/serverless · v1 · an Interlace project
         </div>
         <div
           style={{
