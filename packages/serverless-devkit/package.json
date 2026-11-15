@@ -1,7 +1,7 @@
 {
   "name": "@interlace/serverless-devkit",
   "version": "1.0.1",
-  "description": "TypeScript-first configuration toolkit for Serverless Framework — defineConfig, types, and plugin helpers",
+  "description": "Serverless TypeScript config toolkit — defineConfig, types, and plugin helpers for Serverless Framework",
   "type": "module",
   "sideEffects": false,
   "engines": {
