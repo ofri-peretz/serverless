@@ -9,9 +9,10 @@
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-const ROOT = resolve(__dirname, '..', '..', '..');
+const ROOT = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const REPO = 'https://github.com/ofri-peretz/serverless';
 
 const published = readdirSync(join(ROOT, 'packages'))
