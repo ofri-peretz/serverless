@@ -69,7 +69,7 @@ jobs:
 
       - name: 📦 Create Release PR or Publish
         id: changesets
-        uses: changesets/action@v2
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0: v2 needs Changesets CLI v3
         with:
           title: 'chore(release): version packages'
           commit: 'chore(release): version packages'
