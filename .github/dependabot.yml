@@ -101,6 +101,10 @@ updates:
       - 'github-actions'
     commit-message:
       prefix: 'chore(ci)'
+    ignore:
+      # changesets/action v2 needs Changesets CLI v3; we are on CLI v2. Lift with the CLI major.
+      - dependency-name: 'changesets/action'
+        update-types: ['version-update:semver-major']
     groups:
       all-actions:
         patterns:
