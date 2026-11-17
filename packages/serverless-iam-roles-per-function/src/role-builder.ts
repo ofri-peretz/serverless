@@ -136,6 +136,7 @@ function collectStatementsForFunction(
   const { serverless, provider, settings } = ctx;
   const out: IamStatement[] = [];
 
+  // eslint-disable-next-line conventions/no-commented-code -- prose, not code (FP ofri-peretz/eslint#1553)
   // Always: scoped log statement (function-specific log group)
   out.push(buildLogStatement(provider, fn.name ?? fnName));
 

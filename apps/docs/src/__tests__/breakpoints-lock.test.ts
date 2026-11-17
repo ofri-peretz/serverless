@@ -97,8 +97,8 @@ describe('Breakpoint contract (BREAKPOINTS.md)', () => {
     }
     expect(
       offenders,
-      `Found viewport arbitrary breakpoints. Use sm/md/lg/xl/2xl per BREAKPOINTS.md.\n` +
-        offenders.map((o) => `  ${o.file}: ${o.matches.join(', ')}`).join('\n'),
+      `Found viewport arbitrary breakpoints. Use sm/md/lg/xl/2xl per BREAKPOINTS.md.
+${offenders.map((o) => `  ${o.file}: ${o.matches.join(', ')}`).join('\n')}`,
     ).toEqual([]);
   });
 

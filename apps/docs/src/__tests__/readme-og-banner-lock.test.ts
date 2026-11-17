@@ -31,8 +31,6 @@ function publishedPackages() {
   for (const entry of readdirSync(PACKAGES_DIR, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
 
-    // `entry.name` comes from readdirSync of a fixed in-repo path, never an archive entry.
-    // eslint-disable-next-line node-security/no-zip-slip -- false positive: not archive input
     const root = path.join(PACKAGES_DIR, entry.name);
     const manifestPath = path.join(root, 'package.json');
     if (!existsSync(manifestPath)) continue;

@@ -175,7 +175,7 @@ export interface StageMethodSettings {
 // own `src/types.ts`. See `apps/docs/content/docs/serverless-devkit/extending-types.mdx`.
 
 // oxlint-disable-next-line unicorn/require-module-specifiers -- intentional empty type import; binds augmentation target under Node16 module resolution
-import type {} from '@interlace/serverless-devkit';
+import type {} from '@interlace/serverless-devkit'; // eslint-disable-line import-next/no-empty-named-blocks -- binds the augmentation target below; the rule's autofix would delete it (FP ofri-peretz/eslint#1552)
 
 declare module '@interlace/serverless-devkit' {
   interface PluginConfigRegistry {
