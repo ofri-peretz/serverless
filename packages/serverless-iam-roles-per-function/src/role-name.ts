@@ -43,7 +43,7 @@ export function buildPerFunctionRoleName(opts: BuildRoleNameOptions): unknown {
 
   if (
     nameLength(parts, opts.serverless) > AWS_ROLE_NAME_LIMIT &&
-    parts[parts.length - 1] === 'lambdaRole'
+    parts.at(-1) === 'lambdaRole'
   ) {
     // Drop trailing 'lambdaRole' suffix to make room for the function name.
     parts.pop();

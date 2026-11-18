@@ -5,7 +5,7 @@ import reactA11y from 'eslint-plugin-react-a11y';
 import reactFeatures from 'eslint-plugin-react-features';
 // Interlace ecosystem — à-la-carte (each plugin's own `recommended`), NOT the
 // @interlace/eslint-config meta-config.
-//   security: secure-coding + node-security + lambda-security
+//   security: secure-coding, node-security, lambda-security, browser-security
 //   quality:  conventions, import-next, reliability, modularity, modernization,
 //             maintainability, operability
 // maintainability/operability/lambda-security were SKIPPED on 2026-06-20 due to
@@ -21,6 +21,8 @@ import { configs as modularityCfg } from 'eslint-plugin-modularity';
 import { configs as modernizationCfg } from 'eslint-plugin-modernization';
 import { configs as maintainabilityCfg } from 'eslint-plugin-maintainability';
 import { configs as operabilityCfg } from 'eslint-plugin-operability';
+// The docs site is the one surface that ships to a browser (added 2026-11-17).
+import { configs as browserSecurityCfg } from 'eslint-plugin-browser-security';
 
 /**
  * @interlace ecosystem ESLint config — strict for published-package source,
@@ -85,6 +87,10 @@ export default [
   modernizationCfg.recommended,
   maintainabilityCfg.recommended,
   operabilityCfg.recommended,
+  {
+    ...browserSecurityCfg.recommended,
+    files: ['apps/docs/**/*.{ts,tsx}'],
+  },
 
   // ────────────────────────────────────────────────────────────────────────
   // 2. TypeScript-only rules across the repo
@@ -235,7 +241,8 @@ export default [
       //  - ESM extensionful-import resolver noise (~93 hits), not a real backlog
       'import-next/no-unresolved': 'warn',
       //  - a handful of real security/reliability finds — surface, don't block
-      'node-security/no-ssrf': 'warn',
+      //    (no-ssrf: ratcheted to error 2026-11-17, 0 hits on node-security 6.0.4)
+      'node-security/no-ssrf': 'error',
       'reliability/require-network-timeout': 'warn',
       // New from 2026-06-21 — maintainability/operability/lambda-security added
       // after their published-build bugs were fixed (3.0.4/3.0.6/1.2.4):
@@ -246,10 +253,21 @@ export default [
       'maintainability/cognitive-complexity': 'warn',
       'maintainability/identical-functions': 'warn',
       'maintainability/max-parameters': 'warn',
-      //  - lambda-security: REAL security issues, surfaced as warn to not block
-      //    current PRs; ratchet to error once each handler is reviewed
-      'lambda-security/no-error-swallowing': 'warn',
-      'lambda-security/no-exposed-debug-endpoints': 'warn',
+      //  - lambda-security: ratcheted to error 2026-11-17. Its 27 hits were the
+      //    26 no-error-swallowing + 1 no-exposed-debug-endpoints on 1.2.5; the gate
+      //    fix in ofri-peretz/eslint#1150 shipped since, and 3.0.2 reports 0 here.
+      'lambda-security/no-error-swallowing': 'error',
+      'lambda-security/no-exposed-debug-endpoints': 'error',
+      // The rule reads only the nearest package.json. Test and build tooling is declared
+      // once, in the root manifest, and hoisted; `@/` is the docs app's tsconfig path alias,
+      // not a package (FP ofri-peretz/eslint#1551).
+      'import-next/no-extraneous-dependencies': [
+        'warn',
+        {
+          allowPatterns: ['^@/'],
+          ignore: ['vitest', 'vite', 'vite-plugin-dts'],
+        },
+      ],
     },
   },
 ];

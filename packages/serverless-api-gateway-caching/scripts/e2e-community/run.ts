@@ -712,7 +712,9 @@ async function main(): Promise<void> {
     process.exitCode = 1;
   } finally {
     persistRunLog();
-    if (WORK_DIR && existsSync(WORK_DIR)) {
+    // No existsSync first: `force` already treats a missing directory as done, and a check
+    // before the remove is a race (CWE-367).
+    if (WORK_DIR) {
       try {
         rmSync(WORK_DIR, { recursive: true, force: true });
       } catch (err) {

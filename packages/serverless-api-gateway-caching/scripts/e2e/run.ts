@@ -779,7 +779,7 @@ function verifyClean(ctx: RunContext): void {
   } catch {
     // describe-stacks errors when the stack is fully gone — that's the success case
     info('describe-stacks errored, which is the expected post-remove state.');
-    ok('no live stack named ' + stackName);
+    ok(`no live stack named ${stackName}`);
     return;
   }
   result = result.trim();
