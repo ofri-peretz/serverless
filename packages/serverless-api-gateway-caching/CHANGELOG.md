@@ -1,5 +1,11 @@
 # @interlace/serverless-api-gateway-caching
 
+## 1.0.2
+
+### Patch Changes
+
+- [#79](https://github.com/ofri-peretz/serverless/pull/79) [`4ce645d`](https://github.com/ofri-peretz/serverless/commit/4ce645dd804674c41b2367444d492693d5752e27) Thanks [@ofri-peretz](https://github.com/ofri-peretz)! - Descriptions now open with the phrase people search npm for ("Serverless IAM roles per function", "Serverless API Gateway caching", "Serverless TypeScript config"), so the packages show up in npm search.
+
 ## 1.0.1
 
 ### Patch Changes
