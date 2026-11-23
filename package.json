@@ -41,7 +41,9 @@
     "changeset:version": "changeset version",
     "changeset:publish": "turbo run build && changeset publish",
     "changeset:status": "changeset status --verbose",
-    "prepare": "lefthook install || true"
+    "prepare": "lefthook install || true",
+    "hook:staged": "sh -c 'prettier --check --ignore-unknown \"$@\" && eslint --no-warn-ignored --max-warnings 0 \"$@\"' hook-staged",
+    "hook:verify": "TURBO_SCM_BASE=origin/main turbo run typecheck test build --affected --output-logs=errors-only"
   },
   "keywords": [
     "serverless",
