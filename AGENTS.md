@@ -29,5 +29,5 @@ monorepo of TypeScript-first Serverless Framework plugins.
 
 ## Common Tasks
 
-Scripts are in `package.json`: `npm run build`, `npm test`, `npm run ci:local`, `npm run fix`.
+Scripts are in `package.json`: `npm run build`, `npm test`, `npm run typecheck`, `npm run ci:local`, `npm run fix`.
 Adding a plugin: `CONTRIBUTING.md`.
