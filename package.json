@@ -33,6 +33,7 @@
     "ci:format": "prettier --check \"**/*.{md,yml,yaml,json,ts,mts,js,mjs}\"",
     "ci:oxlint": "oxlint -c .oxlintrc.json --deny=correctness --deny=suspicious --deny=perf --allow=no-await-in-loop --allow=no-shadow --allow=no-underscore-dangle --allow=unicorn/no-array-sort .",
     "ci:lint": "eslint .",
+    "ci:local": "npm run ci:format && npm run ci:oxlint && npm run ci:lint",
     "ci:typecheck": "tsc --noEmit -p tsconfig.json",
     "fix": "prettier --write \"**/*.{md,yml,yaml,json,ts,mts,js,mjs}\" && eslint --fix .",
     "changeset": "changeset",
