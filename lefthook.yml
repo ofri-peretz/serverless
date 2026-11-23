@@ -1,29 +1,14 @@
-# Pre-commit: prettier + eslint + typecheck.
-# PATH wrapper ensures Homebrew binaries are available in GUI git clients.
-pre-commit:
-  parallel: true
-  commands:
-    prettier:
-      glob: '*.{md,yml,yaml,json,ts,mts,js,mjs}'
-      run: sh scripts/lefthook-with-node-path.sh npx --no -- prettier --check {staged_files}
-      fail_text: 'Run `npm run fix` to auto-format, then re-stage.'
-    eslint:
-      glob: '*.{js,ts,mjs,mts,cjs,cts}'
-      run: sh scripts/lefthook-with-node-path.sh npx --no eslint .
-      fail_text: 'Fix ESLint errors. Run `npx eslint --fix .` for auto-fixable issues.'
-    typecheck:
-      glob: '**/*.ts'
-      run: sh scripts/lefthook-with-node-path.sh npx --no tsc --noEmit
-      fail_text: 'TypeScript error. Run `npx tsc --noEmit` to see details.'
-
-pre-push:
-  commands:
-    build:
-      run: sh scripts/lefthook-with-node-path.sh npx --no -- turbo run build --output-logs errors-only
-      fail_text: 'Build failed. Fix errors before pushing.'
-
-commit-msg:
-  commands:
-    commitlint:
-      run: sh scripts/lefthook-with-node-path.sh npx --no -- commitlint --edit {1}
-      fail_text: "Commit message doesn't follow convention. Format: type(scope): description — see commitlint.config.mjs."
+# Git hooks. The stations come from the hookset presets (burgee packages/hookset), pinned by tag:
+# bump `ref` to take a new preset version. `hookset check` (CI, hooks.yml) fails on a missing
+# station, an unpinned ref, or a step here that repeats one a preset runs.
+#
+#   commit-msg  commitlint
+#   pre-commit  npm run hook:staged -- <staged files>   prettier + eslint on the staged files only
+#   pre-push    npm run hook:verify                     typecheck, test and build, affected vs origin/main
+remotes:
+  - git_url: https://github.com/ofri-peretz/burgee
+    ref: hookset@0.1.0
+    configs:
+      - packages/hookset/presets/lefthook/commit-msg.yml
+      - packages/hookset/presets/lefthook/pre-commit.yml
+      - packages/hookset/presets/lefthook/pre-push.yml
