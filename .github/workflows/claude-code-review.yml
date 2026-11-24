@@ -59,10 +59,25 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      # `triggerlist brief` reads the rules from the base branch and fails when it has none, as on
+      # the pull request that adds them: that one run skips the review instead of going red.
+      - name: Does the base branch have the review rules?
+        id: rules
+        if: steps.token.outputs.present == 'true'
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          if git cat-file -e "origin/$BASE_REF:.sdlc/checklist.yaml" && git cat-file -e "origin/$BASE_REF:REVIEW.md"; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Claude review skipped::$BASE_REF has no .sdlc/checklist.yaml or REVIEW.md yet."
+          fi
+
       # triggerlist (burgee): the reviewer reads REVIEW.md and .sdlc/checklist.yaml from the base
       # branch, the checklist items this diff fires, and its own findings from the previous round.
       - name: Claude Code Review
-        if: steps.token.outputs.present == 'true'
+        if: steps.rules.outputs.present == 'true'
         uses: ofri-peretz/burgee/.github/actions/triggerlist-review@hookset@0.3.0
         with:
           claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
