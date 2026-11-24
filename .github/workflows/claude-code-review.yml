@@ -50,18 +50,27 @@ jobs:
         if: steps.token.outputs.present == 'true'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v6
         with:
-          fetch-depth: 1
+          # triggerlist diffs base...HEAD, so the merge base has to be here.
+          fetch-depth: 0
 
+      # triggerlist needs Node 22.13+.
+      - uses: actions/setup-node@v7
+        if: steps.token.outputs.present == 'true'
+        with:
+          node-version-file: .nvmrc
+
+      # triggerlist (burgee): the reviewer reads REVIEW.md and .sdlc/checklist.yaml from the base
+      # branch, the checklist items this diff fires, and its own findings from the previous round.
       - name: Claude Code Review
         if: steps.token.outputs.present == 'true'
-        uses: anthropics/claude-code-action@56cf60fde42f7b19c3abfd5c9c48b69a1288461f # v1
+        uses: ofri-peretz/burgee/.github/actions/triggerlist-review@hookset@0.3.0
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          track_progress: true
-          prompt: |
-            REPO: ${{ github.repository }}
-            PR NUMBER: ${{ github.event.pull_request.number }}
-
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          triggerlist: npx --yes triggerlist@0.3.0
+          claude-args: |
+            --model claude-sonnet-4-6
+            --max-turns 20
+          preamble: |
             Review this pull request. First read the repository's CLAUDE.md /
             AGENTS.md and honour its conventions and contracts.
 
@@ -77,14 +86,6 @@ jobs:
                don't update the matching docs, types, or README, and CLAUDE.md
                statements made stale by the change.
 
-            Be precise and low-noise: only post a finding when you can cite the
-            specific file:line and explain why it is wrong. Cap nits -- prefer a
-            single summary line over many inline style comments. If you find no
-            blocking issues, say so plainly.
-
-            Post specific issues as inline comments; use one top-level comment
-            for the summary.
-          claude_args: |
-            --model claude-sonnet-4-6
-            --max-turns 20
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            Be precise and low-noise: cap nits -- prefer a single summary line
+            over many inline style comments. If you find no blocking issues,
+            say so plainly.

@@ -1,0 +1,68 @@
+# The review checklist (triggerlist). Each item fires only when its trigger matches the diff, so a
+# reviewer reads the handful that apply, never the whole list. CI reads this file from the base
+# branch: a pull request cannot change the checks it is held to.
+# After editing: `npx triggerlist compile` rewrites REVIEW.md.
+
+# Files that judge code. A pull request changing one of these and other files together is flagged
+# by `triggerlist protect` (the pre-push hook:triggerlist).
+gates:
+  - REVIEW.md
+  - .sdlc/checklist.yaml
+  - lefthook.yml
+  - commitlint.config.mjs
+  - packages/*/src/*.lock.test.ts
+  - .github/workflows/claude-code-review.yml
+  - .github/workflows/hooks.yml
+
+items:
+  - id: commonjs-entry
+    trigger:
+      paths: ['packages/*/package.json', 'packages/*/vite.config.ts']
+      pattern: '"main"|"require"|"exports"|formats|cjs'
+    question: Does every published plugin still ship a .cjs main, an exports["."].require and a vite cjs build, so the Serverless Framework can require it?
+    check: npx vitest run --root packages/serverless-devkit src/commonjs-entry.lock.test.ts
+    sources: [packages/serverless-devkit/src/commonjs-entry.lock.test.ts, '#91']
+
+  - id: npm-search-description
+    trigger:
+      paths: ['packages/*/package.json']
+      pattern: '"description"'
+    question: Does each published description still open with "Serverless ", the words people type into npm search?
+    check: npx vitest run --root packages/serverless-devkit src/npm-search-description.lock.test.ts
+    sources:
+      [
+        packages/serverless-devkit/src/npm-search-description.lock.test.ts,
+        '#79',
+      ]
+
+  - id: package-repository-folder
+    trigger:
+      paths: ['packages/*/package.json']
+      pattern: '"repository"|"directory"|"url"'
+    question: Does repository.directory point at this package's own folder in ofri-peretz/serverless, not one copied from another manifest?
+    check: npx vitest run --root packages/serverless-devkit src/package-repository.lock.test.ts
+    sources:
+      [packages/serverless-devkit/src/package-repository.lock.test.ts, '#78']
+
+  - id: changesets-action-major
+    trigger:
+      paths: ['.github/workflows/release.yml', 'package.json']
+      pattern: 'changesets/action|@changesets/cli'
+    question: Does the changesets/action major still match the Changesets CLI major (action v1 with CLI v2), so Release runs publish?
+    check: npx vitest run --root packages/serverless-devkit src/release-action.lock.test.ts
+    sources: [packages/serverless-devkit/src/release-action.lock.test.ts, '#81']
+
+  - id: changeset-for-package-change
+    trigger:
+      paths: ['packages/*/src/**', 'packages/*/package.json']
+    question: Does a change to a package's source or package.json carry a changeset, or the skip-changeset label for internal-only work?
+    check: ls .changeset/ and the PR's labels
+    sources: [.github/workflows/hooks.yml, '#87']
+
+  - id: hooks-bypassed
+    trigger:
+      paths: ['**']
+      pattern: '--no-verify|LEFTHOOK=0'
+    question: Does the change bypass or teach bypassing the git hooks, which are the gate?
+    check: read the lines that fired; the hooks may never be skipped
+    sources: [CLAUDE.md]
