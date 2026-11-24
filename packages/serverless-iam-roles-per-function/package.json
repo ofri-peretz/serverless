@@ -1,6 +1,6 @@
 {
   "name": "@interlace/serverless-iam-roles-per-function",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Serverless IAM roles per function — a drop-in replacement for serverless-iam-roles-per-function with strict validation, role consolidation, CLI introspection, EventBridge / S3 / DLQ auto-permissions, and full v3+v4 support",
   "type": "module",
   "sideEffects": false,
