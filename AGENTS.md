@@ -5,8 +5,9 @@ plugins. [ARCHITECTURE.md](./ARCHITECTURE.md) is the map; the Interlace-wide one
 [`../agents/ARCHITECTURE.md`](../agents/ARCHITECTURE.md), and the breakpoint contract shared with
 `eslint` and `agents` is [BREAKPOINTS.md](./BREAKPOINTS.md).
 
-- Plugins are `@interlace/serverless-plugin-<name>`, built on `@interlace/serverless-devkit`.
-  Output stays CommonJS: the Serverless Framework loads plugins with `require`.
+- Plugins are `@interlace/serverless-<name>`, built on `@interlace/serverless-devkit`.
+  Output stays CommonJS (the Serverless Framework loads plugins with `require`), held by
+  `commonjs-entry.lock.test.ts`.
 - Plugin authoring and lifecycle events: `docs/plugin-development-reference.md`. Adding a plugin:
   `CONTRIBUTING.md`. What is planned: `ROADMAP.md` and `docs/plugin-audit.md`.
 - Commands are `package.json` scripts; `npm run ci:local` mirrors CI. Everything else (strict TS,
