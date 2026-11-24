@@ -5,8 +5,6 @@ on:
     types: [opened, synchronize, reopened]
     paths-ignore:
       - 'docs/**'
-      - '*.md'
-      - '!README.md'
       - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
 
