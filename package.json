@@ -93,6 +93,7 @@
     "prettier": "^3.9.9",
     "provedone": "^0.3.1",
     "triggerlist": "^0.3.0",
+    "truepass": "^1.0.0",
     "tslib": "^2.8.1",
     "turbo": "^2.5.0",
     "typescript": "^5.9.3",

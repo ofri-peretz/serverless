@@ -5,9 +5,9 @@ import reactA11y from 'eslint-plugin-react-a11y';
 import reactFeatures from 'eslint-plugin-react-features';
 // Interlace ecosystem — à-la-carte (each plugin's own `recommended`), NOT the
 // @interlace/eslint-config meta-config.
-//   security: secure-coding, node-security, lambda-security, browser-security
-//   quality:  conventions, import-next, reliability, modularity, modernization,
-//             maintainability, operability
+// The security plugins are secure-coding, node-security, lambda-security and
+// browser-security; the quality plugins are conventions, import-next,
+// reliability, modularity, modernization, maintainability and operability.
 // maintainability/operability/lambda-security were SKIPPED on 2026-06-20 due to
 // dogfooding bugs (doubled namespace + :exit crash). Fixed and republished in
 // 3.0.4/3.0.6/1.2.4 respectively (eslint repo release #203, 2026-06-21).
@@ -23,6 +23,8 @@ import { configs as maintainabilityCfg } from 'eslint-plugin-maintainability';
 import { configs as operabilityCfg } from 'eslint-plugin-operability';
 // The docs site is the one surface that ships to a browser (added 2026-11-17).
 import { configs as browserSecurityCfg } from 'eslint-plugin-browser-security';
+// Test integrity (burgee packages/truepass): focused, unexplained-skip, fixed-sleep and retried tests.
+import { configs as truepass } from 'truepass/eslint';
 
 /**
  * @interlace ecosystem ESLint config — strict for published-package source,
@@ -151,6 +153,26 @@ export default [
       '@typescript-eslint/no-non-null-assertion': 'off',
       'no-console': 'off',
     },
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // 4b. Test integrity — truepass at error over every test file and runner
+  //     config: a focused test, a skip with no reason, a fixed sleep, a retry.
+  //     Findings that predate it sit in eslint-suppressions.json, a per-file
+  //     count ESLint enforces: a new finding fails, a fixed one fails until
+  //     `npx eslint . --prune-suppressions` drops it, so the counts only go down.
+  //     `truepass diff` runs on pre-push (lefthook.yml). Locked by
+  //     packages/serverless-devkit/src/truepass-adoption.lock.test.ts.
+  // ────────────────────────────────────────────────────────────────────────
+  {
+    ...truepass.recommended,
+    files: [
+      '**/*.test.{ts,tsx,mts,cts,mjs,js}',
+      '**/*.spec.{ts,tsx,mts,cts,mjs,js}',
+      '**/vitest.config.{ts,mts,mjs,js}',
+      '**/vitest.*.config.{ts,mts,mjs,js}',
+      '**/playwright.config.ts',
+    ],
   },
 
   // ────────────────────────────────────────────────────────────────────────
