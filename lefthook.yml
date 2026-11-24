@@ -12,3 +12,12 @@ remotes:
       - packages/hookset/presets/lefthook/commit-msg.yml
       - packages/hookset/presets/lefthook/pre-commit.yml
       - packages/hookset/presets/lefthook/pre-push.yml
+
+# provedone, enforced today: a commit message needs a `Verified-by:` trailer. hookset@0.4.0's
+# commit-msg preset runs this same `hook:provedone` station; when the ref moves to it, delete this
+# local step (`hookset check` flags it as a duplicate).
+commit-msg:
+  commands:
+    provedone:
+      run: npm run --silent hook:provedone -- {1}
+      fail_text: 'add a `Verified-by: <command> -> exit 0` (or `Verified-by: none (<reason>)`) trailer'
