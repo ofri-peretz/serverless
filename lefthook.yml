@@ -5,6 +5,7 @@
 #   commit-msg  commitlint
 #   pre-commit  npm run hook:staged -- <staged files>   prettier + eslint on the staged files only
 #   pre-push    npm run hook:verify                     typecheck, test and build, affected vs origin/main
+#               npx truepass diff --base origin/main    weakened assertions, unexplained snapshots (below)
 remotes:
   - git_url: https://github.com/ofri-peretz/burgee
     ref: hookset@0.3.0
@@ -21,3 +22,13 @@ commit-msg:
     provedone:
       run: npm run --silent hook:provedone -- {1}
       fail_text: 'add a `Verified-by: <command> -> exit 0` (or `Verified-by: none (<reason>)`) trailer'
+
+# truepass diff (burgee packages/truepass): an assertion moved to a weaker matcher, or a snapshot
+# changed with no `Snapshot: <why>` line, in the commits since origin/main. A deliberate weakening
+# is accepted by an `Assertion: <why>` line in the commit message. Locked by
+# packages/serverless-devkit/src/truepass-adoption.lock.test.ts.
+pre-push:
+  commands:
+    truepass-diff:
+      priority: 6
+      run: npx truepass diff --base origin/main
