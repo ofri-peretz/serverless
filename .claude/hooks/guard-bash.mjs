@@ -13,11 +13,16 @@
 //   4. Asks (never denies) before a publish: `npm publish`, `changeset publish`, and the
 //      commands the repo lists under `ask` in .claude/hookset.json (deploys, releases).
 //   5. Denies Edit/Write on a path matching a glob the repo lists under `frozen` there.
+//   6. Denies `git commit` / `git push` run in the foreground under the default 2-minute
+//      timeout: their hooks are the repo's gate and take minutes. The denial names the fix
+//      (timeout 600000 or run_in_background), so no CLAUDE.md has to say "not a hang".
 //
 // Matching is done on tokens, not regexes over the raw command: quoted strings and
 // heredoc bodies are data (commit messages, PR bodies), and no pattern here can backtrack.
 // Reads the PreToolUse payload on stdin. Prints a deny or ask decision, or nothing (no opinion).
 // `node guard-bash.mjs --self-test` runs the cases at the bottom.
+
+import { posix } from "node:path";
 
 const SEPARATORS = new Set([";", "&", "|", "\n", "(", ")"]);
 
@@ -110,14 +115,20 @@ const GIT_OPTS_WITH_VALUE = new Set([
   "--namespace",
 ]);
 
-function skipsHooks(words) {
+/** Index of git's subcommand in `words` (past `git -C dir`, `git -c k=v`), or -1. */
+function gitSub(words) {
   const g = words.indexOf("git");
-  if (g === -1) return false;
-  const env = words.slice(0, g);
-  // Skip git's global options (git -C dir commit, git -c k=v push) to reach the subcommand.
+  if (g === -1) return -1;
   let s = g + 1;
   while (words[s]?.startsWith("-"))
     s += GIT_OPTS_WITH_VALUE.has(words[s]) ? 2 : 1;
+  return s;
+}
+
+function skipsHooks(words) {
+  const s = gitSub(words);
+  if (s === -1) return false;
+  const env = words.slice(0, words.indexOf("git"));
   const sub = words[s];
   const args = words.slice(s + 1);
   if (args.includes("--no-verify")) return true;
@@ -151,6 +162,25 @@ function hasPhrase(words, phrase) {
 }
 
 export const PUBLISH = ["npm publish", "pnpm publish", "yarn npm publish", "changeset publish"];
+
+/**
+ * True when `words` runs `npm` or `pnpm` with `publish` as its subcommand after global options:
+ * `npm --access=public publish`, `npm --registry https://r publish`. An option without `=`
+ * may take the next word as its value, so that word is skipped unless it is `publish` itself.
+ */
+function publishesAfterOptions(words) {
+  for (let i = 0; i < words.length; i++) {
+    if (words[i] !== "npm" && words[i] !== "pnpm") continue;
+    let j = i + 1;
+    while (j < words.length && words[j].startsWith("-")) {
+      const valued = words[j].startsWith("--") && !words[j].includes("=");
+      j++;
+      if (valued && j < words.length && !words[j].startsWith("-") && words[j] !== "publish") j++;
+    }
+    if (words[j] === "publish") return `${words[i]} publish`;
+  }
+  return null;
+}
 
 const RULES = [
   {
@@ -193,14 +223,50 @@ export function decide(command, ask = []) {
   const cmds = commands(command);
   for (const r of RULES)
     if (r.test(cmds)) return { decision: "deny", id: r.id, reason: r.reason };
-  const phrase = [...PUBLISH, ...ask].find((p) => cmds.some((w) => hasPhrase(w, p)));
+  const phrase =
+    PUBLISH.find((p) => cmds.some((w) => hasPhrase(w, p))) ??
+    cmds.map(publishesAfterOptions).find(Boolean);
   if (phrase)
     return {
       decision: "ask",
       id: "publish",
       reason: `\`${phrase}\` publishes or deploys outside this repo, and that cannot be undone. A person approves it; CI release workflows are the usual route.`,
     };
+  const listed = ask.find((p) => cmds.some((w) => hasPhrase(w, p)));
+  if (listed)
+    return {
+      decision: "ask",
+      id: "repo-ask",
+      reason: `This repo lists \`${listed}\` in .claude/hookset.json as a step a person approves: it overwrites or ships something that is hard to take back.`,
+    };
   return null;
+}
+
+/** Below this a foreground Bash call is killed while a commit or push hook is still running. */
+export const HOOKED_MIN_TIMEOUT_MS = 300_000;
+
+/**
+ * The verdict for a `git commit` or `git push` given the Bash call's `timeout` and
+ * `run_in_background`, or null. Their hooks run the repo's gate for minutes; the default
+ * 2-minute timeout kills them mid-gate and the agent retries a push that may have landed.
+ */
+export function decideHooked(command, { timeout, run_in_background } = {}) {
+  if (run_in_background === true || (Number(timeout) || 0) >= HOOKED_MIN_TIMEOUT_MS) return null;
+  const hooked = commands(command).find((w) => {
+    const s = gitSub(w);
+    // `git commit --dry-run` runs no hooks; `git push --dry-run` still runs pre-push.
+    return s !== -1 && (w[s] === "commit" ? !w.includes("--dry-run") : w[s] === "push") && !w.includes("--help");
+  });
+  if (!hooked) return null;
+  const sub = hooked[gitSub(hooked)];
+  return {
+    decision: "deny",
+    id: "hooked-timeout",
+    reason:
+      `\`git ${sub}\` runs this repo's ${sub === "push" ? "pre-push" : "commit"} hooks, which take minutes: not a hang. ` +
+      "Run it again with `timeout: 600000` (or `run_in_background: true`) and wait for it. " +
+      "If an earlier push was killed, check `git log origin/<branch> -1` first: it may have landed.",
+  };
 }
 
 /** `*` within a segment, `**` across segments, `?` one character. Paths use forward slashes. */
@@ -220,7 +286,8 @@ export function globToRegExp(glob) {
 
 /** The verdict for an Edit/Write on `file` (relative to the repo), or null. */
 export function decideEdit(file, frozen = []) {
-  const rel = String(file ?? "").replaceAll("\\", "/").replace(/^\.\//, "");
+  // posix.normalize folds `a/../b` and `./a`, so a dotted path cannot step around a frozen glob.
+  const rel = posix.normalize(String(file ?? "").replaceAll("\\", "/")).replace(/^\.\//, "");
   const hit = frozen.find((g) => globToRegExp(g).test(rel));
   return hit
     ? {
@@ -268,7 +335,27 @@ export const CASES = {
     "git config --get core.hooksPath",
     'echo "npm publish" > notes.txt',
   ],
-  ask: ["npm publish --access public", "cd pkg && npx changeset publish", "pnpm publish"],
+  ask: [
+    "npm publish --access public",
+    "cd pkg && npx changeset publish",
+    "pnpm publish",
+    "npm --access=public publish",
+    "npm --registry https://registry.npmjs.org publish",
+    "pnpm --filter pkg publish",
+  ],
+  // decideHooked: [command, Bash input, denied?]
+  hooked: [
+    ["git push origin main", {}, true],
+    ["git -C repo commit -m x", { timeout: 120000 }, true],
+    ["cd a && git push", { timeout: 299999 }, true],
+    ["git push", { timeout: 600000 }, false],
+    ["git commit -m x", { run_in_background: true }, false],
+    ["git push --dry-run", {}, true],
+    ["git commit --dry-run -m x", {}, false],
+    ["git log -n 3", {}, false],
+    ["git commit -F - <<'EOF'\nx\nEOF", { timeout: 300000 }, false],
+    ["echo 'git push'", {}, false],
+  ],
 };
 
 function selfTest() {
@@ -276,11 +363,14 @@ function selfTest() {
     ...CASES.deny.filter((c) => decide(c)?.decision !== "deny").map((c) => `should deny: ${c}`),
     ...CASES.allow.filter((c) => decide(c)).map((c) => `should allow: ${c}`),
     ...CASES.ask.filter((c) => decide(c)?.decision !== "ask").map((c) => `should ask: ${c}`),
+    ...CASES.hooked
+      .filter(([c, input, denied]) => Boolean(decideHooked(c, input)) !== denied)
+      .map(([c, input, denied]) => `should ${denied ? "deny" : "allow"} ${JSON.stringify(input)}: ${c}`),
   ];
   process.stdout.write(
     bad.length
       ? `${bad.join("\n")}\n${bad.length} failing\n`
-      : `ok: ${CASES.deny.length} denied, ${CASES.allow.length} allowed, ${CASES.ask.length} asked\n`,
+      : `ok: ${CASES.deny.length} denied, ${CASES.allow.length} allowed, ${CASES.ask.length} asked, ${CASES.hooked.length} timed\n`,
   );
   process.exit(bad.length ? 1 : 0);
 }
@@ -317,12 +407,13 @@ else if (isMain) {
     const input = payload.tool_input ?? {};
     const config = await repoConfig();
     let hit = null;
-    if (typeof input.command === "string") hit = decide(input.command, config.ask);
+    if (typeof input.command === "string")
+      hit = decide(input.command, config.ask) ?? decideHooked(input.command, input);
     else {
       const file = input.file_path ?? input.notebook_path;
       if (typeof file === "string") {
         // Windows hands both paths over with backslashes: compare them with forward slashes.
-        const [f, d] = [file, config.dir].map((p) => p.replaceAll("\\", "/"));
+        const [f, d] = [file, config.dir].map((p) => posix.normalize(p.replaceAll("\\", "/")));
         const rel = f.startsWith(`${d}/`) ? f.slice(d.length + 1) : f;
         hit = decideEdit(rel, config.frozen);
       }
