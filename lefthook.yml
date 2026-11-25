@@ -2,13 +2,24 @@
 # bump `ref` to take a new preset version. `hookset check` (CI, hooks.yml) fails on a missing
 # station, an unpinned ref, or a step here that repeats one a preset runs.
 #
-#   commit-msg  commitlint
+#   commit-msg  commitlint, then provedone (a `Verified-by:` receipt)
 #   pre-commit  npm run hook:staged -- <staged files>   prettier + eslint on the staged files only
 #   pre-push    npm run hook:verify                     typecheck, test and build, affected vs origin/main
+#               npx truepass diff --base origin/main    weakened assertions, unexplained snapshots (below)
 remotes:
   - git_url: https://github.com/ofri-peretz/burgee
-    ref: hookset@0.3.0
+    ref: hookset@1.1.1
     configs:
       - packages/hookset/presets/lefthook/commit-msg.yml
       - packages/hookset/presets/lefthook/pre-commit.yml
       - packages/hookset/presets/lefthook/pre-push.yml
+
+# truepass diff (burgee packages/truepass): an assertion moved to a weaker matcher, or a snapshot
+# changed with no `Snapshot: <why>` line, in the commits since origin/main. A deliberate weakening
+# is accepted by an `Assertion: <why>` line in the commit message. Locked by
+# packages/serverless-devkit/src/truepass-adoption.lock.test.ts.
+pre-push:
+  commands:
+    truepass-diff:
+      priority: 6
+      run: npx truepass diff --base origin/main

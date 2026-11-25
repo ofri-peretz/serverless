@@ -43,7 +43,9 @@
     "changeset:status": "changeset status --verbose",
     "prepare": "lefthook install || true",
     "hook:staged": "sh -c 'prettier --check --ignore-unknown \"$@\" && eslint --no-warn-ignored --max-warnings 0 \"$@\"' hook-staged",
-    "hook:verify": "TURBO_SCM_BASE=origin/main turbo run typecheck test build --affected --output-logs=errors-only"
+    "hook:verify": "TURBO_SCM_BASE=origin/main turbo run typecheck test build --affected --output-logs=errors-only",
+    "hook:provedone": "provedone gate --mode enforce",
+    "hook:triggerlist": "triggerlist protect origin/main"
   },
   "keywords": [
     "serverless",
@@ -89,6 +91,9 @@
     "lefthook": "^1.13.0",
     "oxlint": "^1.87.0",
     "prettier": "^3.9.9",
+    "provedone": "^1.0.0",
+    "triggerlist": "^1.0.0",
+    "truepass": "^1.0.0",
     "tslib": "^2.8.1",
     "turbo": "^2.5.0",
     "typescript": "^5.9.3",

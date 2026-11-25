@@ -15,8 +15,8 @@ permissions:
 
 jobs:
   hookset:
-    uses: ofri-peretz/burgee/.github/workflows/hookset-check.yml@hookset@0.3.0
+    uses: ofri-peretz/burgee/.github/workflows/hookset-check.yml@hookset@1.1.1
   changeset:
-    uses: ofri-peretz/burgee/.github/workflows/changeset-gate.yml@hookset@0.3.0
+    uses: ofri-peretz/burgee/.github/workflows/changeset-gate.yml@hookset@1.1.1
     with:
       paths: '^packages/[^/]+/(src|package\.json)'
