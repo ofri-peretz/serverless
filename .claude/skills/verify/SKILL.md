@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Run a changed Serverless plugin inside a scratch service, its commands and `serverless package`, and read the synthesized template. Use before committing a plugin behaviour change.
+description: Run a changed plugin in a scratch service and read the synthesized template, before committing.
 ---
 
 # Verify a change by running it
