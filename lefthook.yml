@@ -8,7 +8,7 @@
 #               npx truepass diff --base origin/main    weakened assertions, unexplained snapshots (below)
 remotes:
   - git_url: https://github.com/ofri-peretz/burgee
-    ref: hookset@1.0.1
+    ref: hookset@1.1.1
     configs:
       - packages/hookset/presets/lefthook/commit-msg.yml
       - packages/hookset/presets/lefthook/pre-commit.yml

@@ -79,3 +79,5 @@ Thumbs.db
 .env*.local
 .env
 .vercel
+# MCP server indexes, rebuilt per session by .claude/hooks (hookset)
+.codegraph/
