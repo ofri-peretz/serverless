@@ -59,6 +59,8 @@ export default [
       'oos/**',
       // oxlint JS-plugin shims — CJS tooling, legit `require()`.
       'tools/oxlint-plugins/**',
+      // Vendored byte-for-byte from hookset; `hookset check` fails on any edit, so fixes land in burgee.
+      '.claude/hooks/**',
     ],
   },
 
