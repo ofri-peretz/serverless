@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Differential (replz compare)
+
+# Each service in .sdlc/replz/compare-inputs is packaged with the plugins built in the PR's base
+# and in its head (.sdlc/replz/compare.yaml): any CloudFormation resource that changes fails the
+# run, unless `approved` there names that exact change with a reason. Unit tests drive the plugins
+# against a mocked framework; this runs them inside the real one.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'packages/serverless-iam-roles-per-function/**'
+      - 'packages/serverless-api-gateway-caching/**'
+      - 'packages/serverless-devkit/src/**'
+      - 'package-lock.json'
+      - '.sdlc/replz/**'
+      - '.github/workflows/replz-compare.yml'
+
+concurrency:
+  group: replz-compare-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: replz compare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # Full history: the base commit is checked out as a worktree beside this one.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Compare base and head
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        # The checkout is the PR merged into the base's tip, so the base's tip is the right other
+        # side: whatever differs between them is this PR's change.
+        run: |
+          set -o pipefail
+          npx --yes replz@1.1.0 compare --base "$BASE_SHA" 2>&1 | tee "$RUNNER_TEMP/compare.log"
+
+      - name: Summary
+        if: always()
+        run: |
+          { echo '## replz compare'; echo; echo '```'; cat "$RUNNER_TEMP/compare.log" || echo '(no output)'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
