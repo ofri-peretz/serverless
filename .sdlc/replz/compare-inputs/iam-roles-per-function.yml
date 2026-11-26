@@ -1,0 +1,33 @@
+service: compare-iam
+frameworkVersion: '3'
+plugins:
+  localPath: '@TREE@/packages'
+  modules:
+    - serverless-iam-roles-per-function
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  versionFunctions: false
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: [logs:CreateLogGroup]
+          Resource: '*'
+functions:
+  reader:
+    handler: handler.read
+    iamRoleStatements:
+      - Effect: Allow
+        Action: [dynamodb:GetItem]
+        Resource: arn:aws:dynamodb:us-east-1:123456789012:table/items
+  writer:
+    handler: handler.write
+    iamRoleStatementsInherit: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action: [s3:PutObject]
+        Resource: arn:aws:s3:::bucket/*
+  plain:
+    handler: handler.plain

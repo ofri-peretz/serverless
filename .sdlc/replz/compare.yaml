@@ -1,0 +1,20 @@
+# `replz compare`: each file in compare-inputs is a serverless.yml. It is packaged with
+# Serverless Framework v3 (`serverless package`, which never calls AWS) using the plugins
+# built in the PR's base and in its head, and the template's Resources are printed. Any
+# resource that changes fails the run until `approved` names that exact change with a reason.
+#
+# `@TREE@` in an input is replaced with the tree being compared, so the plugins load from
+# that tree's packages/ (plugins.localPath). The head already has node_modules from CI, so
+# only the base installs. Serverless output is shown only when packaging fails.
+setup: (test -d node_modules || npm ci --ignore-scripts --no-audit --no-fund) && npx turbo run build --filter=./packages/serverless-iam-roles-per-function --filter=./packages/serverless-api-gateway-caching
+command: >-
+  d=$(mktemp -d) && sed "s#@TREE@#$PWD#" > "$d/serverless.yml"
+  && echo 'exports.read = exports.write = exports.plain = async () => ({});' > "$d/handler.js"
+  && (cd "$d" && SLS_TELEMETRY_DISABLED=1 npx --yes serverless@3.40.0 package --stage dev > "$d/log" 2>&1 || { cat "$d/log" >&2; exit 1; })
+  && node -e "console.log(JSON.stringify(require(process.argv[1]).Resources, null, 1))" "$d/.serverless/cloudformation-template-update-stack.json";
+  rc=$?; rm -rf "$d"; exit $rc
+inputs: .sdlc/replz/compare-inputs
+normalize:
+  # The artifact folder and the API Gateway deployment are named for the moment of packaging.
+  - '\d{13}(-\d{4}-\d\d-\d\dT[\d:.]+Z)?'
+approved: []
