@@ -1,0 +1,5 @@
+{
+  "$comment": "Bands for `replz scorecard`, read by .github/workflows/verification-scorecard.yml. Set from the first baseline on 2026-11-26 over 30 days (escape rate 0% (0 of 28), receipts 46.4%, recall unmeasured), with an allowance for the window's noise. They only tighten: lower maxEscapeRate, raise minReceipts and minRecall as the measures improve.",
+  "maxEscapeRate": 0.1,
+  "minReceipts": 0.4
+}
