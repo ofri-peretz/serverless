@@ -13,3 +13,4 @@ CHANGELOG.md
 /.claude/hooks/stop-after-3.mjs
 /.claude/hooks/verify-before-stop.mjs
 /.claude/hooks/codegraph.mjs
+/.claude/hooks/worktree-sweep.mjs
