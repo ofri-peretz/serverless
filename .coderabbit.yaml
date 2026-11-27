@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# Reviewer split by repo volume (2026-11-25): CodeRabbit reviews the low-volume public repos
+# (subagent-gateway, serverless), where its free quota lasts; Claude reviews the high-volume ones
+# (eslint, interlace, burgee), the private agents repo, and blog, whose REVIEW.md checklist is
+# fed to the Claude reviewer. Measured in ofri-peretz/eslint
+# docs/review-hit-rate/: when CodeRabbit ran, 12 of its 13 findings needed a reader; its limit
+# was quota, so this repo spends it only where a reader matters.
+language: en-US
+reviews:
+  profile: chill
+  high_level_summary: false
+  poem: false
+  sequence_diagrams: false
+  related_prs: false
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - 'chore(release)'
+      - '[automated]'
+  path_filters:
+    - '!**/package-lock.json'
+    - '!**/dist/**'
+  path_instructions:
+    - path: '**'
+      instructions: >-
+        Programs already judge every PR here: this repo's CI (lint, typecheck, tests) and the
+        hookset gates (hook drift, Verified-by receipts). Report nothing one of them would
+        report. Report logic bugs, broken edge cases, security reasoning across files, and doc
+        claims the code does not back.
